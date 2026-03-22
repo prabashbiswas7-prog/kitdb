@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Profile — KitDB</title>
+<link rel="stylesheet" href="/assets/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.profile-layout { display:grid; grid-template-columns:280px 1fr; gap:2rem; padding:2rem 0; align-items:start; }
+@media(max-width:800px){ .profile-layout{grid-template-columns:1fr;} }
+.profile-card { background:var(--s1); border:1px solid var(--bd); border-radius:14px; padding:1.75rem; position:sticky; top:calc(var(--nav-h) + 1rem); }
+.profile-avatar { width:80px; height:80px; border-radius:50%; background:var(--g); display:flex; align-items:center; justify-content:center; font-family:var(--fd); font-size:2rem; color:var(--bk); margin:0 auto 1rem; border:3px solid var(--bdg); }
+.profile-username { font-family:var(--fd); font-size:1.5rem; letter-spacing:2px; text-align:center; margin-bottom:.15rem; }
+.profile-role { font-size:.62rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--g); text-align:center; margin-bottom:1.25rem; background:var(--gf); border:1px solid var(--bdg); border-radius:100px; padding:.22rem .75rem; display:inline-block; }
+.profile-meta { display:flex; flex-direction:column; gap:.5rem; margin-bottom:1.25rem; }
+.pm-row { display:flex; align-items:center; gap:.5rem; font-size:.82rem; color:var(--w3); }
+.pm-icon { width:16px; text-align:center; opacity:.6; }
+.profile-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--bd); border:1px solid var(--bd); border-radius:9px; overflow:hidden; margin-bottom:1.25rem; }
+.ps-cell { background:var(--s2); padding:.75rem .5rem; text-align:center; }
+.ps-num { font-family:var(--fd); font-size:1.4rem; color:var(--g); display:block; }
+.ps-lbl { font-size:.58rem; color:var(--w4); text-transform:uppercase; letter-spacing:1px; }
+.profile-tabs { display:flex; gap:.2rem; background:var(--s2); border:1px solid var(--bd); border-radius:8px; padding:.2rem; margin-bottom:1.5rem; }
+.ptab { flex:1; text-align:center; padding:.45rem .5rem; border-radius:6px; font-size:.78rem; font-weight:600; border:none; background:none; color:var(--w4); transition:all .15s; }
+.ptab.active { background:var(--s4); color:var(--w); }
+.ptab-content { display:none; }
+.ptab-content.active { display:block; }
+.edit-form { display:flex; flex-direction:column; gap:.9rem; }
+.rating-history-row { display:flex; align-items:center; gap:.9rem; padding:.65rem 0; border-bottom:1px solid var(--bd); }
+.rating-history-row:last-child { border-bottom:none; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/browse.html" class="nav-link">Browse</a>
+    <a href="/search.html" class="nav-link">Search</a>
+  </div>
+  <div id="nav-auth"></div>
+</nav>
+
+<div class="container">
+  <div id="loading" class="spinner"></div>
+  <div id="profile-content" style="display:none">
+    <div class="profile-layout">
+      <!-- LEFT: Profile Card -->
+      <div>
+        <div class="profile-card">
+          <div class="profile-avatar" id="p-avatar">?</div>
+          <div class="profile-username" id="p-username"></div>
+          <div style="text-align:center"><span class="profile-role" id="p-role">Subscriber</span></div>
+          <div class="profile-meta" id="p-meta"></div>
+          <div class="profile-stats">
+            <div class="ps-cell"><span class="ps-num" id="ps-collection">0</span><span class="ps-lbl">Saved</span></div>
+            <div class="ps-cell"><span class="ps-num" id="ps-ratings">0</span><span class="ps-lbl">Rated</span></div>
+            <div class="ps-cell"><span class="ps-num" id="ps-avg">—</span><span class="ps-lbl">Avg ★</span></div>
+          </div>
+          <div style="font-size:.7rem;color:var(--w4);text-align:center" id="p-joined"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Tabs -->
+      <div>
+        <div class="profile-tabs">
+          <button class="ptab active" onclick="switchTab('collection',this)">💚 Collection</button>
+          <button class="ptab" onclick="switchTab('ratings',this)">⭐ Ratings</button>
+          <button class="ptab" onclick="switchTab('edit',this)">✏️ Edit Profile</button>
+        </div>
+
+        <!-- COLLECTION -->
+        <div class="ptab-content active" id="tab-collection">
+          <div class="kit-grid" id="collection-grid">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <!-- RATINGS HISTORY -->
+        <div class="ptab-content" id="tab-ratings">
+          <div id="ratings-list"><div class="spinner"></div></div>
+        </div>
+
+        <!-- EDIT PROFILE -->
+        <div class="ptab-content" id="tab-edit">
+          <div class="panel">
+            <div class="panel-title" style="margin-bottom:1.25rem">Edit Your Profile</div>
+            <div class="edit-form">
+              <div class="field"><label>Full Name</label><input id="e-name" type="text" placeholder="Your full name"/></div>
+              <div class="field"><label>Country</label>
+                <select id="e-country">
+                  <option value="">Select country…</option>
+                  <option>England</option><option>Scotland</option><option>Wales</option><option>Ireland</option>
+                  <option>Spain</option><option>Germany</option><option>France</option><option>Italy</option>
+                  <option>Portugal</option><option>Netherlands</option><option>Brazil</option><option>Argentina</option>
+                  <option>USA</option><option>Japan</option><option>Australia</option><option>India</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="field"><label>Favourite Club</label><input id="e-club" type="text" placeholder="e.g. Arsenal FC"/></div>
+              <div class="field"><label>Bio</label><textarea id="e-bio" placeholder="Tell the community about yourself…"></textarea></div>
+              <button class="btn btn-p" onclick="saveProfile()">Save Changes</button>
+            </div>
+          </div>
+          <div class="panel" style="margin-top:1rem;border-color:rgba(255,68,68,.2)">
+            <div class="panel-title" style="color:var(--red)">Danger Zone</div>
+            <button class="btn" style="background:none;border:1px solid rgba(255,68,68,.3);color:var(--red);font-size:.8rem" onclick="if(confirm('Sign out of KitDB?'))sb.auth.signOut().then(()=>location.href='/')">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:3rem"></div>
+<footer><strong>KitDB</strong> &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a></footer>
+
+<script src="/assets/js/config.js"></script>
+<script>
+let currentUser = null, profile = null;
+
+(async () => {
+  currentUser = await requireAuth('/login.html?from=/profile.html');
+  if (!currentUser) return;
+  await initNav();
+  profile = await getProfile(currentUser.id);
+  if (!profile) return;
+  renderProfile();
+  loadCollection();
+  loadRatings();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('profile-content').style.display = 'block';
+})();
+
+function renderProfile() {
+  document.getElementById('p-avatar').textContent = (profile.username||'?')[0].toUpperCase();
+  document.getElementById('p-username').textContent = profile.username;
+  document.getElementById('p-role').textContent = profile.role === 'admin' ? '⚙️ Admin' : '👤 Subscriber';
+  document.getElementById('p-joined').textContent = 'Joined ' + new Date(profile.created_at).toLocaleDateString('en-GB', {month:'long',year:'numeric'});
+  const meta = [];
+  if (profile.full_name) meta.push(`<div class="pm-row"><span class="pm-icon">👤</span>${profile.full_name}</div>`);
+  if (profile.country)   meta.push(`<div class="pm-row"><span class="pm-icon">🌍</span>${profile.country}</div>`);
+  if (profile.fav_club)  meta.push(`<div class="pm-row"><span class="pm-icon">⚽</span>${profile.fav_club}</div>`);
+  if (profile.bio)       meta.push(`<div class="pm-row" style="align-items:flex-start"><span class="pm-icon" style="margin-top:.15rem">💬</span><span style="line-height:1.5">${profile.bio}</span></div>`);
+  document.getElementById('p-meta').innerHTML = meta.join('');
+  // prefill edit form
+  document.getElementById('e-name').value  = profile.full_name || '';
+  document.getElementById('e-country').value = profile.country || '';
+  document.getElementById('e-club').value  = profile.fav_club || '';
+  document.getElementById('e-bio').value   = profile.bio || '';
+}
+
+async function loadCollection() {
+  const { data } = await sb.from('collections').select('kit_id').eq('user_id', currentUser.id);
+  document.getElementById('ps-collection').textContent = data?.length || 0;
+  if (!data?.length) { document.getElementById('collection-grid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">💚</div><h3>NO KITS SAVED</h3><p>Browse kits and save your favourites.</p><a href="/browse.html" class="btn btn-p btn-sm" style="margin-top:.75rem">Browse Kits</a></div>`; return; }
+  const ids = data.map(d => d.kit_id);
+  const { data: kits } = await sb.from('kits_with_stats').select('*').in('id', ids);
+  document.getElementById('collection-grid').innerHTML = (kits||[]).map(k => {
+    const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':'b-third';
+    return `<a href="/kit.html?slug=${k.slug}" class="kit-card">
+      <div class="kit-card-img grad-${k.id.charCodeAt(0)%6}">
+        ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
+        <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
+      </div>
+      <div class="kit-card-body">
+        <div class="kit-card-team">${k.team}</div>
+        <div class="kit-card-season">${k.season}</div>
+        <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating),k.rating_count)}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+async function loadRatings() {
+  const { data } = await sb.from('ratings').select('rating, updated_at, kit_id').eq('user_id', currentUser.id).order('updated_at', { ascending: false });
+  document.getElementById('ps-ratings').textContent = data?.length || 0;
+  if (!data?.length) { document.getElementById('ratings-list').innerHTML = `<div class="empty"><div class="empty-icon">⭐</div><h3>NO RATINGS YET</h3><p>Rate kits you've seen or owned.</p></div>`; return; }
+  const avg = data.length ? (data.reduce((s,r)=>s+r.rating,0)/data.length).toFixed(1) : '—';
+  document.getElementById('ps-avg').textContent = avg;
+  const ids = data.map(d => d.kit_id);
+  const { data: kits } = await sb.from('kits').select('id, team, season, slug, image_url').in('id', ids);
+  const kitMap = Object.fromEntries((kits||[]).map(k=>[k.id,k]));
+  document.getElementById('ratings-list').innerHTML = data.map(r => {
+    const k = kitMap[r.kit_id];
+    if (!k) return '';
+    return `<div class="rating-history-row">
+      <div style="width:48px;height:48px;background:var(--s2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">⚽</div>
+      <div style="flex:1;min-width:0">
+        <a href="/kit.html?slug=${k.slug}" style="font-weight:600;font-size:.875rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team}</a>
+        <div style="font-size:.72rem;color:var(--w4)">${k.season} · Rated ${new Date(r.updated_at).toLocaleDateString('en-GB')}</div>
+      </div>
+      <div style="display:flex;gap:.1rem">${[1,2,3,4,5].map(i=>`<span style="color:${i<=r.rating?'var(--gold)':'var(--s4)'}">★</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+async function saveProfile() {
+  const updates = {
+    full_name: document.getElementById('e-name').value.trim(),
+    country:   document.getElementById('e-country').value,
+    fav_club:  document.getElementById('e-club').value.trim(),
+    bio:       document.getElementById('e-bio').value.trim(),
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await sb.from('profiles').update(updates).eq('id', currentUser.id);
+  if (error) { toast('Failed to save: ' + error.message, 'err'); return; }
+  Object.assign(profile, updates);
+  renderProfile();
+  toast('Profile updated!');
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.ptab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kit — KitDB</title>
+<link rel="stylesheet" href="/assets/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.kit-layout { display:grid; grid-template-columns:1fr 380px; gap:2.5rem; align-items:start; padding:2rem 0; }
+@media(max-width:900px){ .kit-layout{grid-template-columns:1fr;} }
+.kit-img-main { background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:420px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; margin-bottom:1rem; }
+.kit-img-main img { height:340px; object-fit:contain; filter:drop-shadow(0 16px 40px rgba(0,0,0,.7)); }
+.kit-img-main .ph { font-size:7rem; opacity:.08; }
+.kit-thumbs { display:flex; gap:.5rem; }
+.kit-thumb { width:72px; height:72px; background:var(--s2); border:1px solid var(--bd); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; overflow:hidden; transition:border-color .15s; }
+.kit-thumb:hover, .kit-thumb.active { border-color:var(--g); }
+.kit-thumb img { height:58px; object-fit:contain; }
+.kit-info-panel { }
+.kit-breadcrumb { font-size:.72rem; color:var(--w4); margin-bottom:.9rem; display:flex; gap:.4rem; align-items:center; flex-wrap:wrap; }
+.kit-breadcrumb a { color:var(--w3); transition:color .15s; }
+.kit-breadcrumb a:hover { color:var(--g); }
+.kit-team-name { font-family:var(--fd); font-size:2.4rem; letter-spacing:3px; margin-bottom:.2rem; line-height:1; }
+.kit-season-tag { font-family:var(--fm); font-size:.85rem; color:var(--g); margin-bottom:1rem; display:flex; gap:.75rem; align-items:center; }
+.kit-rating-section { background:var(--s2); border:1px solid var(--bd); border-radius:10px; padding:1.1rem; margin-bottom:1rem; }
+.kit-rating-avg { font-family:var(--fd); font-size:2.5rem; color:var(--gold); letter-spacing:2px; }
+.kit-rating-label { font-size:.65rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--w4); margin-bottom:.5rem; }
+.stars-interactive .star { font-size:1.75rem !important; transition:color .15s, transform .15s; }
+.stars-interactive .star:hover { transform:scale(1.2); }
+.stars-interactive .star[data-v] { cursor:pointer; }
+.kit-meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; margin-bottom:1rem; }
+.meta-cell { background:var(--s2); border:1px solid var(--bd); border-radius:8px; padding:.75rem .9rem; }
+.meta-key { font-size:.6rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--w4); margin-bottom:.2rem; }
+.meta-val { font-size:.875rem; }
+.kit-desc { background:var(--s2); border:1px solid var(--bd); border-radius:10px; padding:1rem; margin-bottom:1rem; font-size:.875rem; color:var(--w3); line-height:1.7; }
+.buy-btn { display:flex; align-items:center; justify-content:center; gap:.5rem; width:100%; padding:.85rem; border-radius:10px; background:var(--g); color:var(--bk); font-weight:700; font-size:1rem; border:none; font-family:var(--fb); text-decoration:none; transition:all .15s; margin-bottom:.6rem; }
+.buy-btn:hover { background:var(--gd); }
+.save-btn { display:flex; align-items:center; justify-content:center; gap:.5rem; width:100%; padding:.75rem; border-radius:10px; background:none; border:1px solid var(--bd); color:var(--w3); font-size:.9rem; font-weight:600; transition:all .15s; }
+.save-btn:hover { border-color:var(--bdg); color:var(--g); }
+.save-btn.saved { background:var(--gf); border-color:var(--bdg); color:var(--g); }
+.related-section { margin-top:3rem; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/browse.html" class="nav-link">Browse</a>
+    <a href="/search.html" class="nav-link">Search</a>
+  </div>
+  <div id="nav-auth"></div>
+</nav>
+
+<!-- TOP BANNER AD -->
+<div class="container"><div id="ad-top-banner" class="ad-slot ad-banner"></div></div>
+
+<div class="container">
+  <div id="loading" class="spinner"></div>
+  <div id="kit-content" style="display:none">
+    <div class="kit-layout">
+      <!-- LEFT: Images -->
+      <div>
+        <div class="kit-img-main" id="kit-img-main"></div>
+        <div class="kit-thumbs" id="kit-thumbs"></div>
+      </div>
+      <!-- RIGHT: Info -->
+      <div class="kit-info-panel">
+        <div class="kit-breadcrumb" id="kit-breadcrumb"></div>
+        <div class="kit-team-name" id="kit-team"></div>
+        <div class="kit-season-tag" id="kit-season-tag"></div>
+
+        <!-- Rating display -->
+        <div class="kit-rating-section">
+          <div class="kit-rating-label">Community Rating</div>
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem">
+            <span class="kit-rating-avg" id="kit-avg">—</span>
+            <div>
+              <div id="kit-stars-display"></div>
+              <div style="font-size:.72rem;color:var(--w4);margin-top:.15rem" id="kit-rating-count"></div>
+            </div>
+          </div>
+          <!-- User rating -->
+          <div id="user-rating-section" style="border-top:1px solid var(--bd);padding-top:.75rem;margin-top:.25rem;display:none">
+            <div class="kit-rating-label" style="margin-bottom:.5rem">Your Rating</div>
+            <div class="stars stars-interactive" id="user-stars"></div>
+            <div style="font-size:.72rem;color:var(--w4);margin-top:.4rem" id="user-rating-hint">Click a star to rate</div>
+          </div>
+          <div id="login-to-rate" style="border-top:1px solid var(--bd);padding-top:.75rem;font-size:.8rem;color:var(--w4);display:none">
+            <a href="/login.html" style="color:var(--g)">Sign in</a> to rate this kit
+          </div>
+        </div>
+
+        <!-- Meta -->
+        <div class="kit-meta-grid" id="kit-meta-grid"></div>
+
+        <!-- Description -->
+        <div class="kit-desc" id="kit-desc" style="display:none"></div>
+
+        <!-- Buy button -->
+        <div id="buy-section" style="display:none"></div>
+
+        <!-- Save to collection -->
+        <button class="save-btn" id="save-btn" onclick="toggleSave()" style="display:none">
+          <span id="save-icon">🤍</span> <span id="save-label">Save to Collection</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- KIT DETAIL AD -->
+    <div id="ad-kit-detail" class="ad-slot" style="margin-bottom:2rem"></div>
+
+    <!-- Related kits -->
+    <div class="related-section">
+      <div class="section-head"><span class="section-title">MORE FROM <span id="related-team-name">THIS CLUB</span></span></div>
+      <div class="kit-grid" id="related-grid"></div>
+    </div>
+  </div>
+  <div id="not-found" style="display:none" class="empty">
+    <div class="empty-icon">🔍</div>
+    <h3>KIT NOT FOUND</h3>
+    <p>This kit doesn't exist or has been removed.</p>
+    <a href="/browse.html" class="btn btn-p" style="margin-top:1rem">Browse All Kits</a>
+  </div>
+</div>
+
+<div style="height:3rem"></div>
+<footer><strong>KitDB</strong> &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a></footer>
+
+<script src="/assets/js/config.js"></script>
+<script>
+const slug = new URLSearchParams(location.search).get('slug');
+let kit = null, currentUser = null, userProfile = null, isSaved = false, userRating = 0;
+
+(async () => {
+  if (!slug) { show404(); return; }
+  await initNav();
+  currentUser = await getUser();
+  if (currentUser) userProfile = await getProfile(currentUser.id);
+
+  const { data } = await sb.from('kits_with_stats').select('*').eq('slug', slug).single();
+  if (!data) { show404(); return; }
+  kit = data;
+  document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
+
+  // increment view
+  sb.rpc('increment_kit_views', { kit_slug: slug });
+
+  renderKit();
+  if (currentUser) {
+    await loadUserRating();
+    await checkSaved();
+  }
+  loadRelated();
+  injectAd('top_banner','ad-top-banner');
+  injectAd('kit_detail','ad-kit-detail');
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('kit-content').style.display = 'block';
+  trackClick();
+})();
+
+function show404() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('not-found').style.display = 'block';
+}
+
+function renderKit() {
+  const bc = kit.type==='Home'?'b-home':kit.type==='Away'?'b-away':kit.type==='Special Edition'?'b-special':kit.type==='GK'?'b-gk':'b-third';
+  const idx = kit.id.charCodeAt(0) % 6;
+
+  // images
+  const imgs = [kit.image_url, kit.image_url_2, kit.image_url_3].filter(Boolean);
+  document.getElementById('kit-img-main').innerHTML = imgs.length
+    ? `<img src="${imgs[0]}" id="main-img" alt="${kit.team}"/>`
+    : `<span class="ph">⚽</span>`;
+  document.getElementById('kit-img-main').classList.add('grad-' + idx);
+
+  if (imgs.length > 1) {
+    document.getElementById('kit-thumbs').innerHTML = imgs.map((url, i) =>
+      `<div class="kit-thumb ${i===0?'active':''}" onclick="switchImg('${url}',this)"><img src="${url}" alt="view ${i+1}"/></div>`
+    ).join('');
+  }
+
+  // breadcrumb
+  document.getElementById('kit-breadcrumb').innerHTML =
+    `<a href="/">Home</a> <span>›</span> <a href="/browse.html">Browse</a> <span>›</span>
+     <a href="/browse.html?q=${encodeURIComponent(kit.team)}">${kit.team}</a> <span>›</span>
+     <span>${kit.season} ${kit.type}</span>`;
+
+  document.getElementById('kit-team').textContent = kit.team;
+  document.getElementById('kit-season-tag').innerHTML =
+    `<span style="font-family:var(--fm);color:var(--g)">${kit.season}</span>
+     <span class="badge ${bc}">${kit.type}</span>
+     ${kit.league ? `<span style="color:var(--w3);font-size:.8rem">${kit.league}</span>` : ''}`;
+
+  // rating
+  const avg = parseFloat(kit.avg_rating) || 0;
+  document.getElementById('kit-avg').textContent = avg > 0 ? avg.toFixed(1) : '—';
+  document.getElementById('kit-stars-display').innerHTML = renderStars(avg, kit.rating_count);
+  document.getElementById('kit-rating-count').textContent = kit.rating_count > 0 ? `${kit.rating_count} rating${kit.rating_count!==1?'s':''}` : 'No ratings yet';
+
+  // meta
+  const meta = [
+    { key:'Manufacturer', val:kit.maker||'—' },
+    { key:'Primary Color', val:kit.color||'—' },
+    { key:'League', val:kit.league||'—' },
+    { key:'Season', val:kit.season },
+    { key:'Views', val:kit.views||0 },
+    { key:'In Collections', val:kit.collection_count||0 },
+  ];
+  document.getElementById('kit-meta-grid').innerHTML = meta.map(m =>
+    `<div class="meta-cell"><div class="meta-key">${m.key}</div><div class="meta-val">${m.val}</div></div>`
+  ).join('');
+
+  // description
+  if (kit.description) {
+    document.getElementById('kit-desc').textContent = kit.description;
+    document.getElementById('kit-desc').style.display = 'block';
+  }
+
+  // buy button
+  if (kit.buy_url) {
+    document.getElementById('buy-section').style.display = 'block';
+    document.getElementById('buy-section').innerHTML =
+      `<a href="${kit.buy_url}" target="_blank" rel="noopener sponsored" class="buy-btn" onclick="trackClick()">
+        🛒 ${kit.buy_label || 'Buy Now'} ${kit.price_label ? '— ' + kit.price_label : ''}
+       </a>`;
+  }
+
+  // login/rate
+  if (currentUser) {
+    document.getElementById('user-rating-section').style.display = 'block';
+    document.getElementById('save-btn').style.display = 'flex';
+    renderInteractiveStars(userRating);
+  } else {
+    document.getElementById('login-to-rate').style.display = 'block';
+  }
+}
+
+function switchImg(url, el) {
+  document.getElementById('main-img').src = url;
+  document.querySelectorAll('.kit-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function renderInteractiveStars(current) {
+  const el = document.getElementById('user-stars');
+  el.className = 'stars stars-interactive';
+  el.innerHTML = [1,2,3,4,5].map(i =>
+    `<span class="star ${i<=current?'star-full':'star-empty'}" data-v="${i}"
+      onclick="rateKit(${i})"
+      onmouseover="hoverStars(${i})"
+      onmouseout="renderInteractiveStars(${userRating})">★</span>`
+  ).join('');
+  document.getElementById('user-rating-hint').textContent = current > 0 ? `Your rating: ${current}/5 — click to change` : 'Click a star to rate';
+}
+
+function hoverStars(n) {
+  document.querySelectorAll('#user-stars .star').forEach((s, i) => {
+    s.className = 'star ' + (i < n ? 'star-full' : 'star-empty');
+  });
+}
+
+async function loadUserRating() {
+  const { data } = await sb.from('ratings').select('rating').eq('kit_id', kit.id).eq('user_id', currentUser.id).single();
+  if (data) { userRating = data.rating; renderInteractiveStars(userRating); }
+}
+
+async function rateKit(rating) {
+  if (!currentUser) { window.location.href = '/login.html'; return; }
+  const { error } = await sb.from('ratings').upsert({ kit_id: kit.id, user_id: currentUser.id, rating }, { onConflict: 'kit_id,user_id' });
+  if (error) { toast('Failed to save rating', 'err'); return; }
+  userRating = rating;
+  renderInteractiveStars(rating);
+  // refresh avg
+  const { data: fresh } = await sb.from('kits_with_stats').select('avg_rating,rating_count').eq('id', kit.id).single();
+  if (fresh) {
+    const avg = parseFloat(fresh.avg_rating) || 0;
+    document.getElementById('kit-avg').textContent = avg > 0 ? avg.toFixed(1) : '—';
+    document.getElementById('kit-stars-display').innerHTML = renderStars(avg, fresh.rating_count);
+    document.getElementById('kit-rating-count').textContent = `${fresh.rating_count} rating${fresh.rating_count!==1?'s':''}`;
+  }
+  toast('Rating saved!');
+}
+
+async function checkSaved() {
+  const { data } = await sb.from('collections').select('id').eq('kit_id', kit.id).eq('user_id', currentUser.id).single();
+  isSaved = !!data;
+  updateSaveBtn();
+}
+function updateSaveBtn() {
+  const btn = document.getElementById('save-btn');
+  btn.classList.toggle('saved', isSaved);
+  document.getElementById('save-icon').textContent = isSaved ? '💚' : '🤍';
+  document.getElementById('save-label').textContent = isSaved ? 'Saved to Collection' : 'Save to Collection';
+}
+async function toggleSave() {
+  if (!currentUser) { window.location.href = '/login.html'; return; }
+  if (isSaved) {
+    await sb.from('collections').delete().eq('kit_id', kit.id).eq('user_id', currentUser.id);
+    isSaved = false; toast('Removed from collection');
+  } else {
+    await sb.from('collections').insert({ kit_id: kit.id, user_id: currentUser.id });
+    isSaved = true; toast('Saved to collection!');
+  }
+  updateSaveBtn();
+}
+
+async function loadRelated() {
+  document.getElementById('related-team-name').textContent = kit.team.toUpperCase();
+  const { data } = await sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).neq('slug', slug).limit(4);
+  if (!data || !data.length) { document.querySelector('.related-section').style.display='none'; return; }
+  document.getElementById('related-grid').innerHTML = data.map(k => {
+    const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':'b-third';
+    const idx = k.id.charCodeAt(0) % 6;
+    return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+      <div class="kit-card-img grad-${idx}">
+        ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
+        <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
+      </div>
+      <div class="kit-card-body">
+        <div class="kit-card-team">${k.team}</div>
+        <div class="kit-card-season">${k.season}</div>
+        <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating),k.rating_count)}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

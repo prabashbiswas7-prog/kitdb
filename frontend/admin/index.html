@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KitDB Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --g:#00C853;--gd:#009c41;--gf:rgba(0,200,83,.08);--gb:rgba(0,200,83,.2);
+  --bk:#080808;--s1:#101010;--s2:#171717;--s3:#1e1e1e;--s4:#262626;
+  --bd:#222;--bdg:rgba(0,200,83,.2);--w:#f0f0f0;--w2:#bbb;--w3:#777;--w4:#444;
+  --red:#ff4444;--gold:#ffcc00;
+  --fd:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+  --sb:220px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bk);color:var(--w);font-family:var(--fb);display:flex;min-height:100vh}
+button{cursor:pointer;font-family:var(--fb)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--s1)}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{position:fixed;inset:0;background:var(--bk);display:flex;align-items:center;justify-content:center;z-index:999;padding:1.5rem}
+.login-box{background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:380px;padding:2rem}
+.login-logo{font-family:var(--fd);font-size:1.6rem;letter-spacing:3px;text-align:center;margin-bottom:.2rem}
+.login-logo span{color:var(--g)}
+.login-sub{text-align:center;font-size:.72rem;color:var(--w4);margin-bottom:1.75rem;text-transform:uppercase;letter-spacing:1.5px}
+.lfield{margin-bottom:1rem}
+.lfield label{display:block;font-size:.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.38rem}
+.lfield input{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.65rem .9rem;color:var(--w);font-family:var(--fb);font-size:.9rem;outline:none;transition:border-color .15s}
+.lfield input:focus{border-color:var(--bdg)}
+.lerr{background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);border-radius:6px;padding:.6rem .8rem;font-size:.8rem;color:var(--red);margin-bottom:.75rem;display:none}
+.lbtn{width:100%;background:var(--g);color:var(--bk);border:none;border-radius:8px;padding:.7rem;font-weight:700;font-size:.95rem;transition:all .15s}
+.lbtn:hover{background:var(--gd)}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sb);background:var(--s1);border-right:1px solid var(--bd);min-height:100vh;display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:1.4rem 1.2rem 1rem;font-family:var(--fd);font-size:1.6rem;letter-spacing:3px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:.5rem}
+.sb-logo span{color:var(--g)}
+.sb-badge{font-family:var(--fb);font-size:.55rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--gf);color:var(--g);border:1px solid var(--bdg);padding:.18rem .5rem;border-radius:100px;margin-left:.25rem;vertical-align:middle}
+.sb-section{padding:.75rem .75rem .2rem;font-size:.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--w4)}
+.sb-item{display:flex;align-items:center;gap:.65rem;padding:.55rem .9rem;margin:.07rem .45rem;border-radius:7px;font-size:.82rem;font-weight:500;color:var(--w3);background:none;border:none;width:calc(100% - .9rem);text-align:left;transition:all .15s}
+.sb-item:hover{background:var(--s3);color:var(--w)}
+.sb-item.active{background:var(--gf);color:var(--g);border:1px solid var(--bdg)}
+.sb-ic{width:15px;text-align:center;font-size:.85rem}
+.sb-count{margin-left:auto;background:var(--s3);color:var(--w4);font-size:.6rem;font-family:var(--fm);padding:.12rem .38rem;border-radius:100px}
+.sb-item.active .sb-count{background:var(--gf);color:var(--g)}
+.sb-footer{margin-top:auto;padding:.9rem 1.2rem;border-top:1px solid var(--bd)}
+.sb-user{font-size:.78rem;color:var(--w3);margin-bottom:.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-signout{background:none;border:1px solid var(--bd);color:var(--w4);border-radius:6px;padding:.35rem .75rem;font-size:.72rem;width:100%;transition:all .15s}
+.sb-signout:hover{border-color:rgba(255,68,68,.4);color:var(--red)}
+
+/* ── MAIN ── */
+.admin-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:54px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem;flex-shrink:0}
+.tb-title{font-family:var(--fd);font-size:1rem;letter-spacing:2px;color:var(--w2)}
+.content{flex:1;overflow-y:auto;padding:1.75rem}
+.page{display:none}
+.page.active{display:block}
+
+/* ── BUTTONS ── */
+.btn{border:none;border-radius:7px;font-family:var(--fb);font-weight:600;padding:.48rem 1.05rem;font-size:.8rem;transition:all .15s;display:inline-flex;align-items:center;gap:.4rem}
+.btn-p{background:var(--g);color:var(--bk)}.btn-p:hover{background:var(--gd)}
+.btn-g{background:none;border:1px solid var(--bd);color:var(--w3)}.btn-g:hover{border-color:var(--bdg);color:var(--w)}
+.btn-r{background:none;border:1px solid rgba(255,68,68,.3);color:var(--red)}.btn-r:hover{background:rgba(255,68,68,.07)}
+.btn-sm{padding:.3rem .65rem;font-size:.72rem}
+.btn-ed{background:none;border:1px solid var(--bd);color:var(--w3);border-radius:5px;padding:.25rem .55rem;font-size:.7rem}.btn-ed:hover{border-color:var(--bdg);color:var(--g)}
+.btn-del{background:none;border:1px solid rgba(255,68,68,.25);color:var(--red);border-radius:5px;padding:.25rem .55rem;font-size:.7rem}.btn-del:hover{background:rgba(255,68,68,.07)}
+
+/* ── DASHBOARD ── */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+@media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr)}}
+.dash-card{background:var(--s1);border:1px solid var(--bd);border-radius:11px;padding:1.25rem}
+.dash-num{font-family:var(--fd);font-size:2.2rem;color:var(--g);letter-spacing:2px;display:block;line-height:1}
+.dash-lbl{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);margin-top:.25rem;display:block}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+
+/* ── TABLE ── */
+.table-wrap{border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+thead th{background:var(--s2);padding:.65rem .9rem;text-align:left;font-size:.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);border-bottom:1px solid var(--bd)}
+tbody tr{border-bottom:1px solid var(--bd);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--s2)}
+td{padding:.72rem .9rem;vertical-align:middle}
+.td-img{width:44px;height:44px;background:var(--s3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;overflow:hidden;flex-shrink:0}
+.td-img img{width:100%;height:100%;object-fit:contain}
+.td-t{font-weight:600;font-size:.85rem}
+.td-m{font-family:var(--fm);font-size:.72rem;color:var(--g)}
+.td-d{color:var(--w3);font-size:.78rem}
+.td-a{display:flex;gap:.35rem}
+.badge-pub{font-size:.6rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:.18rem .5rem;border-radius:4px}
+.pub-y{background:var(--gf);color:var(--g);border:1px solid var(--bdg)}
+.pub-n{background:rgba(255,68,68,.07);color:var(--red);border:1px solid rgba(255,68,68,.2)}
+.bh{background:var(--g);color:var(--bk);font-size:.6rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:.18rem .5rem;border-radius:4px}
+.ba{background:var(--s4);color:var(--w3);border:1px solid var(--bd);font-size:.6rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:.18rem .5rem;border-radius:4px}
+.bt{background:#111130;color:#7799ff;border:1px solid #2233aa;font-size:.6rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:.18rem .5rem;border-radius:4px}
+
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:.9rem}
+.ff{grid-column:1/-1}
+.field label{display:block;font-size:.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.38rem}
+.field input,.field select,.field textarea{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.62rem .88rem;color:var(--w);font-family:var(--fb);font-size:.875rem;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--bdg)}
+.field select option{background:var(--s2)}
+.field textarea{resize:vertical;min-height:90px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem .9rem;background:var(--s2);border:1px solid var(--bd);border-radius:7px}
+.toggle-label{font-size:.82rem;font-weight:500}
+.toggle{position:relative;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--s4);border-radius:11px;transition:.2s}
+.toggle-slider:before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:var(--w3);border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--g)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(18px);background:var(--bk)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.section-title{font-family:var(--fd);font-size:1.25rem;letter-spacing:2px}
+.section-title span{color:var(--g)}
+.panel{background:var(--s1);border:1px solid var(--bd);border-radius:11px;padding:1.25rem}
+.panel-title{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);margin-bottom:1rem}
+
+/* ── MODAL ── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;padding:1.25rem}
+.ov.open{display:flex}
+.mbox{background:var(--s1);border:1px solid var(--bd);border-radius:14px;max-width:680px;width:100%;padding:1.75rem;position:relative;max-height:90vh;overflow-y:auto}
+.mtitle{font-family:var(--fd);font-size:1.3rem;letter-spacing:2px;margin-bottom:1.4rem}
+.mtitle span{color:var(--g)}
+.mclose{position:absolute;top:.9rem;right:.9rem;background:var(--s3);border:none;color:var(--w3);width:27px;height:27px;border-radius:6px;font-size:.8rem}
+.mclose:hover{color:var(--w)}
+.mactions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.4rem;border-top:1px solid var(--bd);padding-top:1.1rem}
+
+/* ── AD SLOTS ── */
+.ad-slot-card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:1.1rem;margin-bottom:1rem}
+.ad-slot-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.ad-slot-name{font-weight:600;font-size:.88rem}
+.ad-code-area{width:100%;background:var(--bk);border:1px solid var(--bd);border-radius:6px;padding:.75rem .9rem;color:#4ecca3;font-family:var(--fm);font-size:.75rem;min-height:80px;resize:vertical;outline:none;transition:border-color .15s;line-height:1.6}
+.ad-code-area:focus{border-color:var(--bdg)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--s3);border:1px solid var(--bdg);border-radius:8px;padding:.8rem 1.2rem;font-size:.83rem;font-weight:500;z-index:9999;transform:translateY(60px);opacity:0;transition:all .28s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{color:var(--g)}
+.toast.err{border-color:rgba(255,68,68,.4);color:var(--red)}
+
+/* ── SPINNER ── */
+.spinner{width:24px;height:24px;border:2px solid var(--s4);border-top-color:var(--g);border-radius:50%;animation:spin .6s linear infinite;margin:2rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.img-preview{width:80px;height:80px;background:var(--s3);border-radius:8px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden;margin-top:.5rem}
+.img-preview img{width:100%;height:100%;object-fit:contain}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Kit<span>DB</span></div>
+    <div class="login-sub">Admin Panel</div>
+    <div class="lerr" id="lerr"></div>
+    <div class="lfield"><label>Email</label><input id="l-email" type="email" placeholder="admin@kitdb.com" autocomplete="email"/></div>
+    <div class="lfield"><label>Password</label><input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAdminLogin()"/></div>
+    <button class="lbtn" onclick="doAdminLogin()" id="lbtn">Sign In to Admin</button>
+  </div>
+</div>
+
+<!-- ── ADMIN APP ── -->
+<div id="admin-app" style="display:none;width:100%;display:none">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sb-logo">Kit<span>DB</span> <span class="sb-badge">Admin</span></div>
+    <div class="sb-section">Overview</div>
+    <button class="sb-item active" onclick="sp('dashboard',this)"><span class="sb-ic">📊</span>Dashboard</button>
+    <div class="sb-section">Content</div>
+    <button class="sb-item" onclick="sp('kits',this)"><span class="sb-ic">👕</span>Kits <span class="sb-count" id="sb-kits">0</span></button>
+    <button class="sb-item" onclick="sp('homepage',this)"><span class="sb-ic">🏠</span>Homepage</button>
+    <div class="sb-section">Monetisation</div>
+    <button class="sb-item" onclick="sp('ads',this)"><span class="sb-ic">📢</span>Ad Slots</button>
+    <div class="sb-section">Users</div>
+    <button class="sb-item" onclick="sp('users',this)"><span class="sb-ic">👥</span>Users <span class="sb-count" id="sb-users">0</span></button>
+    <button class="sb-item" onclick="sp('admins',this)"><span class="sb-ic">🔑</span>Admins</button>
+    <div class="sb-footer">
+      <div class="sb-user" id="sb-user-label">—</div>
+      <button class="sb-signout" onclick="adminSignOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="admin-main">
+    <div class="topbar">
+      <span class="tb-title" id="page-title">DASHBOARD</span>
+      <div style="display:flex;gap:.6rem">
+        <a href="/" target="_blank" class="btn btn-g btn-sm">↗ View Site</a>
+        <button class="btn btn-p btn-sm" onclick="openKitForm(null)">+ Add Kit</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="dash-grid">
+          <div class="dash-card"><span class="dash-num" id="d-kits">—</span><span class="dash-lbl">Total Kits</span></div>
+          <div class="dash-card"><span class="dash-num" id="d-users">—</span><span class="dash-lbl">Users</span></div>
+          <div class="dash-card"><span class="dash-num" id="d-ratings">—</span><span class="dash-lbl">Ratings</span></div>
+          <div class="dash-card"><span class="dash-num" id="d-saves">—</span><span class="dash-lbl">Collections</span></div>
+        </div>
+        <div class="dash-row">
+          <div class="panel">
+            <div class="panel-title">📈 Recently Added Kits</div>
+            <div id="d-recent-kits"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">👥 Recent Signups</div>
+            <div id="d-recent-users"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KITS -->
+      <div class="page" id="page-kits">
+        <div class="section-head">
+          <span class="section-title">KIT <span>MANAGER</span></span>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <input id="kit-search" type="text" placeholder="Search kits…" oninput="filterKitsTable()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.38rem .8rem;color:var(--w);font-size:.8rem;outline:none;width:180px;transition:border-color .15s" onfocus="this.style.borderColor='var(--bdg)'" onblur="this.style.borderColor='var(--bd)'"/>
+            <button class="btn btn-p btn-sm" onclick="openKitForm(null)">+ Add Kit</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Kit</th><th>Team</th><th>Season</th><th>League</th><th>Type</th><th>Status</th><th>Featured</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="kits-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- HOMEPAGE -->
+      <div class="page" id="page-homepage">
+        <div class="section-head"><span class="section-title">HOMEPAGE <span>EDITOR</span></span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+          <div class="panel">
+            <div class="panel-title">Hero Section</div>
+            <div style="display:flex;flex-direction:column;gap:.9rem">
+              <div class="field"><label>Hero Title (use \n for line break)</label><input id="hp-title" type="text"/></div>
+              <div class="field"><label>Hero Subtitle</label><input id="hp-sub" type="text"/></div>
+              <div class="field"><label>CTA Button Text</label><input id="hp-cta" type="text"/></div>
+              <div class="field"><label>Featured Section Title</label><input id="hp-feat" type="text"/></div>
+              <button class="btn btn-p btn-sm" onclick="saveHomepage()">Save Hero Settings</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Announcement Banner</div>
+            <div style="display:flex;flex-direction:column;gap:.9rem">
+              <div class="toggle-row">
+                <span class="toggle-label">Show Announcement</span>
+                <label class="toggle"><input type="checkbox" id="hp-ann-on"/><span class="toggle-slider"></span></label>
+              </div>
+              <div class="field"><label>Announcement Text</label><textarea id="hp-ann" style="min-height:70px" placeholder="e.g. 🎉 2024/25 kits now live!"></textarea></div>
+              <button class="btn btn-p btn-sm" onclick="saveAnnouncement()">Save Announcement</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:1.25rem">
+          <div class="panel-title">Featured Kits</div>
+          <p style="font-size:.8rem;color:var(--w3);margin-bottom:.9rem">Mark kits as Featured in the Kit Manager. Featured kits appear on the homepage hero section.</p>
+          <div id="featured-list"></div>
+          <button class="btn btn-g btn-sm" style="margin-top:.75rem" onclick="sp('kits',document.querySelectorAll('.sb-item')[2])">Manage Kits →</button>
+        </div>
+      </div>
+
+      <!-- ADS -->
+      <div class="page" id="page-ads">
+        <div class="section-head"><span class="section-title">AD <span>MANAGER</span></span></div>
+        <p style="font-size:.83rem;color:var(--w3);margin-bottom:1.5rem">Paste Google AdSense code or any HTML ad code into each slot. Toggle slots on/off without deleting the code.</p>
+        <div id="ad-slots-list"></div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page" id="page-users">
+        <div class="section-head">
+          <span class="section-title">USER <span>MANAGER</span></span>
+          <input id="user-search" type="text" placeholder="Search users…" oninput="filterUsersTable()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.38rem .8rem;color:var(--w);font-size:.8rem;outline:none;width:180px;transition:border-color .15s" onfocus="this.style.borderColor='var(--bdg)'" onblur="this.style.borderColor='var(--bd)'"/>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Username</th><th>Email</th><th>Country</th><th>Fav Club</th><th>Role</th><th>Joined</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ADMINS -->
+      <div class="page" id="page-admins">
+        <div class="section-head"><span class="section-title">ADMIN <span>ACCOUNTS</span></span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+          <div class="panel">
+            <div class="panel-title">Create New Admin</div>
+            <p style="font-size:.78rem;color:var(--w3);margin-bottom:1rem">Admin accounts can only be created here. They are never automatically granted on signup.</p>
+            <div style="display:flex;flex-direction:column;gap:.85rem">
+              <div class="field"><label>Email *</label><input id="na-email" type="email" placeholder="admin@example.com"/></div>
+              <div class="field"><label>Password *</label><input id="na-pass" type="password" placeholder="Strong password"/></div>
+              <div class="field"><label>Username *</label><input id="na-user" type="text" placeholder="admin_username"/></div>
+              <button class="btn btn-p btn-sm" onclick="createAdmin()">Create Admin Account</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Current Admins</div>
+            <div id="admin-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /admin-main -->
+</div><!-- /admin-app -->
+
+<!-- KIT FORM MODAL -->
+<div class="ov" id="kit-ov" onclick="closeKitOvEvt(event)">
+  <div class="mbox">
+    <button class="mclose" onclick="closeKitForm()">✕</button>
+    <div class="mtitle" id="kit-form-title">ADD <span>KIT</span></div>
+    <div class="form-grid">
+      <div class="field"><label>Team / Club *</label><input id="kf-team" placeholder="e.g. Arsenal FC"/></div>
+      <div class="field"><label>Season *</label><input id="kf-season" placeholder="e.g. 2024/25"/></div>
+      <div class="field"><label>League</label><input id="kf-league" placeholder="e.g. Premier League"/></div>
+      <div class="field"><label>Kit Type *</label>
+        <select id="kf-type"><option>Home</option><option>Away</option><option>Third</option><option>GK Home</option><option>GK Away</option><option>Special Edition</option></select>
+      </div>
+      <div class="field"><label>Manufacturer</label><input id="kf-maker" placeholder="e.g. Adidas"/></div>
+      <div class="field"><label>Primary Color</label><input id="kf-color" placeholder="e.g. Red & White"/></div>
+      <div class="field"><label>Price Label (display only)</label><input id="kf-price" placeholder="e.g. From £89.95"/></div>
+      <div class="field"><label>Affiliate Buy URL</label><input id="kf-buy" placeholder="https://…"/></div>
+      <div class="field"><label>Buy Button Label</label><input id="kf-buylabel" placeholder="Buy Now"/></div>
+      <div class="field"><label>Slug (URL key, no spaces) *</label><input id="kf-slug" placeholder="arsenal-home-2425"/></div>
+      <div class="field ff"><label>Image URL (main)</label>
+        <input id="kf-img" placeholder="https://…" oninput="previewImg()"/>
+        <div class="img-preview" id="img-preview-box">📷</div>
+      </div>
+      <div class="field"><label>Image URL 2</label><input id="kf-img2" placeholder="https://…"/></div>
+      <div class="field"><label>Image URL 3</label><input id="kf-img3" placeholder="https://…"/></div>
+      <div class="field ff"><label>Description</label><textarea id="kf-desc" placeholder="Describe the kit…"></textarea></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.9rem">
+      <div class="toggle-row"><span class="toggle-label">Published</span><label class="toggle"><input type="checkbox" id="kf-pub" checked/><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><span class="toggle-label">Featured on Homepage</span><label class="toggle"><input type="checkbox" id="kf-feat"/><span class="toggle-slider"></span></label></div>
+    </div>
+    <input type="hidden" id="kf-id"/>
+    <div class="mactions">
+      <button class="btn btn-g" onclick="closeKitForm()">Cancel</button>
+      <button class="btn btn-p" onclick="saveKit()">Save Kit</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ── paste your keys
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let adminProfile = null, allKitsList = [], allUsersList = [];
+
+// ══ LOGIN ══════════════════════════════════════════════════
+async function doAdminLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('lerr');
+  const btn   = document.getElementById('lbtn');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent='Enter email and password.'; errEl.style.display='block'; return; }
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.textContent = 'Sign In to Admin'; btn.disabled = false;
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
+  if (!profile || profile.role !== 'admin') {
+    await sb.auth.signOut();
+    errEl.textContent = 'Access denied. Admin accounts only.';
+    errEl.style.display = 'block'; return;
+  }
+  adminProfile = profile;
+  showAdmin();
+}
+
+async function checkExistingSession() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if (profile && profile.role === 'admin') { adminProfile = profile; showAdmin(); }
+}
+
+function showAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-app').style.display = 'flex';
+  document.getElementById('sb-user-label').textContent = adminProfile.username || adminProfile.email || 'Admin';
+  loadDashboard();
+}
+
+async function adminSignOut() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// ══ PAGES ══════════════════════════════════════════════════
+function sp(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const titles={dashboard:'DASHBOARD',kits:'KIT MANAGER',homepage:'HOMEPAGE EDITOR',ads:'AD MANAGER',users:'USER MANAGER',admins:'ADMIN ACCOUNTS'};
+  document.getElementById('page-title').textContent = titles[id]||id.toUpperCase();
+  if (id==='kits')     loadKits();
+  if (id==='homepage') loadHomepageEditor();
+  if (id==='ads')      loadAdSlots();
+  if (id==='users')    loadUsers();
+  if (id==='admins')   loadAdmins();
+}
+
+// ══ DASHBOARD ══════════════════════════════════════════════
+async function loadDashboard() {
+  const [{ count: kc }, { count: uc }, { count: rc }, { count: sc }] = await Promise.all([
+    sb.from('kits').select('*', {count:'exact',head:true}),
+    sb.from('profiles').select('*', {count:'exact',head:true}).eq('role','subscriber'),
+    sb.from('ratings').select('*', {count:'exact',head:true}),
+    sb.from('collections').select('*', {count:'exact',head:true}),
+  ]);
+  document.getElementById('d-kits').textContent   = kc||0;
+  document.getElementById('d-users').textContent  = uc||0;
+  document.getElementById('d-ratings').textContent= rc||0;
+  document.getElementById('d-saves').textContent  = sc||0;
+  document.getElementById('sb-kits').textContent  = kc||0;
+  document.getElementById('sb-users').textContent = uc||0;
+
+  const { data: recentKits } = await sb.from('kits').select('team,season,type,created_at').order('created_at',{ascending:false}).limit(6);
+  document.getElementById('d-recent-kits').innerHTML = (recentKits||[]).map(k =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd)">
+      <span style="font-size:.83rem;font-weight:500">${k.team} <span style="color:var(--w4);font-weight:400">${k.season}</span></span>
+      <span style="font-size:.68rem;color:var(--w4)">${new Date(k.created_at).toLocaleDateString('en-GB')}</span>
+    </div>`
+  ).join('');
+
+  const { data: recentUsers } = await sb.from('profiles').select('username,country,created_at').eq('role','subscriber').order('created_at',{ascending:false}).limit(6);
+  document.getElementById('d-recent-users').innerHTML = (recentUsers||[]).map(u =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd)">
+      <span style="font-size:.83rem;font-weight:500">${u.username||'—'} <span style="color:var(--w4);font-weight:400">${u.country||''}</span></span>
+      <span style="font-size:.68rem;color:var(--w4)">${new Date(u.created_at).toLocaleDateString('en-GB')}</span>
+    </div>`
+  ).join('');
+}
+
+// ══ KITS ══════════════════════════════════════════════════
+async function loadKits() {
+  document.getElementById('kits-tbody').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  const { data } = await sb.from('kits').select('*').order('created_at',{ascending:false});
+  allKitsList = data || [];
+  renderKitsTable(allKitsList);
+}
+function filterKitsTable() {
+  const q = document.getElementById('kit-search').value.toLowerCase();
+  renderKitsTable(q ? allKitsList.filter(k=>[k.team,k.season,k.league,k.type,k.maker].join(' ').toLowerCase().includes(q)) : allKitsList);
+}
+function renderKitsTable(kits) {
+  const bc = t => t==='Home'?'bh':t==='Away'?'ba':'bt';
+  document.getElementById('kits-tbody').innerHTML = kits.map(k => `<tr>
+    <td><div class="td-img">${k.image_url?`<img src="${k.image_url}" alt="${k.team}"/>`:'👕'}</div></td>
+    <td class="td-t">${k.team}</td>
+    <td class="td-m">${k.season}</td>
+    <td class="td-d">${k.league||'—'}</td>
+    <td><span class="${bc(k.type)}">${k.type}</span></td>
+    <td><span class="badge-pub ${k.is_published?'pub-y':'pub-n'}">${k.is_published?'Live':'Draft'}</span></td>
+    <td style="text-align:center">${k.is_featured?'⭐':'—'}</td>
+    <td><div class="td-a">
+      <button class="btn-ed" onclick='openKitForm(${JSON.stringify(k)})'>Edit</button>
+      <button class="btn-del" onclick="deleteKit('${k.id}','${k.team}')">Del</button>
+    </div></td>
+  </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--w4)">No kits found.</td></tr>';
+}
+
+let editingKitId = null;
+function openKitForm(kit) {
+  editingKitId = kit?.id || null;
+  document.getElementById('kit-form-title').innerHTML = kit ? 'EDIT <span>KIT</span>' : 'ADD <span>KIT</span>';
+  const f = kit || {};
+  document.getElementById('kf-team').value    = f.team||'';
+  document.getElementById('kf-season').value  = f.season||'';
+  document.getElementById('kf-league').value  = f.league||'';
+  document.getElementById('kf-type').value    = f.type||'Home';
+  document.getElementById('kf-maker').value   = f.maker||'';
+  document.getElementById('kf-color').value   = f.color||'';
+  document.getElementById('kf-price').value   = f.price_label||'';
+  document.getElementById('kf-buy').value     = f.buy_url||'';
+  document.getElementById('kf-buylabel').value= f.buy_label||'Buy Now';
+  document.getElementById('kf-slug').value    = f.slug||'';
+  document.getElementById('kf-img').value     = f.image_url||'';
+  document.getElementById('kf-img2').value    = f.image_url_2||'';
+  document.getElementById('kf-img3').value    = f.image_url_3||'';
+  document.getElementById('kf-desc').value    = f.description||'';
+  document.getElementById('kf-pub').checked   = f.is_published !== false;
+  document.getElementById('kf-feat').checked  = !!f.is_featured;
+  document.getElementById('kf-id').value      = f.id||'';
+  previewImg();
+  document.getElementById('kit-ov').classList.add('open');
+}
+function closeKitForm() { document.getElementById('kit-ov').classList.remove('open'); }
+function closeKitOvEvt(e) { if(e.target===document.getElementById('kit-ov')) closeKitForm(); }
+
+function previewImg() {
+  const url = document.getElementById('kf-img').value.trim();
+  const box = document.getElementById('img-preview-box');
+  box.innerHTML = url ? `<img src="${url}" onerror="this.parentElement.innerHTML='📷'"/>` : '📷';
+}
+
+function autoSlug() {
+  const team = document.getElementById('kf-team').value.trim();
+  const season = document.getElementById('kf-season').value.trim();
+  const type = document.getElementById('kf-type').value.toLowerCase().replace(' ','-');
+  if (team && season && !editingKitId) {
+    const slug = (team+'-'+type+'-'+season).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    document.getElementById('kf-slug').value = slug;
+  }
+}
+document.getElementById('kf-team').addEventListener('input', autoSlug);
+document.getElementById('kf-season').addEventListener('input', autoSlug);
+document.getElementById('kf-type').addEventListener('change', autoSlug);
+
+async function saveKit() {
+  const team  = document.getElementById('kf-team').value.trim();
+  const season= document.getElementById('kf-season').value.trim();
+  const slug  = document.getElementById('kf-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
+  if (!team || !season || !slug) { toast('Team, Season and Slug are required','err'); return; }
+  const payload = {
+    team, season, slug,
+    league:       document.getElementById('kf-league').value.trim()||null,
+    type:         document.getElementById('kf-type').value,
+    maker:        document.getElementById('kf-maker').value.trim()||null,
+    color:        document.getElementById('kf-color').value.trim()||null,
+    price_label:  document.getElementById('kf-price').value.trim()||null,
+    buy_url:      document.getElementById('kf-buy').value.trim()||null,
+    buy_label:    document.getElementById('kf-buylabel').value.trim()||'Buy Now',
+    image_url:    document.getElementById('kf-img').value.trim()||null,
+    image_url_2:  document.getElementById('kf-img2').value.trim()||null,
+    image_url_3:  document.getElementById('kf-img3').value.trim()||null,
+    description:  document.getElementById('kf-desc').value.trim()||null,
+    is_published: document.getElementById('kf-pub').checked,
+    is_featured:  document.getElementById('kf-feat').checked,
+    updated_at:   new Date().toISOString(),
+  };
+  let error;
+  if (editingKitId) {
+    ({ error } = await sb.from('kits').update(payload).eq('id', editingKitId));
+  } else {
+    ({ error } = await sb.from('kits').insert(payload));
+  }
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  toast(editingKitId?'Kit updated!':'Kit added!');
+  closeKitForm(); loadKits(); loadDashboard();
+}
+
+async function deleteKit(id, name) {
+  if (!confirm(`Delete "${name}"? This will also remove all ratings and collection saves.`)) return;
+  const { error } = await sb.from('kits').delete().eq('id', id);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  toast('Kit deleted'); loadKits(); loadDashboard();
+}
+
+// ══ HOMEPAGE ══════════════════════════════════════════════
+async function loadHomepageEditor() {
+  const { data } = await sb.from('homepage_config').select('*');
+  if (!data) return;
+  const cfg = Object.fromEntries(data.map(r=>[r.key,r.value]));
+  document.getElementById('hp-title').value  = cfg.hero_title||'';
+  document.getElementById('hp-sub').value    = cfg.hero_subtitle||'';
+  document.getElementById('hp-cta').value    = cfg.hero_cta_text||'';
+  document.getElementById('hp-feat').value   = cfg.featured_title||'';
+  document.getElementById('hp-ann').value    = cfg.announcement||'';
+  document.getElementById('hp-ann-on').checked = cfg.announcement_on === 'true';
+
+  const { data: featured } = await sb.from('kits').select('team,season,type,slug').eq('is_featured',true).limit(10);
+  document.getElementById('featured-list').innerHTML = (featured||[]).length
+    ? (featured||[]).map(k=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd)"><span style="font-size:.83rem">${k.team} — ${k.season} ${k.type}</span><button class="btn-del btn-sm" onclick="unfeature('${k.slug}')">Remove</button></div>`).join('')
+    : '<div style="font-size:.8rem;color:var(--w4)">No featured kits. Mark kits as Featured in Kit Manager.</div>';
+}
+async function saveHomepage() {
+  const updates = [
+    {key:'hero_title',    value:document.getElementById('hp-title').value},
+    {key:'hero_subtitle', value:document.getElementById('hp-sub').value},
+    {key:'hero_cta_text', value:document.getElementById('hp-cta').value},
+    {key:'featured_title',value:document.getElementById('hp-feat').value},
+  ];
+  for (const u of updates) {
+    await sb.from('homepage_config').upsert(u, {onConflict:'key'});
+  }
+  toast('Homepage settings saved!');
+}
+async function saveAnnouncement() {
+  const on = document.getElementById('hp-ann-on').checked;
+  const text = document.getElementById('hp-ann').value;
+  await sb.from('homepage_config').upsert({key:'announcement', value:text},{onConflict:'key'});
+  await sb.from('homepage_config').upsert({key:'announcement_on', value:String(on)},{onConflict:'key'});
+  toast('Announcement saved!');
+}
+async function unfeature(slug) {
+  await sb.from('kits').update({is_featured:false}).eq('slug',slug);
+  loadHomepageEditor(); toast('Removed from featured');
+}
+
+// ══ AD SLOTS ══════════════════════════════════════════════
+async function loadAdSlots() {
+  const { data } = await sb.from('ad_slots').select('*').order('slot_key');
+  const el = document.getElementById('ad-slots-list');
+  if (!data) return;
+  el.innerHTML = data.map(slot => `
+    <div class="ad-slot-card" id="asc-${slot.id}">
+      <div class="ad-slot-head">
+        <div>
+          <div class="ad-slot-name">${slot.label}</div>
+          <div style="font-family:var(--fm);font-size:.68rem;color:var(--w4)">${slot.slot_key}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <label class="toggle"><input type="checkbox" ${slot.is_active?'checked':''} onchange="toggleAdSlot('${slot.id}',this.checked)"/><span class="toggle-slider"></span></label>
+          <button class="btn btn-p btn-sm" onclick="saveAdSlot('${slot.id}')">Save</button>
+        </div>
+      </div>
+      <textarea class="ad-code-area" id="acode-${slot.id}" placeholder="Paste ad code here…">${slot.ad_code||''}</textarea>
+    </div>`).join('');
+}
+async function saveAdSlot(id) {
+  const code = document.getElementById('acode-'+id).value;
+  const { error } = await sb.from('ad_slots').update({ad_code:code, updated_at:new Date().toISOString()}).eq('id',id);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  toast('Ad slot saved!');
+}
+async function toggleAdSlot(id, active) {
+  await sb.from('ad_slots').update({is_active:active}).eq('id',id);
+  toast(active?'Ad slot enabled':'Ad slot disabled');
+}
+
+// ══ USERS ══════════════════════════════════════════════════
+async function loadUsers() {
+  const { data } = await sb.from('profiles').select('*').eq('role','subscriber').order('created_at',{ascending:false});
+  allUsersList = data || [];
+  renderUsersTable(allUsersList);
+}
+function filterUsersTable() {
+  const q = document.getElementById('user-search').value.toLowerCase();
+  renderUsersTable(q ? allUsersList.filter(u=>[u.username,u.full_name,u.country,u.fav_club].join(' ').toLowerCase().includes(q)) : allUsersList);
+}
+function renderUsersTable(users) {
+  document.getElementById('users-tbody').innerHTML = users.map(u => `<tr>
+    <td class="td-t">${u.username||'—'}</td>
+    <td class="td-d" style="font-family:var(--fm);font-size:.72rem">${u.id.substring(0,8)}…</td>
+    <td class="td-d">${u.country||'—'}</td>
+    <td class="td-d">${u.fav_club||'—'}</td>
+    <td><span class="badge-pub pub-y">Subscriber</span></td>
+    <td class="td-d">${new Date(u.created_at).toLocaleDateString('en-GB')}</td>
+    <td><div class="td-a">
+      <button class="btn-del" onclick="banUser('${u.id}','${u.username}')">Remove</button>
+    </div></td>
+  </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--w4)">No users yet.</td></tr>';
+}
+async function banUser(id, name) {
+  if (!confirm(`Remove user "${name}"? This will delete their profile and data.`)) return;
+  const { error } = await sb.from('profiles').delete().eq('id',id);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  toast('User removed'); loadUsers(); loadDashboard();
+}
+
+// ══ ADMINS ══════════════════════════════════════════════════
+async function loadAdmins() {
+  const { data } = await sb.from('profiles').select('username,id,created_at').eq('role','admin');
+  document.getElementById('admin-list').innerHTML = (data||[]).map(a =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid var(--bd)">
+      <div><div style="font-weight:600;font-size:.875rem">⚙️ ${a.username||'Admin'}</div><div style="font-size:.7rem;color:var(--w4)">${new Date(a.created_at).toLocaleDateString('en-GB')}</div></div>
+      ${a.id !== adminProfile?.id ? `<button class="btn-del btn-sm" onclick="removeAdmin('${a.id}','${a.username}')">Demote</button>` : '<span style="font-size:.7rem;color:var(--g)">You</span>'}
+    </div>`
+  ).join('') || '<div style="font-size:.8rem;color:var(--w4)">No admins found.</div>';
+}
+async function createAdmin() {
+  const email = document.getElementById('na-email').value.trim();
+  const pass  = document.getElementById('na-pass').value;
+  const uname = document.getElementById('na-user').value.trim();
+  if (!email || !pass || !uname) { toast('All fields required','err'); return; }
+  // sign up via Supabase — profile trigger sets role to subscriber
+  // then we manually update to admin
+  const { data, error } = await sb.auth.signUp({ email, password: pass, options: { data: { username: uname } } });
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  if (data.user) {
+    // wait a moment for trigger, then update role
+    setTimeout(async () => {
+      await sb.from('profiles').update({ role: 'admin' }).eq('id', data.user.id);
+      toast('Admin account created!'); loadAdmins();
+    }, 1500);
+  }
+  document.getElementById('na-email').value = '';
+  document.getElementById('na-pass').value  = '';
+  document.getElementById('na-user').value  = '';
+}
+async function removeAdmin(id, name) {
+  if (!confirm(`Demote "${name}" from admin to subscriber?`)) return;
+  await sb.from('profiles').update({role:'subscriber'}).eq('id',id);
+  toast('Admin demoted'); loadAdmins();
+}
+
+// ══ TOAST ══════════════════════════════════════════════════
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = (type==='ok'?'✓ ':'✗ ') + msg;
+  t.className = 'toast show '+(type==='ok'?'ok':'err');
+  setTimeout(()=>t.className='toast',3000);
+}
+
+// ══ INIT ══════════════════════════════════════════════════
+checkExistingSession();
+</script>
+</body>
+</html>

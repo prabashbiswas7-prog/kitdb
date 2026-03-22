@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign In — KitDB</title>
+<link rel="stylesheet" href="/assets/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.auth-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+.auth-box { background:var(--s1); border:1px solid var(--bd); border-radius:16px; width:100%; max-width:420px; padding:2.25rem; }
+.auth-logo { font-family:var(--fd); font-size:1.75rem; letter-spacing:3px; text-align:center; margin-bottom:.25rem; }
+.auth-logo span { color:var(--g); }
+.auth-tagline { text-align:center; font-size:.8rem; color:var(--w4); margin-bottom:2rem; }
+.auth-tabs { display:flex; background:var(--s2); border:1px solid var(--bd); border-radius:8px; padding:.2rem; margin-bottom:1.75rem; }
+.auth-tab { flex:1; text-align:center; padding:.45rem; border-radius:6px; font-size:.83rem; font-weight:600; border:none; background:none; color:var(--w4); transition:all .15s; }
+.auth-tab.active { background:var(--s4); color:var(--w); }
+.auth-form { display:flex; flex-direction:column; gap:1rem; }
+.auth-form .field { display:flex; flex-direction:column; }
+.divider { display:flex; align-items:center; gap:.75rem; margin:.25rem 0; color:var(--w4); font-size:.75rem; }
+.divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--bd); }
+.auth-error { background:rgba(255,68,68,.08); border:1px solid rgba(255,68,68,.2); border-radius:7px; padding:.7rem .9rem; font-size:.82rem; color:var(--red); display:none; }
+.auth-success { background:var(--gf); border:1px solid var(--bdg); border-radius:7px; padding:.7rem .9rem; font-size:.82rem; color:var(--g); display:none; }
+.auth-switch { text-align:center; font-size:.8rem; color:var(--w4); margin-top:1.25rem; }
+.auth-switch a { color:var(--g); }
+</style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-box">
+    <a href="/" class="auth-logo" style="display:block;text-decoration:none">Kit<span>DB</span></a>
+    <div class="auth-tagline">Football Kit Encyclopedia</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Join Free</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="auth-error" id="login-error"></div>
+      <div class="auth-success" id="login-success"></div>
+      <div class="auth-form">
+        <div class="field"><label>Email</label><input id="l-email" type="email" placeholder="you@example.com" autocomplete="email"/></div>
+        <div class="field"><label>Password</label><input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <button class="btn btn-p" style="width:100%;justify-content:center;padding:.7rem" onclick="doLogin()" id="login-btn">Sign In</button>
+      </div>
+      <div class="auth-switch">Don't have an account? <a href="#" onclick="switchTab('signup')">Join free →</a></div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="form-signup" style="display:none">
+      <div class="auth-error" id="signup-error"></div>
+      <div class="auth-success" id="signup-success"></div>
+      <div class="auth-form">
+        <div class="field"><label>Username *</label><input id="s-user" type="text" placeholder="e.g. kitfan99" autocomplete="username"/></div>
+        <div class="field"><label>Full Name</label><input id="s-name" type="text" placeholder="Your name" autocomplete="name"/></div>
+        <div class="field"><label>Email *</label><input id="s-email" type="email" placeholder="you@example.com" autocomplete="email"/></div>
+        <div class="field"><label>Password *</label><input id="s-pass" type="password" placeholder="Min 6 characters" autocomplete="new-password"/></div>
+        <div style="font-size:.72rem;color:var(--w4);background:var(--s2);border-radius:7px;padding:.65rem .85rem;line-height:1.5">
+          By joining you agree to our <a href="#" style="color:var(--g)">Terms</a>. Your account lets you rate kits and build your collection.
+        </div>
+        <button class="btn btn-p" style="width:100%;justify-content:center;padding:.7rem" onclick="doSignup()" id="signup-btn">Create Free Account</button>
+      </div>
+      <div class="auth-switch">Already have an account? <a href="#" onclick="switchTab('login')">Sign in →</a></div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/config.js"></script>
+<script>
+// check if already logged in
+(async () => {
+  const user = await getUser();
+  if (user) window.location.href = '/profile.html';
+  // check if #signup in URL
+  if (location.hash === '#signup') switchTab('signup');
+})();
+
+function switchTab(tab) {
+  document.getElementById('form-login').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = tab==='signup' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
+}
+
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent='Please fill in all fields.'; errEl.style.display='block'; return; }
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.textContent = 'Sign In'; btn.disabled = false;
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+  const returnTo = new URLSearchParams(location.search).get('from') || '/';
+  window.location.href = returnTo;
+}
+
+async function doSignup() {
+  const username = document.getElementById('s-user').value.trim();
+  const name     = document.getElementById('s-name').value.trim();
+  const email    = document.getElementById('s-email').value.trim();
+  const pass     = document.getElementById('s-pass').value;
+  const errEl    = document.getElementById('signup-error');
+  const sucEl    = document.getElementById('signup-success');
+  const btn      = document.getElementById('signup-btn');
+  errEl.style.display = 'none'; sucEl.style.display = 'none';
+
+  if (!username || !email || !pass) { errEl.textContent='Username, email and password are required.'; errEl.style.display='block'; return; }
+  if (pass.length < 6) { errEl.textContent='Password must be at least 6 characters.'; errEl.style.display='block'; return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { errEl.textContent='Username can only contain letters, numbers and underscores.'; errEl.style.display='block'; return; }
+
+  btn.textContent = 'Creating account…'; btn.disabled = true;
+  const { error } = await sb.auth.signUp({
+    email, password: pass,
+    options: { data: { username, full_name: name } }
+  });
+  btn.textContent = 'Create Free Account'; btn.disabled = false;
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+  sucEl.textContent = '✓ Account created! Check your email to confirm, then sign in.';
+  sucEl.style.display = 'block';
+  setTimeout(() => switchTab('login'), 3000);
+}
+</script>
+</body>
+</html>
