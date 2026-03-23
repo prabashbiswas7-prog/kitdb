@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title id="page-title">KitDB</title>
+<meta name="description" id="page-desc" content=""/>
+<meta property="og:title" id="og-title" content=""/>
+<meta property="og:description" id="og-desc" content=""/>
+<meta property="og:image" id="og-img" content=""/>
+<link rel="stylesheet" href="/assets/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.page-content { max-width:780px; margin:0 auto; padding:2.5rem 0; }
+.page-title { font-family:var(--fd); font-size:clamp(2rem,5vw,3.5rem); letter-spacing:3px; margin-bottom:1.5rem; }
+.page-body { font-size:.95rem; line-height:1.8; color:var(--w2); }
+.page-body h1,.page-body h2,.page-body h3 { font-family:var(--fd); letter-spacing:2px; color:var(--w); margin:2rem 0 1rem; }
+.page-body h1{font-size:2rem}.page-body h2{font-size:1.5rem}.page-body h3{font-size:1.2rem}
+.page-body p { margin-bottom:1.25rem; }
+.page-body a { color:var(--g); text-decoration:underline; }
+.page-body ul,.page-body ol { padding-left:1.5rem; margin-bottom:1.25rem; }
+.page-body li { margin-bottom:.4rem; }
+.page-body table { width:100%; border-collapse:collapse; margin:1.5rem 0; }
+.page-body th,.page-body td { padding:.65rem .9rem; border:1px solid var(--bd); text-align:left; font-size:.85rem; }
+.page-body th { background:var(--s2); }
+.page-body img { max-width:100%; border-radius:10px; margin:1rem 0; }
+.page-body blockquote { border-left:3px solid var(--g); padding-left:1.25rem; color:var(--w3); font-style:italic; margin:1.5rem 0; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/browse.html" class="nav-link">Browse</a>
+    <a href="/blog.html" class="nav-link">Blog</a>
+    <a href="/search.html" class="nav-link">Search</a>
+  </div>
+  <div id="nav-auth"></div>
+</nav>
+
+<div class="container">
+  <div id="ad-top-banner" class="ad-slot ad-banner"></div>
+  <div id="loading" class="spinner"></div>
+  <div class="page-content" id="page-wrap" style="display:none">
+    <div class="page-title" id="pg-title"></div>
+    <div class="page-body" id="pg-body"></div>
+  </div>
+  <div id="not-found" style="display:none" class="empty">
+    <div class="empty-icon">📄</div>
+    <h3>PAGE NOT FOUND</h3>
+    <a href="/" class="btn btn-p btn-sm" style="margin-top:1rem">← Home</a>
+  </div>
+</div>
+
+<div style="height:3rem"></div>
+<footer>
+  <strong id="site-name">KitDB</strong> &nbsp;·&nbsp;
+  <a href="/">Home</a> &nbsp;·&nbsp;
+  <a href="/browse.html">Browse</a> &nbsp;·&nbsp;
+  <div id="footer-pages" style="display:inline"></div>
+  <div style="margin-top:.75rem;color:var(--w4)" id="footer-text"></div>
+</footer>
+
+<script src="/assets/js/config.js"></script>
+<script>
+const slug = new URLSearchParams(location.search).get('slug');
+
+(async () => {
+  if (!slug) { show404(); return; }
+  await initNav();
+  await loadSettings();
+  const { data: page } = await sb.from('pages').select('*').eq('slug', slug).eq('is_published', true).single();
+  if (!page) { show404(); return; }
+
+  const title = page.seo_title || page.title + ' — KitDB';
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('page-desc').content = page.seo_description || '';
+  document.getElementById('og-title').content = title;
+  document.getElementById('og-desc').content = page.seo_description || '';
+  document.getElementById('og-img').content = page.og_image || '';
+  document.getElementById('pg-title').textContent = page.title;
+  document.getElementById('pg-body').innerHTML = page.content || '';
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('page-wrap').style.display = 'block';
+  injectAd('top_banner','ad-top-banner');
+})();
+
+function show404() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('not-found').style.display = 'block';
+}
+
+async function loadSettings() {
+  const { data } = await sb.from('site_settings').select('*');
+  if (!data) return;
+  const s = Object.fromEntries(data.map(r=>[r.key,r.value]));
+  if (s.site_name) document.getElementById('site-name').textContent = s.site_name;
+  if (s.footer_text) document.getElementById('footer-text').textContent = s.footer_text;
+  if (s.google_analytics_id) {
+    const sc = document.createElement('script');
+    sc.src = `https://www.googletagmanager.com/gtag/js?id=${s.google_analytics_id}`;
+    sc.async = true; document.head.appendChild(sc);
+    window.dataLayer=window.dataLayer||[];
+    function gtag(){dataLayer.push(arguments);} gtag('js',new Date()); gtag('config',s.google_analytics_id);
+  }
+  // footer pages
+  const { data: pages } = await sb.from('pages').select('title,slug').eq('show_in_footer',true).order('sort_order');
+  if (pages?.length) {
+    document.getElementById('footer-pages').innerHTML = pages.map(p =>
+      `<a href="/page.html?slug=${p.slug}">${p.title}</a>`
+    ).join(' &nbsp;·&nbsp; ') + ' &nbsp;·&nbsp; ';
+  }
+}
+</script>
+</body>
+</html>

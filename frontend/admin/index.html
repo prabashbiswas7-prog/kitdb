@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>KitDB Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<!-- TipTap Rich Editor -->
+<script src="https://cdn.jsdelivr.net/npm/@tiptap/core@2.1.13/dist/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2.1.13/dist/index.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -37,7 +40,7 @@ input,select,textarea{font-family:var(--fb)}
 .lbtn{width:100%;background:var(--g);color:var(--bk);border:none;border-radius:8px;padding:.7rem;font-weight:700;font-size:.95rem;transition:background .15s}
 .lbtn:hover{background:var(--gd)}
 
-/* APP */
+/* APP LAYOUT */
 #app{display:none;flex-direction:column;height:100vh;overflow:hidden}
 .topbar{height:52px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;flex-shrink:0;z-index:50}
 .tb-logo{font-family:var(--fd);font-size:1.4rem;letter-spacing:3px}
@@ -47,13 +50,14 @@ input,select,textarea{font-family:var(--fb)}
 .tb-user{font-size:.75rem;color:var(--w4)}
 .app-body{display:flex;flex:1;overflow:hidden}
 
-/* LEFT ICON NAV */
-.leftnav{width:52px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;padding:.5rem 0;gap:.25rem;flex-shrink:0}
-.ln-btn{width:36px;height:36px;border-radius:8px;background:none;border:none;color:var(--w4);font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative}
+/* LEFT NAV */
+.leftnav{width:52px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;padding:.5rem 0;gap:.2rem;flex-shrink:0;overflow-y:auto}
+.ln-btn{width:36px;height:36px;border-radius:8px;background:none;border:none;color:var(--w4);font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;flex-shrink:0}
 .ln-btn:hover{background:var(--s3);color:var(--w)}
 .ln-btn.active{background:var(--gf);color:var(--g)}
 .ln-tip{position:absolute;left:44px;background:var(--s3);border:1px solid var(--bd);color:var(--w);font-size:.72rem;padding:.3rem .65rem;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:99}
 .ln-btn:hover .ln-tip{opacity:1}
+.ln-sep{width:28px;height:1px;background:var(--bd);margin:.25rem 0;flex-shrink:0}
 
 /* THREE PANE KIT MANAGER */
 .three-pane{display:flex;flex:1;overflow:hidden}
@@ -62,7 +66,7 @@ input,select,textarea{font-family:var(--fb)}
 .pane-2{width:230px;border-right:1px solid var(--bd);background:var(--s2)}
 .pane-3{flex:1;background:var(--bk);overflow-y:auto}
 .ph{padding:.7rem 1rem;font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:inherit;position:sticky;top:0;z-index:10}
-.ph-add{background:none;border:none;color:var(--g);font-size:.95rem;padding:.1rem .3rem;border-radius:4px;line-height:1;transition:background .15s}
+.ph-add{background:none;border:none;color:var(--g);font-size:.95rem;padding:.1rem .3rem;border-radius:4px;line-height:1}
 .ph-add:hover{background:var(--gf)}
 .tree-search{padding:.55rem .75rem;border-bottom:1px solid var(--bd);position:sticky;top:38px;z-index:9;background:inherit}
 .tree-search input{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:6px;padding:.35rem .6rem;color:var(--w);font-size:.76rem;outline:none;transition:border-color .15s}
@@ -75,7 +79,7 @@ input,select,textarea{font-family:var(--fb)}
 .ti .ti-ct{margin-left:auto;font-family:var(--fm);font-size:.6rem;color:var(--w4);background:var(--s4);padding:.1rem .32rem;border-radius:100px;flex-shrink:0}
 .ti.active .ti-ct{background:var(--gf);color:var(--g)}
 
-/* PANE 3 KIT VIEW */
+/* PANE 3 */
 .p3-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
 .p3-title{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}
 .p3-title span{color:var(--g)}
@@ -88,47 +92,30 @@ input,select,textarea{font-family:var(--fb)}
 .tc.filled::after{content:'✓';position:absolute;top:.5rem;right:.6rem;font-size:.68rem;color:var(--g);font-weight:700}
 .tc-img{height:75px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;opacity:.12;margin-bottom:.45rem}
 .tc-img img{height:65px;object-fit:contain;opacity:1}
-.tc-type{font-size:.68rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--w3)}
-.tc-info{font-size:.62rem;color:var(--w4);margin-top:.2rem}
 .kits-table{padding:1.25rem 1.5rem}
-table{width:100%;border-collapse:collapse;font-size:.8rem}
-thead th{background:var(--s2);padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);border-bottom:1px solid var(--bd)}
-tbody tr{border-bottom:1px solid var(--bd);transition:background .12s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--s2)}
-td{padding:.62rem .9rem;vertical-align:middle}
-.td-img{width:38px;height:38px;background:var(--s3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.95rem;overflow:hidden}
-.td-img img{width:100%;height:100%;object-fit:contain}
 
-/* DASH & OTHER PAGES */
-.dash-page{padding:1.75rem;display:none}
-.dash-page.active{display:block}
-.other-page{padding:1.75rem;display:none;overflow-y:auto;flex:1;flex-direction:column}
-.other-page.active{display:flex}
+/* FULL PAGE VIEWS */
+.full-page{flex:1;overflow-y:auto;display:none;flex-direction:column}
+.full-page.active{display:flex}
+.fp-inner{padding:1.75rem;flex:1}
+
+/* DASHBOARD */
 .dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem}
+@media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr)}}
 .dc{background:var(--s1);border:1px solid var(--bd);border-radius:11px;padding:1.2rem}
 .dc-n{font-family:var(--fd);font-size:2rem;color:var(--g);letter-spacing:2px;display:block}
 .dc-l{font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);margin-top:.2rem;display:block}
 
 /* BUTTONS */
-.btn{border:none;border-radius:7px;font-family:var(--fb);font-weight:600;padding:.45rem 1rem;font-size:.8rem;transition:all .15s;display:inline-flex;align-items:center;gap:.35rem}
+.btn{border:none;border-radius:7px;font-family:var(--fb);font-weight:600;padding:.45rem 1rem;font-size:.8rem;transition:all .15s;display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
 .btn-p{background:var(--g);color:var(--bk)}.btn-p:hover{background:var(--gd)}
 .btn-g{background:none;border:1px solid var(--bd);color:var(--w3)}.btn-g:hover{border-color:var(--bdg);color:var(--w)}
+.btn-r{background:none;border:1px solid rgba(255,68,68,.3);color:var(--red)}.btn-r:hover{background:rgba(255,68,68,.07)}
 .btn-sm{padding:.3rem .65rem;font-size:.72rem}
 .btn-ed{background:none;border:1px solid var(--bd);color:var(--w3);border-radius:5px;padding:.25rem .55rem;font-size:.7rem}.btn-ed:hover{border-color:var(--bdg);color:var(--g)}
 .btn-del{background:none;border:1px solid rgba(255,68,68,.25);color:var(--red);border-radius:5px;padding:.25rem .55rem;font-size:.7rem}.btn-del:hover{background:rgba(255,68,68,.07)}
 
-/* FORM MODAL */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;padding:1.25rem}
-.ov.open{display:flex}
-.mbox{background:var(--s1);border:1px solid var(--bd);border-radius:14px;max-width:700px;width:100%;position:relative;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column}
-.mbox-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;background:var(--s1);z-index:5}
-.mtitle{font-family:var(--fd);font-size:1.25rem;letter-spacing:2px}
-.mtitle span{color:var(--g)}
-.mclose{background:var(--s3);border:none;color:var(--w3);width:27px;height:27px;border-radius:6px;font-size:.8rem}
-.mclose:hover{color:var(--w)}
-.mbox-body{padding:1.5rem;flex:1}
-.mbox-foot{padding:1rem 1.5rem;border-top:1px solid var(--bd);display:flex;gap:.6rem;justify-content:flex-end;flex-shrink:0;position:sticky;bottom:0;background:var(--s1)}
+/* FORMS */
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:.875rem}
 .ff{grid-column:1/-1}
 .fsec{font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--g);padding:.4rem 0;border-bottom:1px solid var(--bdg);margin-bottom:.875rem;grid-column:1/-1}
@@ -144,26 +131,105 @@ td{padding:.62rem .9rem;vertical-align:middle}
 .acl.open{display:block}
 .aci{padding:.48rem .88rem;font-size:.84rem;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--bd)}
 .aci:last-child{border-bottom:none}
-.aci:hover,.aci.sel{background:var(--gf);color:var(--g)}
+.aci:hover{background:var(--gf);color:var(--g)}
 .aci-new{color:var(--g);font-style:italic;font-size:.8rem}
 
 /* TOGGLES */
 .tgl-row{display:flex;align-items:center;justify-content:space-between;padding:.68rem .88rem;background:var(--s2);border:1px solid var(--bd);border-radius:7px}
-.tgl{position:relative;width:38px;height:21px}
+.tgl{position:relative;width:38px;height:21px;cursor:pointer}
 .tgl input{opacity:0;width:0;height:0}
 .tgl-s{position:absolute;cursor:pointer;inset:0;background:var(--s4);border-radius:11px;transition:.2s}
 .tgl-s::before{content:"";position:absolute;height:15px;width:15px;left:3px;bottom:3px;background:var(--w3);border-radius:50%;transition:.2s}
 .tgl input:checked+.tgl-s{background:var(--g)}
 .tgl input:checked+.tgl-s::before{transform:translateX(17px);background:var(--bk)}
 
-/* IMG PREVIEW */
-.img-prev{width:70px;height:70px;background:var(--s3);border-radius:7px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1.3rem;overflow:hidden;margin-top:.5rem;flex-shrink:0}
+/* MODAL */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;padding:1.25rem}
+.ov.open{display:flex}
+.mbox{background:var(--s1);border:1px solid var(--bd);border-radius:14px;max-width:780px;width:100%;position:relative;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column}
+.mbox-lg{max-width:1000px}
+.mbox-head{padding:1.1rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;background:var(--s1);z-index:5}
+.mtitle{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}
+.mtitle span{color:var(--g)}
+.mclose{background:var(--s3);border:none;color:var(--w3);width:27px;height:27px;border-radius:6px;font-size:.8rem}
+.mclose:hover{color:var(--w)}
+.mbox-body{padding:1.5rem;flex:1}
+.mbox-foot{padding:1rem 1.5rem;border-top:1px solid var(--bd);display:flex;gap:.6rem;justify-content:flex-end;flex-shrink:0;position:sticky;bottom:0;background:var(--s1)}
+
+/* IMG UPLOAD */
+.img-prev{width:70px;height:70px;background:var(--s3);border-radius:7px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1.3rem;overflow:hidden;flex-shrink:0}
 .img-prev img{width:100%;height:100%;object-fit:contain}
+.upload-zone{background:var(--s2);border:2px dashed var(--bd);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--g);background:var(--gf)}
+.upload-zone p{font-size:.83rem;color:var(--w3);margin-top:.5rem}
+.upload-zone .uz-icon{font-size:1.75rem;opacity:.3}
+.upload-progress{display:none;margin-top:.75rem}
+.progress-bar{height:4px;background:var(--s4);border-radius:2px;overflow:hidden;margin-bottom:.4rem}
+.progress-fill{height:100%;background:var(--g);border-radius:2px;transition:width .2s;width:0%}
+.img-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:.5rem;margin-top:.75rem}
+.img-thumb{position:relative;width:80px;height:80px;border-radius:7px;overflow:hidden;border:1px solid var(--bd);cursor:pointer}
+.img-thumb img{width:100%;height:100%;object-fit:contain;background:var(--s3)}
+.img-thumb.selected{border-color:var(--g)}
+.img-thumb .thumb-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;color:var(--red);width:18px;height:18px;border-radius:3px;font-size:.65rem;display:none;align-items:center;justify-content:center}
+.img-thumb:hover .thumb-del{display:flex}
+
+/* RICH EDITOR */
+.editor-toolbar{display:flex;gap:.25rem;flex-wrap:wrap;padding:.6rem .75rem;background:var(--s2);border:1px solid var(--bd);border-radius:8px 8px 0 0;border-bottom:none}
+.editor-toolbar button{background:none;border:1px solid transparent;color:var(--w3);border-radius:5px;padding:.25rem .5rem;font-size:.8rem;transition:all .15s;min-width:28px}
+.editor-toolbar button:hover{border-color:var(--bd);color:var(--w)}
+.editor-toolbar button.active{background:var(--gf);border-color:var(--bdg);color:var(--g)}
+.editor-toolbar .sep{width:1px;background:var(--bd);margin:0 .15rem;align-self:stretch}
+.tiptap-editor{background:var(--s2);border:1px solid var(--bd);border-radius:0 0 8px 8px;padding:1rem 1.1rem;min-height:320px;outline:none;font-size:.9rem;line-height:1.7;color:var(--w2)}
+.tiptap-editor:focus{border-color:var(--bdg)}
+.tiptap-editor h1,.tiptap-editor h2,.tiptap-editor h3{font-family:var(--fd);letter-spacing:2px;color:var(--w);margin:1.5rem 0 .75rem}
+.tiptap-editor h1{font-size:1.8rem}.tiptap-editor h2{font-size:1.4rem}.tiptap-editor h3{font-size:1.1rem}
+.tiptap-editor p{margin-bottom:1rem}
+.tiptap-editor a{color:var(--g);text-decoration:underline}
+.tiptap-editor blockquote{border-left:3px solid var(--g);padding-left:1rem;color:var(--w3);font-style:italic;margin:1rem 0}
+.tiptap-editor ul,.tiptap-editor ol{padding-left:1.5rem;margin-bottom:1rem}
+.tiptap-editor code{background:var(--s3);padding:.1rem .35rem;border-radius:3px;font-family:var(--fm);font-size:.85rem}
+.tiptap-editor pre{background:var(--s3);border-radius:7px;padding:.875rem;margin-bottom:1rem;overflow-x:auto}
+.tiptap-editor table{width:100%;border-collapse:collapse;margin-bottom:1rem}
+.tiptap-editor th,.tiptap-editor td{border:1px solid var(--bd);padding:.5rem .75rem;font-size:.85rem}
+.tiptap-editor th{background:var(--s3)}
+.tiptap-editor .is-editor-empty:first-child::before{content:attr(data-placeholder);float:left;color:var(--w4);pointer-events:none;height:0}
+
+/* HOMEPAGE BUILDER */
+.section-builder{display:flex;flex-direction:column;gap:.75rem}
+.hb-card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;overflow:hidden;transition:border-color .15s}
+.hb-card:hover{border-color:var(--bdg)}
+.hb-head{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;cursor:pointer}
+.hb-drag{color:var(--w4);font-size:.9rem;cursor:grab}
+.hb-icon{font-size:1rem}
+.hb-name{font-weight:600;font-size:.88rem;flex:1}
+.hb-type{font-family:var(--fm);font-size:.65rem;color:var(--w4)}
+.hb-actions{display:flex;align-items:center;gap:.5rem;margin-left:auto}
+.hb-body{padding:0 1rem 1rem;display:none;border-top:1px solid var(--bd);margin-top:.25rem;padding-top:.875rem}
+.hb-body.open{display:block}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem;margin-bottom:1.25rem}
+.preset-card{background:var(--s3);border:1px solid var(--bd);border-radius:8px;padding:.875rem;text-align:center;cursor:pointer;transition:all .15s}
+.preset-card:hover{border-color:var(--bdg);transform:translateY(-1px)}
+.preset-icon{font-size:1.5rem;margin-bottom:.4rem}
+.preset-name{font-size:.75rem;font-weight:600}
+.preset-desc{font-size:.65rem;color:var(--w4);margin-top:.2rem}
+
+/* TABLE */
+.tw{border:1px solid var(--bd);border-radius:9px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+thead th{background:var(--s2);padding:.6rem .9rem;text-align:left;font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);border-bottom:1px solid var(--bd)}
+tbody tr{border-bottom:1px solid var(--bd);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--s2)}
+td{padding:.65rem .9rem;vertical-align:middle}
+.td-img{width:38px;height:38px;background:var(--s3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.95rem;overflow:hidden}
+.td-img img{width:100%;height:100%;object-fit:contain}
 
 /* PANELS */
 .panel{background:var(--s1);border:1px solid var(--bd);border-radius:11px;padding:1.25rem}
 .pt{font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);margin-bottom:1rem}
-.tw{border:1px solid var(--bd);border-radius:9px;overflow:hidden}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem}
+.st{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}
+.st span{color:var(--g)}
 
 /* BADGES */
 .badge{font-size:.6rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:.18rem .5rem;border-radius:4px}
@@ -179,6 +245,19 @@ td{padding:.62rem .9rem;vertical-align:middle}
 .adc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem}
 .ad-code-area{width:100%;background:var(--bk);border:1px solid var(--bd);border-radius:6px;padding:.7rem .9rem;color:#4ecca3;font-family:var(--fm);font-size:.73rem;min-height:75px;resize:vertical;outline:none;line-height:1.6;transition:border-color .15s}
 .ad-code-area:focus{border-color:var(--bdg)}
+
+/* TAGS INPUT */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:.35rem;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.45rem .6rem;min-height:42px;cursor:text;transition:border-color .15s}
+.tags-wrap:focus-within{border-color:var(--bdg)}
+.tag-item{background:var(--gf);border:1px solid var(--bdg);color:var(--g);font-size:.72rem;padding:.15rem .5rem;border-radius:4px;display:flex;align-items:center;gap:.3rem}
+.tag-item button{background:none;border:none;color:var(--g);font-size:.75rem;padding:0;line-height:1}
+.tags-input{background:none;border:none;outline:none;color:var(--w);font-size:.85rem;min-width:80px;flex:1}
+
+/* SEO PREVIEW */
+.seo-preview{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:1rem;margin-top:.75rem}
+.seo-url{font-size:.72rem;color:#8ab4f8;margin-bottom:.25rem}
+.seo-title{font-size:.95rem;color:#8ab4f8;font-weight:500;margin-bottom:.2rem}
+.seo-desc{font-size:.78rem;color:var(--w3);line-height:1.4}
 
 /* MISC */
 .spinner{width:22px;height:22px;border:2px solid var(--s4);border-top-color:var(--g);border-radius:50%;animation:spin .6s linear infinite;margin:2.5rem auto}
@@ -220,109 +299,246 @@ td{padding:.62rem .9rem;vertical-align:middle}
   <div class="app-body">
     <!-- LEFT NAV -->
     <div class="leftnav">
-      <button class="ln-btn active" id="lnb-kits" onclick="switchView('kits',this)">👕<span class="ln-tip">Kit Manager</span></button>
-      <button class="ln-btn" id="lnb-dash" onclick="switchView('dash',this)">📊<span class="ln-tip">Dashboard</span></button>
-      <button class="ln-btn" id="lnb-hp" onclick="switchView('hp',this)">🏠<span class="ln-tip">Homepage</span></button>
-      <button class="ln-btn" id="lnb-ads" onclick="switchView('ads',this)">📢<span class="ln-tip">Ad Slots</span></button>
-      <button class="ln-btn" id="lnb-users" onclick="switchView('users',this)">👥<span class="ln-tip">Users</span></button>
-      <button class="ln-btn" id="lnb-admins" onclick="switchView('admins',this)">🔑<span class="ln-tip">Admins</span></button>
+      <button class="ln-btn active" id="lnb-kits" onclick="sv('kits',this)">👕<span class="ln-tip">Kit Manager</span></button>
+      <button class="ln-btn" id="lnb-images" onclick="sv('images',this)">🖼️<span class="ln-tip">Image Manager</span></button>
+      <div class="ln-sep"></div>
+      <button class="ln-btn" id="lnb-hp" onclick="sv('hp',this)">🏠<span class="ln-tip">Homepage Builder</span></button>
+      <button class="ln-btn" id="lnb-blog" onclick="sv('blog',this)">📝<span class="ln-tip">Blog</span></button>
+      <button class="ln-btn" id="lnb-pages" onclick="sv('pages',this)">📄<span class="ln-tip">Pages</span></button>
+      <div class="ln-sep"></div>
+      <button class="ln-btn" id="lnb-seo" onclick="sv('seo',this)">🔍<span class="ln-tip">SEO & Analytics</span></button>
+      <button class="ln-btn" id="lnb-ads" onclick="sv('ads',this)">📢<span class="ln-tip">Ad Slots</span></button>
+      <div class="ln-sep"></div>
+      <button class="ln-btn" id="lnb-users" onclick="sv('users',this)">👥<span class="ln-tip">Users</span></button>
+      <button class="ln-btn" id="lnb-admins" onclick="sv('admins',this)">🔑<span class="ln-tip">Admins</span></button>
+      <button class="ln-btn" id="lnb-settings" onclick="sv('settings',this)">⚙️<span class="ln-tip">Site Settings</span></button>
+      <div class="ln-sep"></div>
+      <button class="ln-btn" id="lnb-dash" onclick="sv('dash',this)">📊<span class="ln-tip">Dashboard</span></button>
     </div>
 
-    <!-- KIT MANAGER 3-PANE -->
+    <!-- ── KIT MANAGER 3-PANE ── -->
     <div class="three-pane" id="view-kits">
-      <!-- PANE 1: SEASONS -->
       <div class="pane pane-1">
-        <div class="ph">SEASON<button class="ph-add" onclick="promptAddSeason()" title="Add">+</button></div>
+        <div class="ph">SEASON<button class="ph-add" onclick="promptAddSeason()">+</button></div>
         <div class="tree-search"><input type="text" id="p1-q" placeholder="Search season…" oninput="renderP1()"/></div>
         <div id="p1-list"></div>
       </div>
-      <!-- PANE 2: LEAGUES → CLUBS -->
       <div class="pane pane-2">
-        <div class="ph" id="p2-head">LEAGUE<button class="ph-add" onclick="promptAddLeague()" title="Add">+</button></div>
+        <div class="ph" id="p2-head">LEAGUE<button class="ph-add" onclick="promptAddLeague()">+</button></div>
         <div class="tree-search"><input type="text" id="p2-q" placeholder="Search…" oninput="renderP2()"/></div>
         <div id="p2-list"></div>
       </div>
-      <!-- PANE 3: KITS -->
       <div class="pane pane-3" id="p3">
-        <div class="empty" style="margin-top:5rem"><div class="empty-i">👕</div><p style="font-size:.85rem">Select a season → league → club</p></div>
+        <div class="empty" style="margin-top:5rem"><div class="empty-i">👕</div><p style="font-size:.85rem">Season → League → Club</p></div>
       </div>
     </div>
 
-    <!-- DASHBOARD -->
-    <div class="dash-page" id="view-dash">
-      <div class="dash-grid">
-        <div class="dc"><span class="dc-n" id="d-kits">—</span><span class="dc-l">Total Kits</span></div>
-        <div class="dc"><span class="dc-n" id="d-clubs">—</span><span class="dc-l">Clubs</span></div>
-        <div class="dc"><span class="dc-n" id="d-users">—</span><span class="dc-l">Users</span></div>
-        <div class="dc"><span class="dc-n" id="d-ratings">—</span><span class="dc-l">Ratings</span></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-        <div class="panel"><div class="pt">Recent Kits</div><div id="d-rk"></div></div>
-        <div class="panel"><div class="pt">Recent Users</div><div id="d-ru"></div></div>
+    <!-- ── IMAGE MANAGER ── -->
+    <div class="full-page" id="view-images">
+      <div class="fp-inner">
+        <div class="sh"><span class="st">IMAGE <span>MANAGER</span></span></div>
+        <div class="upload-zone" id="img-upload-zone" ondragover="e=>{e.preventDefault();this.classList.add('dragover')}" ondragleave="this.classList.remove('dragover')" ondrop="handleImgDrop(event)" onclick="document.getElementById('img-file-input').click()">
+          <div class="uz-icon">🖼️</div>
+          <p><strong>Drag & drop kit images here</strong> or click to browse</p>
+          <p style="font-size:.72rem;margin-top:.25rem">Multiple files supported · Auto-renamed · JPEG/PNG/WebP</p>
+          <input type="file" id="img-file-input" accept="image/*" multiple style="display:none" onchange="handleImgSelect(event)"/>
+        </div>
+        <div class="upload-progress" id="upload-progress">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div style="font-size:.75rem;color:var(--w3)" id="progress-text">Uploading…</div>
+        </div>
+        <div style="margin-top:1.5rem">
+          <div class="sh">
+            <span style="font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4)">Uploaded Images</span>
+            <input type="text" id="img-search" placeholder="Search images…" oninput="filterImages()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.35rem .75rem;color:var(--w);font-size:.78rem;outline:none;width:200px"/>
+          </div>
+          <div class="img-gallery" id="img-gallery"><div class="spinner"></div></div>
+        </div>
       </div>
     </div>
 
-    <!-- HOMEPAGE -->
-    <div class="other-page" id="view-hp">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
-        <div class="panel">
-          <div class="pt">Hero Section</div>
-          <div style="display:flex;flex-direction:column;gap:.875rem">
-            <div class="field"><label>Hero Title</label><input id="hp-title"/></div>
-            <div class="field"><label>Subtitle</label><input id="hp-sub"/></div>
-            <div class="field"><label>CTA Button Text</label><input id="hp-cta"/></div>
-            <div class="field"><label>Featured Section Title</label><input id="hp-feat"/></div>
-            <button class="btn btn-p btn-sm" onclick="saveHp()">Save</button>
+    <!-- ── HOMEPAGE BUILDER ── -->
+    <div class="full-page" id="view-hp">
+      <div class="fp-inner">
+        <div class="sh">
+          <span class="st">HOMEPAGE <span>BUILDER</span></span>
+          <div style="display:flex;gap:.6rem">
+            <button class="btn btn-g btn-sm" onclick="addPresetSection()">+ Add Section</button>
+            <button class="btn btn-p btn-sm" onclick="saveHpOrder()">Save Order</button>
+          </div>
+        </div>
+        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Drag sections to reorder. Toggle on/off. Click to edit settings.</p>
+        <div class="section-builder" id="section-builder"></div>
+      </div>
+    </div>
+
+    <!-- ADD SECTION PRESETS -->
+    <div class="ov" id="preset-ov" onclick="if(event.target===this)this.classList.remove('open')">
+      <div class="mbox">
+        <div class="mbox-head">
+          <div class="mtitle">ADD <span>SECTION</span></div>
+          <button class="mclose" onclick="document.getElementById('preset-ov').classList.remove('open')">✕</button>
+        </div>
+        <div class="mbox-body">
+          <div class="preset-grid" id="preset-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BLOG MANAGER ── -->
+    <div class="full-page" id="view-blog">
+      <div class="fp-inner">
+        <div class="sh">
+          <span class="st">BLOG <span>MANAGER</span></span>
+          <button class="btn btn-p btn-sm" onclick="openBlogForm(null)">+ New Post</button>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Title</th><th>Status</th><th>Published</th><th>Tags</th><th>Actions</th></tr></thead>
+          <tbody id="blog-tb"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── PAGES MANAGER ── -->
+    <div class="full-page" id="view-pages">
+      <div class="fp-inner">
+        <div class="sh">
+          <span class="st">PAGES <span>MANAGER</span></span>
+          <button class="btn btn-p btn-sm" onclick="openPageForm(null)">+ New Page</button>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Title</th><th>Slug</th><th>Footer</th><th>Nav</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="pages-tb"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── SEO & ANALYTICS ── -->
+    <div class="full-page" id="view-seo">
+      <div class="fp-inner">
+        <div class="sh"><span class="st">SEO & <span>ANALYTICS</span></span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+          <div class="panel">
+            <div class="pt">Global SEO</div>
+            <div style="display:flex;flex-direction:column;gap:.875rem">
+              <div class="field"><label>Site Name</label><input id="seo-name"/></div>
+              <div class="field"><label>Global SEO Title</label><input id="seo-title" oninput="updateSeoPreview()"/></div>
+              <div class="field"><label>Global SEO Description</label><textarea id="seo-desc" style="min-height:70px" oninput="updateSeoPreview()"></textarea></div>
+              <div class="field"><label>Global OG Image URL</label><input id="seo-og"/></div>
+              <div class="seo-preview" id="seo-preview">
+                <div class="seo-url" id="sp-url">yoursite.com</div>
+                <div class="seo-title" id="sp-title">Title preview</div>
+                <div class="seo-desc" id="sp-desc">Description preview</div>
+              </div>
+              <button class="btn btn-p btn-sm" onclick="saveSEO()">Save Global SEO</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="pt">Analytics & Tracking</div>
+            <div style="display:flex;flex-direction:column;gap:.875rem">
+              <div class="field"><label>Google Analytics ID (G-XXXXXXXXXX)</label><input id="seo-ga" placeholder="G-XXXXXXXXXX"/></div>
+              <div class="field"><label>Custom &lt;head&gt; Code</label><textarea id="seo-head" style="min-height:80px;font-family:var(--fm);font-size:.75rem" placeholder="&lt;!-- Any code to inject in &lt;head&gt; --&gt;"></textarea></div>
+              <div class="field"><label>Custom &lt;body&gt; Code</label><textarea id="seo-body" style="min-height:80px;font-family:var(--fm);font-size:.75rem" placeholder="&lt;!-- Facebook Pixel, etc --&gt;"></textarea></div>
+              <button class="btn btn-p btn-sm" onclick="saveAnalytics()">Save Analytics</button>
+            </div>
           </div>
         </div>
         <div class="panel">
-          <div class="pt">Announcement Banner</div>
-          <div style="display:flex;flex-direction:column;gap:.875rem">
-            <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Show Announcement</span><label class="tgl"><input type="checkbox" id="hp-ann-on"/><span class="tgl-s"></span></label></div>
-            <div class="field"><label>Text</label><textarea id="hp-ann" style="min-height:70px"></textarea></div>
-            <button class="btn btn-p btn-sm" onclick="saveAnn()">Save</button>
+          <div class="pt">Robots.txt</div>
+          <textarea id="seo-robots" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.7rem .9rem;color:#4ecca3;font-family:var(--fm);font-size:.78rem;min-height:100px;outline:none;resize:vertical;line-height:1.6"></textarea>
+          <button class="btn btn-p btn-sm" style="margin-top:.75rem" onclick="saveRobots()">Save Robots.txt</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AD SLOTS ── -->
+    <div class="full-page" id="view-ads">
+      <div class="fp-inner">
+        <div class="sh"><span class="st">AD <span>SLOTS</span></span></div>
+        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Paste Google AdSense or any HTML ad code. Toggle each slot on/off.</p>
+        <div id="ads-list"></div>
+      </div>
+    </div>
+
+    <!-- ── USERS ── -->
+    <div class="full-page" id="view-users">
+      <div class="fp-inner">
+        <div class="sh">
+          <span class="st">USERS</span>
+          <input type="text" id="user-q" placeholder="Search users…" oninput="filterUsers()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.38rem .8rem;color:var(--w);font-size:.8rem;outline:none;width:200px"/>
+        </div>
+        <div class="tw"><table><thead><tr><th>Username</th><th>Country</th><th>Fav Club</th><th>Joined</th><th>Action</th></tr></thead><tbody id="users-tb"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ── ADMINS ── -->
+    <div class="full-page" id="view-admins">
+      <div class="fp-inner">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+          <div class="panel">
+            <div class="pt">Create New Admin</div>
+            <div style="display:flex;flex-direction:column;gap:.875rem">
+              <div class="field"><label>Email</label><input id="na-email" type="email"/></div>
+              <div class="field"><label>Password</label><input id="na-pass" type="password"/></div>
+              <div class="field"><label>Username</label><input id="na-user"/></div>
+              <button class="btn btn-p btn-sm" onclick="createAdmin()">Create Admin</button>
+            </div>
+          </div>
+          <div class="panel"><div class="pt">Current Admins</div><div id="admins-list"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SITE SETTINGS ── -->
+    <div class="full-page" id="view-settings">
+      <div class="fp-inner">
+        <div class="sh"><span class="st">SITE <span>SETTINGS</span></span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+          <div class="panel">
+            <div class="pt">General</div>
+            <div style="display:flex;flex-direction:column;gap:.875rem">
+              <div class="field"><label>Site Name</label><input id="ss-name"/></div>
+              <div class="field"><label>Site Tagline</label><input id="ss-tagline"/></div>
+              <div class="field"><label>Site URL</label><input id="ss-url" placeholder="https://yoursite.com"/></div>
+              <div class="field"><label>Contact Email</label><input id="ss-email" type="email"/></div>
+              <button class="btn btn-p btn-sm" onclick="saveSettings()">Save Settings</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="pt">Footer</div>
+            <div style="display:flex;flex-direction:column;gap:.875rem">
+              <div class="field"><label>Footer Text</label><input id="ss-footer"/></div>
+              <div class="field"><label>Twitter URL</label><input id="ss-twitter" placeholder="https://twitter.com/…"/></div>
+              <div class="field"><label>Instagram URL</label><input id="ss-instagram" placeholder="https://instagram.com/…"/></div>
+              <div class="field"><label>Facebook URL</label><input id="ss-facebook" placeholder="https://facebook.com/…"/></div>
+              <button class="btn btn-p btn-sm" onclick="saveFooter()">Save Footer</button>
+            </div>
           </div>
         </div>
       </div>
-      <div class="panel"><div class="pt">Featured Kits — mark kits as Featured in Kit Manager</div><div id="hp-feat-list"></div></div>
     </div>
 
-    <!-- ADS -->
-    <div class="other-page" id="view-ads">
-      <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Paste Google AdSense or any HTML ad code. Toggle each slot on/off without losing the code.</p>
-      <div id="ads-list"></div>
-    </div>
-
-    <!-- USERS -->
-    <div class="other-page" id="view-users">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem">
-        <span style="font-family:var(--fd);font-size:1.2rem;letter-spacing:2px">USERS</span>
-        <input type="text" id="user-q" placeholder="Search users…" oninput="filterUsers()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.38rem .8rem;color:var(--w);font-size:.8rem;outline:none;width:200px"/>
-      </div>
-      <div class="tw"><table><thead><tr><th>Username</th><th>Country</th><th>Fav Club</th><th>Joined</th><th>Action</th></tr></thead><tbody id="users-tb"></tbody></table></div>
-    </div>
-
-    <!-- ADMINS -->
-    <div class="other-page" id="view-admins">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
-        <div class="panel">
-          <div class="pt">Create New Admin</div>
-          <div style="display:flex;flex-direction:column;gap:.875rem">
-            <div class="field"><label>Email</label><input id="na-email" type="email"/></div>
-            <div class="field"><label>Password</label><input id="na-pass" type="password"/></div>
-            <div class="field"><label>Username</label><input id="na-user"/></div>
-            <button class="btn btn-p btn-sm" onclick="createAdmin()">Create Admin</button>
-          </div>
+    <!-- ── DASHBOARD ── -->
+    <div class="full-page" id="view-dash">
+      <div class="fp-inner">
+        <div class="dash-grid">
+          <div class="dc"><span class="dc-n" id="d-kits">—</span><span class="dc-l">Total Kits</span></div>
+          <div class="dc"><span class="dc-n" id="d-clubs">—</span><span class="dc-l">Clubs</span></div>
+          <div class="dc"><span class="dc-n" id="d-users">—</span><span class="dc-l">Users</span></div>
+          <div class="dc"><span class="dc-n" id="d-ratings">—</span><span class="dc-l">Ratings</span></div>
         </div>
-        <div class="panel"><div class="pt">Current Admins</div><div id="admins-list"></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="panel"><div class="pt">Recent Kits</div><div id="d-rk"></div></div>
+          <div class="panel"><div class="pt">Recent Users</div><div id="d-ru"></div></div>
+        </div>
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- /app-body -->
+</div><!-- /app -->
 
-<!-- KIT FORM MODAL -->
-<div class="ov" id="kit-ov" onclick="closeKitOvEvt(event)">
+<!-- ── KIT FORM MODAL ── -->
+<div class="ov" id="kit-ov" onclick="if(event.target===this)closeKitForm()">
   <div class="mbox">
     <div class="mbox-head">
       <div class="mtitle" id="kf-title">ADD <span>KIT</span></div>
@@ -331,59 +547,36 @@ td{padding:.62rem .9rem;vertical-align:middle}
     <div class="mbox-body">
       <div class="fgrid">
         <div class="fsec">Kit Identity</div>
-        <div class="field">
-          <label>Club / Team *</label>
-          <div class="acw">
-            <input id="kf-team" placeholder="Start typing club name…" autocomplete="off" oninput="acIn('team')" onfocus="acIn('team')" onblur="setTimeout(()=>acClose('team'),180)"/>
-            <div class="acl" id="acl-team"></div>
-          </div>
-        </div>
-        <div class="field">
-          <label>Season *</label>
-          <div class="acw">
-            <input id="kf-season" placeholder="e.g. 2024/25" autocomplete="off" oninput="acIn('season')" onfocus="acIn('season')" onblur="setTimeout(()=>acClose('season'),180)"/>
-            <div class="acl" id="acl-season"></div>
-          </div>
-        </div>
-        <div class="field">
-          <label>League</label>
-          <div class="acw">
-            <input id="kf-league" placeholder="Start typing league…" autocomplete="off" oninput="acIn('league')" onfocus="acIn('league')" onblur="setTimeout(()=>acClose('league'),180)"/>
-            <div class="acl" id="acl-league"></div>
-          </div>
-        </div>
-        <div class="field">
-          <label>Kit Type *</label>
-          <select id="kf-type" onchange="autoSlug()">
-            <option>Home</option><option>Away</option><option>Third</option>
-            <option>GK Home</option><option>GK Away</option><option>Special Edition</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Manufacturer</label>
-          <div class="acw">
-            <input id="kf-maker" placeholder="e.g. Adidas, Nike…" autocomplete="off" oninput="acIn('maker')" onfocus="acIn('maker')" onblur="setTimeout(()=>acClose('maker'),180)"/>
-            <div class="acl" id="acl-maker"></div>
-          </div>
-        </div>
-        <div class="field"><label>Primary Color</label><input id="kf-color" placeholder="e.g. Red & White"/></div>
+        <div class="field"><label>Club / Team *</label><div class="acw"><input id="kf-team" placeholder="Start typing…" autocomplete="off" oninput="acIn('team')" onfocus="acIn('team')" onblur="setTimeout(()=>acClose('team'),180)"/><div class="acl" id="acl-team"></div></div></div>
+        <div class="field"><label>Season *</label><div class="acw"><input id="kf-season" placeholder="e.g. 2024/25" autocomplete="off" oninput="acIn('season')" onfocus="acIn('season')" onblur="setTimeout(()=>acClose('season'),180)"/><div class="acl" id="acl-season"></div></div></div>
+        <div class="field"><label>League</label><div class="acw"><input id="kf-league" placeholder="Start typing…" autocomplete="off" oninput="acIn('league')" onfocus="acIn('league')" onblur="setTimeout(()=>acClose('league'),180)"/><div class="acl" id="acl-league"></div></div></div>
+        <div class="field"><label>Kit Type *</label><select id="kf-type" onchange="autoSlug()"><option>Home</option><option>Away</option><option>Third</option><option>GK Home</option><option>GK Away</option><option>Special Edition</option></select></div>
+        <div class="field"><label>Manufacturer</label><div class="acw"><input id="kf-maker" placeholder="e.g. Adidas…" autocomplete="off" oninput="acIn('maker')" onfocus="acIn('maker')" onblur="setTimeout(()=>acClose('maker'),180)"/><div class="acl" id="acl-maker"></div></div></div>
+        <div class="field"><label>Primary Color</label><input id="kf-color"/></div>
 
-        <div class="fsec">Images</div>
-        <div class="field ff" style="display:flex;gap:.875rem;align-items:flex-start">
-          <div style="flex:1"><label>Main Image URL</label><input id="kf-img" placeholder="https://…" oninput="prevImg()"/></div>
-          <div class="img-prev" id="img-prev">📷</div>
+        <div class="fsec">Images — drag & drop or paste URLs</div>
+        <div class="field ff">
+          <label>Upload Images (auto-renamed)</label>
+          <div class="upload-zone" style="padding:1rem" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleKitImgDrop(event)" onclick="document.getElementById('kit-img-input').click()">
+            <div>📂 Drop images or click to upload</div>
+            <input type="file" id="kit-img-input" accept="image/*" multiple style="display:none" onchange="handleKitImgSelect(event)"/>
+          </div>
+          <div class="img-gallery" id="kit-img-gallery" style="margin-top:.5rem"></div>
         </div>
-        <div class="field"><label>Image 2 URL</label><input id="kf-img2" placeholder="https://…"/></div>
-        <div class="field"><label>Image 3 URL</label><input id="kf-img3" placeholder="https://…"/></div>
+        <div class="field"><label>Image URL 1</label><input id="kf-img" placeholder="https://… or upload above" oninput="prevImg()"/><div class="img-prev" id="img-prev" style="margin-top:.5rem">📷</div></div>
+        <div class="field"><label>Image URL 2</label><input id="kf-img2" placeholder="https://…"/></div>
+        <div class="field"><label>Image URL 3</label><input id="kf-img3" placeholder="https://…"/></div>
 
         <div class="fsec">Commerce</div>
         <div class="field"><label>Price Label</label><input id="kf-price" placeholder="e.g. From £89.95"/></div>
         <div class="field"><label>Affiliate Buy URL</label><input id="kf-buy" placeholder="https://…"/></div>
         <div class="field"><label>Buy Button Label</label><input id="kf-buylabel" placeholder="Buy Now"/></div>
-        <div class="field"><label>URL Slug (auto-generated) *</label><input id="kf-slug" placeholder="auto"/></div>
+        <div class="field"><label>URL Slug *</label><input id="kf-slug" placeholder="auto-generated"/></div>
 
-        <div class="fsec">Details</div>
+        <div class="fsec">Content & SEO</div>
         <div class="field ff"><label>Description</label><textarea id="kf-desc" placeholder="Describe this kit…"></textarea></div>
+        <div class="field"><label>SEO Title</label><input id="kf-seo-title" placeholder="Leave blank to auto-generate"/></div>
+        <div class="field"><label>SEO Description</label><input id="kf-seo-desc" placeholder="Leave blank to use kit description"/></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
         <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Published (Live)</span><label class="tgl"><input type="checkbox" id="kf-pub" checked/><span class="tgl-s"></span></label></div>
@@ -398,11 +591,126 @@ td{padding:.62rem .9rem;vertical-align:middle}
   </div>
 </div>
 
+<!-- ── BLOG FORM MODAL ── -->
+<div class="ov" id="blog-ov" onclick="if(event.target===this)closeBlogForm()">
+  <div class="mbox mbox-lg">
+    <div class="mbox-head">
+      <div class="mtitle" id="bf-title">NEW <span>POST</span></div>
+      <button class="mclose" onclick="closeBlogForm()">✕</button>
+    </div>
+    <div class="mbox-body">
+      <div class="fgrid">
+        <div class="fsec">Post Details</div>
+        <div class="field ff"><label>Title *</label><input id="bf-title-input" placeholder="Post title…" oninput="autoBlogSlug()"/></div>
+        <div class="field"><label>Slug *</label><input id="bf-slug" placeholder="auto-generated"/></div>
+        <div class="field"><label>Cover Image URL</label><input id="bf-cover" placeholder="https://…"/></div>
+        <div class="field ff"><label>Excerpt</label><textarea id="bf-excerpt" placeholder="Short summary shown in blog listings…" style="min-height:60px"></textarea></div>
+        <div class="field ff">
+          <label>Tags</label>
+          <div class="tags-wrap" id="tags-wrap" onclick="document.getElementById('tags-input').focus()">
+            <input class="tags-input" id="tags-input" placeholder="Type tag and press Enter…" onkeydown="handleTagInput(event)"/>
+          </div>
+        </div>
+
+        <div class="fsec">Content</div>
+        <div class="field ff">
+          <label>Post Content</label>
+          <div class="editor-toolbar" id="editor-toolbar">
+            <button onclick="edCmd('bold')" title="Bold"><b>B</b></button>
+            <button onclick="edCmd('italic')" title="Italic"><i>I</i></button>
+            <button onclick="edCmd('strike')" title="Strike"><s>S</s></button>
+            <div class="sep"></div>
+            <button onclick="edCmd('h1')" title="H1">H1</button>
+            <button onclick="edCmd('h2')" title="H2">H2</button>
+            <button onclick="edCmd('h3')" title="H3">H3</button>
+            <div class="sep"></div>
+            <button onclick="edCmd('bulletList')" title="Bullet list">• List</button>
+            <button onclick="edCmd('orderedList')" title="Numbered list">1. List</button>
+            <button onclick="edCmd('blockquote')" title="Quote">" "</button>
+            <div class="sep"></div>
+            <button onclick="edCmd('link')" title="Link">🔗</button>
+            <button onclick="edInsertImg()" title="Image">🖼</button>
+            <button onclick="edInsertVideo()" title="Embed video">▶</button>
+            <button onclick="edCmd('table')" title="Table">⊞</button>
+            <div class="sep"></div>
+            <button onclick="edCmd('code')" title="Code">&lt;/&gt;</button>
+            <button onclick="edCmd('codeBlock')" title="Code block">{ }</button>
+            <button onclick="edCmd('undo')" title="Undo">↩</button>
+            <button onclick="edCmd('redo')" title="Redo">↪</button>
+          </div>
+          <div class="tiptap-editor" id="tiptap-editor" contenteditable="true" data-placeholder="Start writing your post…"></div>
+        </div>
+
+        <div class="fsec">SEO</div>
+        <div class="field"><label>SEO Title</label><input id="bf-seo-title" placeholder="Leave blank to use post title"/></div>
+        <div class="field"><label>SEO Description</label><input id="bf-seo-desc" placeholder="Leave blank to use excerpt"/></div>
+        <div class="field"><label>OG Image URL</label><input id="bf-og-img" placeholder="Leave blank to use cover image"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Published</span><label class="tgl"><input type="checkbox" id="bf-pub"/><span class="tgl-s"></span></label></div>
+        <div></div>
+      </div>
+      <input type="hidden" id="bf-id"/>
+      <input type="hidden" id="bf-tags-data" value="[]"/>
+    </div>
+    <div class="mbox-foot">
+      <button class="btn btn-g" onclick="closeBlogForm()">Cancel</button>
+      <button class="btn btn-p" onclick="saveBlogPost()">Save Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE FORM MODAL ── -->
+<div class="ov" id="page-ov" onclick="if(event.target===this)closePageForm()">
+  <div class="mbox mbox-lg">
+    <div class="mbox-head">
+      <div class="mtitle" id="pf-title">NEW <span>PAGE</span></div>
+      <button class="mclose" onclick="closePageForm()">✕</button>
+    </div>
+    <div class="mbox-body">
+      <div class="fgrid">
+        <div class="fsec">Page Details</div>
+        <div class="field ff"><label>Page Title *</label><input id="pf-title-input" placeholder="e.g. About Us" oninput="autoPageSlug()"/></div>
+        <div class="field"><label>Slug *</label><input id="pf-slug" placeholder="e.g. about"/></div>
+        <div class="field ff">
+          <label>Content</label>
+          <div class="editor-toolbar">
+            <button onclick="pgCmd('bold')"><b>B</b></button>
+            <button onclick="pgCmd('italic')"><i>I</i></button>
+            <div class="sep"></div>
+            <button onclick="pgCmd('h2')">H2</button>
+            <button onclick="pgCmd('h3')">H3</button>
+            <div class="sep"></div>
+            <button onclick="pgCmd('bulletList')">• List</button>
+            <button onclick="pgCmd('link')">🔗</button>
+            <button onclick="pgCmd('table')">⊞</button>
+          </div>
+          <div class="tiptap-editor" id="page-editor" contenteditable="true" data-placeholder="Write page content…" style="min-height:260px"></div>
+        </div>
+        <div class="fsec">SEO</div>
+        <div class="field"><label>SEO Title</label><input id="pf-seo-title"/></div>
+        <div class="field"><label>SEO Description</label><input id="pf-seo-desc"/></div>
+        <div class="field"><label>OG Image</label><input id="pf-og-img"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem">
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Published</span><label class="tgl"><input type="checkbox" id="pf-pub" checked/><span class="tgl-s"></span></label></div>
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Show in Footer</span><label class="tgl"><input type="checkbox" id="pf-footer" checked/><span class="tgl-s"></span></label></div>
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Show in Nav</span><label class="tgl"><input type="checkbox" id="pf-nav"/><span class="tgl-s"></span></label></div>
+      </div>
+      <input type="hidden" id="pf-id"/>
+    </div>
+    <div class="mbox-foot">
+      <button class="btn btn-g" onclick="closePageForm()">Cancel</button>
+      <button class="btn btn-p" onclick="savePage()">Save Page</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://dpelurhaljmnogdxqpoj.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZWx1cmhhbGptbm9nZHhxcG9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTE4MzksImV4cCI6MjA4OTc2NzgzOX0.cvWry3iR8MZg7zV6ewKyw8YIOxIUCaV3gUBZlPsykNM';
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const {createClient} = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -410,6 +718,8 @@ let adminProfile=null;
 let allSeasons=[], allLeagues=[], allClubs=[], allMakers=[];
 let selSeason=null, selLeague=null, selClub=null;
 let allUsers=[], editKitId=null, p2Mode='leagues';
+let allImages=[], blogTags=[];
+let siteUrl='yoursite.com';
 
 // ══ LOGIN ══════════════════════════════════════════════════
 async function doLogin(){
@@ -423,7 +733,7 @@ async function doLogin(){
   btn.textContent='Sign In to Admin';btn.disabled=false;
   if(error){err.textContent=error.message;err.style.display='block';return;}
   const {data:p}=await sb.from('profiles').select('*').eq('id',data.user.id).single();
-  if(!p||p.role!=='admin'){await sb.auth.signOut();err.textContent='Access denied. Admins only.';err.style.display='block';return;}
+  if(!p||p.role!=='admin'){await sb.auth.signOut();err.textContent='Access denied.';err.style.display='block';return;}
   adminProfile=p;showApp();
 }
 async function checkSession(){
@@ -432,7 +742,6 @@ async function checkSession(){
   if(p&&p.role==='admin'){adminProfile=p;showApp();}
 }
 async function doSignOut(){await sb.auth.signOut();location.reload();}
-
 async function showApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
@@ -443,114 +752,97 @@ async function showApp(){
 
 // ══ MASTER DATA ════════════════════════════════════════════
 async function loadMaster(){
-  const [s,l,c]=await Promise.all([
+  const [s,l,c,ss]=await Promise.all([
     sb.from('seasons').select('*').order('year_start',{ascending:false}),
     sb.from('leagues').select('*').order('name'),
     sb.from('clubs').select('*').order('name'),
+    sb.from('site_settings').select('*'),
   ]);
-  allSeasons=s.data||[];
-  allLeagues=l.data||[];
-  allClubs=c.data||[];
+  allSeasons=s.data||[];allLeagues=l.data||[];allClubs=c.data||[];
+  if(ss.data){const cfg=Object.fromEntries(ss.data.map(r=>[r.key,r.value]));if(cfg.site_url)siteUrl=cfg.site_url.replace('https://','').replace('http://','');}
   const {data:km}=await sb.from('kits').select('maker').not('maker','is',null);
-  const dbMakers=[...new Set((km||[]).map(k=>k.maker).filter(Boolean))];
-  const defaultMakers=['Adidas','Nike','Puma','Umbro','Kappa','Hummel','New Balance','Under Armour','Joma','Macron','Castore','Errea'];
-  allMakers=[...new Set([...dbMakers,...defaultMakers])].sort();
+  const db=[...new Set((km||[]).map(k=>k.maker).filter(Boolean))];
+  const def=['Adidas','Nike','Puma','Umbro','Kappa','Hummel','New Balance','Under Armour','Joma','Macron','Castore','Errea'];
+  allMakers=[...new Set([...db,...def])].sort();
 }
 
 // ══ VIEW SWITCHER ══════════════════════════════════════════
-function switchView(v,btn){
+function sv(v,btn){
   document.getElementById('view-kits').style.display='none';
-  document.getElementById('view-dash').classList.remove('active');
-  document.querySelectorAll('.other-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.full-page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.ln-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if(v==='kits'){document.getElementById('view-kits').style.display='flex';}
-  else if(v==='dash'){document.getElementById('view-dash').classList.add('active');loadDash();}
-  else{
-    const el=document.getElementById('view-'+v);if(el)el.classList.add('active');
-    if(v==='hp')loadHp();
-    if(v==='ads')loadAds();
-    if(v==='users')loadUsers();
-    if(v==='admins')loadAdmins();
-  }
+  else{const el=document.getElementById('view-'+v);if(el)el.classList.add('active');}
+  if(v==='images')loadImages();
+  if(v==='hp')loadHpBuilder();
+  if(v==='blog')loadBlog();
+  if(v==='pages')loadPages();
+  if(v==='seo')loadSEO();
+  if(v==='ads')loadAds();
+  if(v==='users')loadUsers();
+  if(v==='admins')loadAdmins();
+  if(v==='settings')loadSettings();
+  if(v==='dash')loadDash();
 }
 
-// ══ PANE 1 — SEASONS ══════════════════════════════════════
+// ══ PANE 1 ═════════════════════════════════════════════════
 function renderP1(){
   const q=document.getElementById('p1-q').value.toLowerCase();
-  const filtered=allSeasons.filter(s=>s.name.toLowerCase().includes(q));
-  document.getElementById('p1-list').innerHTML=filtered.length
-    ?filtered.map(s=>`<div class="ti ${selSeason?.id===s.id?'active':''}" onclick="selectSeason('${s.id}')"><span class="ti-ic">📅</span>${s.name}</div>`).join('')
+  const f=allSeasons.filter(s=>s.name.toLowerCase().includes(q));
+  document.getElementById('p1-list').innerHTML=f.length
+    ?f.map(s=>`<div class="ti ${selSeason?.id===s.id?'active':''}" onclick="selectSeason('${s.id}')"><span class="ti-ic">📅</span>${s.name}</div>`).join('')
     :'<div class="empty"><p style="font-size:.8rem">No seasons</p></div>';
 }
 async function selectSeason(id){
   selSeason=allSeasons.find(s=>s.id===id);selLeague=null;selClub=null;p2Mode='leagues';
   renderP1();renderP2Leagues();
-  document.getElementById('p3').innerHTML='<div class="empty" style="margin-top:5rem"><div class="empty-i">🏆</div><p style="font-size:.85rem">Now select a league</p></div>';
+  document.getElementById('p3').innerHTML='<div class="empty" style="margin-top:5rem"><div class="empty-i">🏆</div><p style="font-size:.85rem">Select a league</p></div>';
 }
 async function promptAddSeason(){
   const name=prompt('Season (e.g. 2025/26):');if(!name)return;
-  const parts=name.split('/');
-  const ys=parseInt(parts[0]);
+  const parts=name.split('/');const ys=parseInt(parts[0]);
   const ye=parts[1]?(parts[1].length===2?parseInt(parts[0].substring(0,2)+parts[1]):parseInt(parts[1])):ys+1;
   const{error}=await sb.from('seasons').insert({name:name.trim(),year_start:ys,year_end:ye});
   if(error){toast('Error: '+error.message,'err');return;}
   toast('Season added!');await loadMaster();renderP1();
 }
 
-// ══ PANE 2 — LEAGUES ══════════════════════════════════════
+// ══ PANE 2 ═════════════════════════════════════════════════
+function renderP2(){if(p2Mode==='leagues')renderP2Leagues();else renderP2Clubs();}
 function renderP2Leagues(){
   p2Mode='leagues';
-  const q=document.getElementById('p2-q').value.toLowerCase();
-  document.getElementById('p2-head').innerHTML=`LEAGUE <button class="ph-add" onclick="promptAddLeague()" title="Add">+</button>`;
+  document.getElementById('p2-head').innerHTML=`LEAGUE <button class="ph-add" onclick="promptAddLeague()">+</button>`;
   document.getElementById('p2-q').placeholder='Search league…';
-  const filtered=allLeagues.filter(l=>l.name.toLowerCase().includes(q));
-  document.getElementById('p2-list').innerHTML=filtered.map(l=>{
+  const q=document.getElementById('p2-q').value.toLowerCase();
+  const f=allLeagues.filter(l=>l.name.toLowerCase().includes(q));
+  document.getElementById('p2-list').innerHTML=f.map(l=>{
     const cc=allClubs.filter(c=>c.league_id===l.id).length;
     return `<div class="ti ${selLeague?.id===l.id?'active':''}" onclick="selectLeague('${l.id}')"><span class="ti-ic">🏆</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</span><span class="ti-ct">${cc}</span></div>`;
-  }).join('')||'<div class="empty"><p style="font-size:.8rem">No leagues</p></div>';
-}
-function renderP2(){
-  if(p2Mode==='leagues')renderP2Leagues();
-  else renderP2Clubs();
+  }).join('')||'<div class="empty"><p>No leagues</p></div>';
 }
 async function selectLeague(id){
   selLeague=allLeagues.find(l=>l.id===id);selClub=null;
   renderP2Clubs();
-  document.getElementById('p3').innerHTML='<div class="empty" style="margin-top:5rem"><div class="empty-i">⚽</div><p style="font-size:.85rem">Now select a club</p></div>';
+  document.getElementById('p3').innerHTML='<div class="empty" style="margin-top:5rem"><div class="empty-i">⚽</div><p style="font-size:.85rem">Select a club</p></div>';
 }
 function renderP2Clubs(){
   p2Mode='clubs';
-  const q=document.getElementById('p2-q').value.toLowerCase();
-  document.getElementById('p2-head').innerHTML=`<span style="cursor:pointer;color:var(--w3);font-size:.75rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="selLeague=null;selClub=null;renderP2Leagues()">← ${selLeague?.name||''}</span> <button class="ph-add" onclick="promptAddClub()" title="Add">+</button>`;
+  document.getElementById('p2-head').innerHTML=`<span style="cursor:pointer;color:var(--w3);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px" onclick="selLeague=null;selClub=null;renderP2Leagues()">← ${selLeague?.name||''}</span> <button class="ph-add" onclick="promptAddClub()">+</button>`;
   document.getElementById('p2-q').placeholder='Search club…';
+  const q=document.getElementById('p2-q').value.toLowerCase();
   const clubs=allClubs.filter(c=>c.league_id===selLeague?.id&&c.name.toLowerCase().includes(q));
   document.getElementById('p2-list').innerHTML=clubs.length
     ?clubs.map(c=>`<div class="ti ${selClub?.id===c.id?'active':''}" onclick="selectClub('${c.id}')"><span class="ti-ic">⚽</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span></div>`).join('')
     :'<div class="empty"><p style="font-size:.8rem">No clubs — click + to add</p></div>';
 }
-async function selectClub(id){
-  selClub=allClubs.find(c=>c.id===id);
-  renderP2Clubs();
-  loadP3();
-}
-async function promptAddLeague(){
-  const name=prompt('League name:');if(!name)return;
-  const country=prompt('Country/Region (e.g. England):');
-  const{error}=await sb.from('leagues').insert({name:name.trim(),country:country||null});
-  if(error){toast('Error: '+error.message,'err');return;}
-  toast('League added!');await loadMaster();renderP2Leagues();
-}
-async function promptAddClub(){
-  const name=prompt('Club name:');if(!name)return;
-  const{error}=await sb.from('clubs').insert({name:name.trim(),league_id:selLeague?.id||null,country:selLeague?.country||null});
-  if(error){toast('Error: '+error.message,'err');return;}
-  toast('Club added!');await loadMaster();if(selLeague)renderP2Clubs();
-}
+async function selectClub(id){selClub=allClubs.find(c=>c.id===id);renderP2Clubs();loadP3();}
+async function promptAddLeague(){const name=prompt('League name:');if(!name)return;const country=prompt('Country:');const{error}=await sb.from('leagues').insert({name:name.trim(),country:country||null});if(error){toast('Error: '+error.message,'err');return;}toast('League added!');await loadMaster();renderP2Leagues();}
+async function promptAddClub(){const name=prompt('Club name:');if(!name)return;const{error}=await sb.from('clubs').insert({name:name.trim(),league_id:selLeague?.id||null});if(error){toast('Error: '+error.message,'err');return;}toast('Club added!');await loadMaster();if(selLeague)renderP2Clubs();}
 
-// ══ PANE 3 — KIT CARDS ════════════════════════════════════
+// ══ PANE 3 ═════════════════════════════════════════════════
 async function loadP3(){
-  if(!selSeason||!selClub){return;}
+  if(!selSeason||!selClub)return;
   const p3=document.getElementById('p3');
   p3.innerHTML='<div class="spinner"></div>';
   const{data:kits}=await sb.from('kits_with_stats').select('*').eq('team',selClub.name).eq('season',selSeason.name);
@@ -558,40 +850,14 @@ async function loadP3(){
   const bc=t=>t==='Home'?'bh':t==='Away'?'ba':t.includes('Special')?'bsp':'bt';
   p3.innerHTML=`
     <div class="p3-head">
-      <div>
-        <div class="p3-title">${selClub.name} <span>${selSeason.name}</span></div>
-        <div class="p3-sub">${selLeague?.name||''} &nbsp;·&nbsp; ${(kits||[]).length} kit${(kits||[]).length!==1?'s':''} this season</div>
-      </div>
+      <div><div class="p3-title">${selClub.name} <span>${selSeason.name}</span></div><div class="p3-sub">${selLeague?.name||''} · ${(kits||[]).length} kit${(kits||[]).length!==1?'s':''}</div></div>
       <button class="btn btn-p btn-sm" onclick="openKitForm(null,'${selClub.name.replace(/'/g,"\\'")}','${selSeason.name}','${(selLeague?.name||'').replace(/'/g,"\\'")}')">+ Add Kit</button>
     </div>
     <div class="type-grid">
       <div class="type-label">Kit Types — click to add or edit</div>
-      ${types.map(t=>{
-        const k=(kits||[]).find(x=>x.type===t);
-        return `<div class="tc ${k?'filled':''}" onclick="${k?`openKitForm(${JSON.stringify(k).replace(/"/g,'&quot;')})`:`openKitForm(null,'${selClub.name.replace(/'/g,"\\'")}','${selSeason.name}','${(selLeague?.name||'').replace(/'/g,"\\'")}','${t}')`}">
-          <div class="tc-img">${k?.image_url?`<img src="${k.image_url}" alt="${t}"/>`:'👕'}</div>
-          <span class="badge ${bc(t)}">${t}</span>
-          <div class="tc-info">${k?`★ ${parseFloat(k.avg_rating||0).toFixed(1)} · ${k.is_published?'Live':'Draft'}`:'Not added yet'}</div>
-        </div>`;
-      }).join('')}
+      ${types.map(t=>{const k=(kits||[]).find(x=>x.type===t);return `<div class="tc ${k?'filled':''}" onclick="${k?`openKitForm(${JSON.stringify(k).replace(/"/g,'&quot;')})`:`openKitForm(null,'${selClub.name.replace(/'/g,"\\'")}','${selSeason.name}','${(selLeague?.name||'').replace(/'/g,"\\'")}','${t}')`}"><div class="tc-img">${k?.image_url?`<img src="${k.image_url}" alt="${t}"/>`:'👕'}</div><span class="badge ${bc(t)}">${t}</span><div style="font-size:.62rem;color:var(--w4);margin-top:.2rem">${k?`★ ${parseFloat(k.avg_rating||0).toFixed(1)} · ${k.is_published?'Live':'Draft'}`:'Not added yet'}</div></div>`;}).join('')}
     </div>
-    ${(kits||[]).length?`<div class="kits-table">
-      <table>
-        <thead><tr><th>Img</th><th>Type</th><th>Maker</th><th>Color</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>${(kits||[]).map(k=>`<tr>
-          <td><div class="td-img">${k.image_url?`<img src="${k.image_url}"/>`:'👕'}</div></td>
-          <td><span class="badge ${bc(k.type)}">${k.type}</span></td>
-          <td style="color:var(--w3);font-size:.78rem">${k.maker||'—'}</td>
-          <td style="color:var(--w3);font-size:.78rem">${k.color||'—'}</td>
-          <td style="font-family:var(--fm);font-size:.72rem;color:var(--g)">${k.price_label||'—'}</td>
-          <td><span class="badge ${k.is_published?'pub-y':'pub-n'}">${k.is_published?'Live':'Draft'}</span></td>
-          <td><div style="display:flex;gap:.35rem">
-            <button class="btn-ed" onclick='openKitForm(${JSON.stringify(k).replace(/'/g,"&#39;")})'>Edit</button>
-            <button class="btn-del" onclick="delKit('${k.id}','${k.team.replace(/'/g,"\\'")}')">Del</button>
-          </div></td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>`:''}`;
+    ${(kits||[]).length?`<div class="kits-table"><table><thead><tr><th>Img</th><th>Type</th><th>Maker</th><th>Status</th><th>Actions</th></tr></thead><tbody>${(kits||[]).map(k=>`<tr><td><div class="td-img">${k.image_url?`<img src="${k.image_url}"/>`:'👕'}</div></td><td><span class="badge ${bc(k.type)}">${k.type}</span></td><td style="color:var(--w3);font-size:.78rem">${k.maker||'—'}</td><td><span class="badge ${k.is_published?'pub-y':'pub-n'}">${k.is_published?'Live':'Draft'}</span></td><td><div style="display:flex;gap:.35rem"><button class="btn-ed" onclick='openKitForm(${JSON.stringify(k).replace(/'/g,"&#39;")})'>Edit</button><button class="btn-del" onclick="delKit('${k.id}','${k.team.replace(/'/g,"\\'")}')">Del</button></div></td></tr>`).join('')}</tbody></table></div>`:''}`;
 }
 
 // ══ KIT FORM ══════════════════════════════════════════════
@@ -613,147 +879,438 @@ function openKitForm(kit,preTeam='',preSeason='',preLeague='',preType='Home'){
   document.getElementById('kf-img2').value    =f.image_url_2||'';
   document.getElementById('kf-img3').value    =f.image_url_3||'';
   document.getElementById('kf-desc').value    =f.description||'';
+  document.getElementById('kf-seo-title').value=f.seo_title||'';
+  document.getElementById('kf-seo-desc').value =f.seo_description||'';
   document.getElementById('kf-pub').checked   =f.is_published!==false;
   document.getElementById('kf-feat').checked  =!!f.is_featured;
   document.getElementById('kf-id').value      =f.id||'';
+  document.getElementById('kit-img-gallery').innerHTML='';
   prevImg();
   if(!kit)setTimeout(autoSlug,50);
   document.getElementById('kit-ov').classList.add('open');
 }
 function closeKitForm(){document.getElementById('kit-ov').classList.remove('open');}
-function closeKitOvEvt(e){if(e.target===document.getElementById('kit-ov'))closeKitForm();}
 function prevImg(){const u=document.getElementById('kf-img').value.trim();const b=document.getElementById('img-prev');b.innerHTML=u?`<img src="${u}" onerror="this.parentElement.innerHTML='📷'"/>`:'📷';}
-
-function autoSlug(){
-  if(editKitId)return;
-  const t=document.getElementById('kf-team').value.trim();
-  const s=document.getElementById('kf-season').value.trim();
-  const tp=document.getElementById('kf-type').value.toLowerCase().replace(/\s+/g,'-');
-  if(t&&s){document.getElementById('kf-slug').value=(t+'-'+tp+'-'+s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
-}
-document.getElementById('kf-team').addEventListener('input',autoSlug);
+function autoSlug(){if(editKitId)return;const t=document.getElementById('kf-team').value.trim(),s=document.getElementById('kf-season').value.trim(),tp=document.getElementById('kf-type').value.toLowerCase().replace(/\s+/g,'-');if(t&&s)document.getElementById('kf-slug').value=(t+'-'+tp+'-'+s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+document.getElementById('kf-team').addEventListener('input',()=>{autoSlug();autoFill();});
 document.getElementById('kf-season').addEventListener('input',autoSlug);
 
 async function saveKit(){
-  const team=document.getElementById('kf-team').value.trim();
-  const season=document.getElementById('kf-season').value.trim();
+  const team=document.getElementById('kf-team').value.trim(),season=document.getElementById('kf-season').value.trim();
   let slug=document.getElementById('kf-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
   if(!team||!season){toast('Team and Season required','err');return;}
-  if(!slug)autoSlug(),slug=document.getElementById('kf-slug').value.trim();
-  if(!slug){toast('Could not generate slug','err');return;}
-  const payload={
-    team,season,slug,
-    league:document.getElementById('kf-league').value.trim()||null,
-    type:document.getElementById('kf-type').value,
-    maker:document.getElementById('kf-maker').value.trim()||null,
-    color:document.getElementById('kf-color').value.trim()||null,
-    price_label:document.getElementById('kf-price').value.trim()||null,
-    buy_url:document.getElementById('kf-buy').value.trim()||null,
-    buy_label:document.getElementById('kf-buylabel').value.trim()||'Buy Now',
-    image_url:document.getElementById('kf-img').value.trim()||null,
-    image_url_2:document.getElementById('kf-img2').value.trim()||null,
-    image_url_3:document.getElementById('kf-img3').value.trim()||null,
-    description:document.getElementById('kf-desc').value.trim()||null,
-    is_published:document.getElementById('kf-pub').checked,
-    is_featured:document.getElementById('kf-feat').checked,
-    updated_at:new Date().toISOString(),
-  };
+  if(!slug){autoSlug();slug=document.getElementById('kf-slug').value.trim();}
+  const payload={team,season,slug,league:document.getElementById('kf-league').value.trim()||null,type:document.getElementById('kf-type').value,maker:document.getElementById('kf-maker').value.trim()||null,color:document.getElementById('kf-color').value.trim()||null,price_label:document.getElementById('kf-price').value.trim()||null,buy_url:document.getElementById('kf-buy').value.trim()||null,buy_label:document.getElementById('kf-buylabel').value.trim()||'Buy Now',image_url:document.getElementById('kf-img').value.trim()||null,image_url_2:document.getElementById('kf-img2').value.trim()||null,image_url_3:document.getElementById('kf-img3').value.trim()||null,description:document.getElementById('kf-desc').value.trim()||null,seo_title:document.getElementById('kf-seo-title').value.trim()||null,seo_description:document.getElementById('kf-seo-desc').value.trim()||null,is_published:document.getElementById('kf-pub').checked,is_featured:document.getElementById('kf-feat').checked,updated_at:new Date().toISOString()};
   let error;
   if(editKitId){({error}=await sb.from('kits').update(payload).eq('id',editKitId));}
   else{({error}=await sb.from('kits').insert(payload));}
   if(error){toast('Error: '+error.message,'err');return;}
-  const maker=payload.maker;
-  if(maker&&!allMakers.includes(maker)){allMakers.push(maker);allMakers.sort();}
   toast(editKitId?'Kit updated!':'Kit added!');
-  closeKitForm();
-  if(selClub&&selSeason)loadP3();
+  closeKitForm();if(selClub&&selSeason)loadP3();
 }
-async function delKit(id,name){
-  if(!confirm(`Delete "${name}"?`))return;
-  const{error}=await sb.from('kits').delete().eq('id',id);
-  if(error){toast('Error: '+error.message,'err');return;}
-  toast('Deleted');if(selClub&&selSeason)loadP3();
-}
+async function delKit(id,name){if(!confirm(`Delete "${name}"?`))return;const{error}=await sb.from('kits').delete().eq('id',id);if(error){toast('Error: '+error.message,'err');return;}toast('Deleted');if(selClub&&selSeason)loadP3();}
 
 // ══ AUTOCOMPLETE ══════════════════════════════════════════
-const acSrc={
-  team:()=>allClubs.map(c=>c.name),
-  season:()=>allSeasons.map(s=>s.name),
-  league:()=>allLeagues.map(l=>l.name),
-  maker:()=>allMakers,
-};
-function acIn(key){
-  const inp=document.getElementById('kf-'+key);
-  const list=document.getElementById('acl-'+key);
-  const q=inp.value.toLowerCase();
-  const src=acSrc[key]?acSrc[key]():[];
-  const matches=src.filter(v=>v.toLowerCase().includes(q)).slice(0,10);
-  const exact=src.find(v=>v.toLowerCase()===q);
-  if(!matches.length&&!q){list.classList.remove('open');return;}
-  const items=matches.map(v=>`<div class="aci" onmousedown="acSet('${key}','${v.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}');${key==='team'?'autoFill();':''}">${v}</div>`).join('');
-  const addNew=q&&!exact?`<div class="aci aci-new" onmousedown="acSet('${key}','${inp.value.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">+ Use "${inp.value}"</div>`:'';
-  list.innerHTML=items+addNew;
-  list.classList.add('open');
-}
-function acSet(key,val){
-  document.getElementById('kf-'+key).value=val;
-  acClose(key);
-  if(key==='team')autoFill();
-  setTimeout(autoSlug,30);
-}
+const acSrc={team:()=>allClubs.map(c=>c.name),season:()=>allSeasons.map(s=>s.name),league:()=>allLeagues.map(l=>l.name),maker:()=>allMakers};
+function acIn(key){const inp=document.getElementById('kf-'+key),list=document.getElementById('acl-'+key),q=inp.value.toLowerCase();const src=acSrc[key]?acSrc[key]():[];const matches=src.filter(v=>v.toLowerCase().includes(q)).slice(0,10);const exact=src.find(v=>v.toLowerCase()===q);if(!matches.length&&!q){list.classList.remove('open');return;}list.innerHTML=matches.map(v=>`<div class="aci" onmousedown="acSet('${key}','${v.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">  ${v}</div>`).join('')+(q&&!exact?`<div class="aci aci-new" onmousedown="acSet('${key}','${inp.value.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">+ Use "${inp.value}"</div>`:'');list.classList.add('open');}
+function acSet(key,val){document.getElementById('kf-'+key).value=val;acClose(key);if(key==='team')autoFill();setTimeout(autoSlug,30);}
 function acClose(key){document.getElementById('acl-'+key)?.classList.remove('open');}
-function autoFill(){
-  const name=document.getElementById('kf-team').value.trim();
-  const club=allClubs.find(c=>c.name.toLowerCase()===name.toLowerCase());
-  if(club?.league_id){
-    const lg=allLeagues.find(l=>l.id===club.league_id);
-    if(lg&&!document.getElementById('kf-league').value)document.getElementById('kf-league').value=lg.name;
+function autoFill(){const name=document.getElementById('kf-team').value.trim();const club=allClubs.find(c=>c.name.toLowerCase()===name.toLowerCase());if(club?.league_id){const lg=allLeagues.find(l=>l.id===club.league_id);if(lg&&!document.getElementById('kf-league').value)document.getElementById('kf-league').value=lg.name;}}
+
+// ══ IMAGE UPLOAD ══════════════════════════════════════════
+function makeImgName(file, teamName='', season='', type='') {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const base = (teamName||'kit').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const s = (season||'').replace(/\//g,'-').replace(/[^a-z0-9-]/g,'');
+  const t = (type||'').toLowerCase().replace(/\s+/g,'-');
+  const ts = Date.now();
+  return `${base}${s?'-'+s:''}${t?'-'+t:''}-${ts}.${ext}`;
+}
+
+async function uploadImgToSupabase(file, filename) {
+  const { data, error } = await sb.storage.from('kits').upload(filename, file, { contentType: file.type, upsert: true });
+  if (error) throw error;
+  const { data: urlData } = sb.storage.from('kits').getPublicUrl(filename);
+  return urlData.publicUrl;
+}
+
+// Kit form image upload
+async function handleKitImgSelect(e) { await processKitImages([...e.target.files]); }
+async function handleKitImgDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); await processKitImages([...e.dataTransfer.files]); }
+
+async function processKitImages(files) {
+  const team = document.getElementById('kf-team').value.trim();
+  const season = document.getElementById('kf-season').value.trim();
+  const type = document.getElementById('kf-type').value;
+  const gallery = document.getElementById('kit-img-gallery');
+  const imgFields = ['kf-img','kf-img2','kf-img3'];
+  let fieldIdx = imgFields.findIndex(id => !document.getElementById(id).value);
+  if (fieldIdx === -1) fieldIdx = 0;
+
+  for (const file of files.slice(0, 3)) {
+    const name = makeImgName(file, team, season, type);
+    try {
+      const url = await uploadImgToSupabase(file, name);
+      if (fieldIdx < 3) {
+        document.getElementById(imgFields[fieldIdx]).value = url;
+        if (fieldIdx === 0) prevImg();
+        fieldIdx++;
+      }
+      const thumb = document.createElement('div');
+      thumb.className = 'img-thumb selected';
+      thumb.innerHTML = `<img src="${url}" alt="${name}"/>`;
+      gallery.appendChild(thumb);
+      toast('Image uploaded!');
+    } catch(err) { toast('Upload failed: '+err.message,'err'); }
   }
 }
 
-// ══ DASHBOARD ═════════════════════════════════════════════
-async function loadDash(){
-  const[{count:kc},{count:uc},{count:rc}]=await Promise.all([
-    sb.from('kits').select('*',{count:'exact',head:true}),
-    sb.from('profiles').select('*',{count:'exact',head:true}).eq('role','subscriber'),
-    sb.from('ratings').select('*',{count:'exact',head:true}),
-  ]);
-  document.getElementById('d-kits').textContent=kc||0;
-  document.getElementById('d-clubs').textContent=allClubs.length;
-  document.getElementById('d-users').textContent=uc||0;
-  document.getElementById('d-ratings').textContent=rc||0;
-  const{data:rk}=await sb.from('kits').select('team,season,type,created_at').order('created_at',{ascending:false}).limit(6);
-  document.getElementById('d-rk').innerHTML=(rk||[]).map(k=>`<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem"><span>${k.team} <span style="color:var(--w4)">${k.season} ${k.type}</span></span><span style="font-size:.68rem;color:var(--w4)">${new Date(k.created_at).toLocaleDateString('en-GB')}</span></div>`).join('');
-  const{data:ru}=await sb.from('profiles').select('username,country,created_at').eq('role','subscriber').order('created_at',{ascending:false}).limit(6);
-  document.getElementById('d-ru').innerHTML=(ru||[]).map(u=>`<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem"><span>${u.username||'—'} <span style="color:var(--w4)">${u.country||''}</span></span><span style="font-size:.68rem;color:var(--w4)">${new Date(u.created_at).toLocaleDateString('en-GB')}</span></div>`).join('');
+// Image Manager
+async function loadImages() {
+  const gallery = document.getElementById('img-gallery');
+  try {
+    const { data, error } = await sb.storage.from('kits').list('', { limit: 200, sortBy: { column: 'created_at', order: 'desc' } });
+    if (error) throw error;
+    allImages = data || [];
+    renderImageGallery(allImages);
+  } catch(e) {
+    gallery.innerHTML = `<div style="grid-column:1/-1;color:var(--red);font-size:.82rem">⚠ Could not load images. Make sure the "kits" storage bucket exists and is public.</div>`;
+  }
+}
+function filterImages() {
+  const q = document.getElementById('img-search').value.toLowerCase();
+  renderImageGallery(q ? allImages.filter(i=>i.name.toLowerCase().includes(q)) : allImages);
+}
+function renderImageGallery(images) {
+  const gallery = document.getElementById('img-gallery');
+  if (!images.length) { gallery.innerHTML = '<div style="grid-column:1/-1;font-size:.82rem;color:var(--w4)">No images yet. Upload some above.</div>'; return; }
+  gallery.innerHTML = images.map(img => {
+    const { data } = sb.storage.from('kits').getPublicUrl(img.name);
+    return `<div class="img-thumb" title="${img.name}" onclick="copyImgUrl('${data.publicUrl}')">
+      <img src="${data.publicUrl}" alt="${img.name}" loading="lazy"/>
+      <button class="thumb-del" onclick="event.stopPropagation();deleteImg('${img.name}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function copyImgUrl(url) {
+  navigator.clipboard.writeText(url);
+  toast('URL copied to clipboard!');
+}
+async function deleteImg(name) {
+  if (!confirm(`Delete image "${name}"?`)) return;
+  const { error } = await sb.storage.from('kits').remove([name]);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  toast('Image deleted'); loadImages();
 }
 
-// ══ HOMEPAGE ══════════════════════════════════════════════
-async function loadHp(){
-  const{data}=await sb.from('homepage_config').select('*');if(!data)return;
-  const cfg=Object.fromEntries(data.map(r=>[r.key,r.value]));
-  document.getElementById('hp-title').value=cfg.hero_title||'';
-  document.getElementById('hp-sub').value=cfg.hero_subtitle||'';
-  document.getElementById('hp-cta').value=cfg.hero_cta_text||'';
-  document.getElementById('hp-feat').value=cfg.featured_title||'';
-  document.getElementById('hp-ann').value=cfg.announcement||'';
-  document.getElementById('hp-ann-on').checked=cfg.announcement_on==='true';
-  const{data:feat}=await sb.from('kits').select('team,season,type,slug').eq('is_featured',true).limit(10);
-  document.getElementById('hp-feat-list').innerHTML=(feat||[]).length
-    ?(feat||[]).map(k=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd);font-size:.83rem"><span>${k.team} — ${k.season} ${k.type}</span><button class="btn-del btn-sm" onclick="unfeature('${k.slug}')">Remove</button></div>`).join('')
-    :'<div style="font-size:.8rem;color:var(--w4);margin-top:.5rem">No featured kits yet. Mark kits as Featured in Kit Manager.</div>';
+// Image Manager upload zone
+async function handleImgDrop(e) { e.preventDefault(); document.getElementById('img-upload-zone').classList.remove('dragover'); await processManagerImages([...e.dataTransfer.files]); }
+async function handleImgSelect(e) { await processManagerImages([...e.target.files]); }
+async function processManagerImages(files) {
+  const prog = document.getElementById('upload-progress');
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  prog.style.display = 'block';
+  let done = 0;
+  for (const file of files) {
+    const name = makeImgName(file);
+    try {
+      text.textContent = `Uploading ${file.name}…`;
+      await uploadImgToSupabase(file, name);
+      done++;
+      fill.style.width = Math.round((done/files.length)*100)+'%';
+    } catch(err) { toast('Failed: '+err.message,'err'); }
+  }
+  text.textContent = `✓ ${done} image${done!==1?'s':''} uploaded`;
+  setTimeout(() => { prog.style.display='none'; fill.style.width='0%'; }, 2000);
+  loadImages();
+  toast(`${done} image${done!==1?'s':''} uploaded!`);
 }
-async function saveHp(){
-  for(const[key,id]of[['hero_title','hp-title'],['hero_subtitle','hp-sub'],['hero_cta_text','hp-cta'],['featured_title','hp-feat']])
-    await sb.from('homepage_config').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});
-  toast('Homepage saved!');
+
+// ══ HOMEPAGE BUILDER ══════════════════════════════════════
+const SECTION_PRESETS = [
+  {type:'hero',icon:'🦸',name:'Hero Banner',desc:'Main hero with title, subtitle & CTA'},
+  {type:'featured_kits',icon:'⭐',name:'Featured Kits',desc:'Showcase selected kits'},
+  {type:'latest_kits',icon:'🆕',name:'Latest Kits',desc:'Auto-show newest kits'},
+  {type:'kit_filter',icon:'🔍',name:'Kit Filter',desc:'Filterable kit grid'},
+  {type:'blog_posts',icon:'📝',name:'Blog Posts',desc:'Latest blog articles'},
+  {type:'banner',icon:'📢',name:'Banner/Announcement',desc:'Coloured announcement strip'},
+  {type:'newsletter',icon:'✉️',name:'Newsletter',desc:'Email signup form'},
+  {type:'content',icon:'📄',name:'Content Block',desc:'Title + rich text content'},
+  {type:'gallery',icon:'🖼️',name:'Image Gallery',desc:'Kit image gallery'},
+  {type:'custom_html',icon:'</>', name:'Custom HTML',desc:'Any custom HTML/embed'},
+];
+
+async function loadHpBuilder() {
+  const { data } = await sb.from('homepage_sections').select('*').order('sort_order');
+  renderSectionBuilder(data||[]);
 }
-async function saveAnn(){
-  await sb.from('homepage_config').upsert({key:'announcement',value:document.getElementById('hp-ann').value},{onConflict:'key'});
-  await sb.from('homepage_config').upsert({key:'announcement_on',value:String(document.getElementById('hp-ann-on').checked)},{onConflict:'key'});
-  toast('Announcement saved!');
+function renderSectionBuilder(sections) {
+  const el = document.getElementById('section-builder');
+  el.innerHTML = sections.map(s => {
+    const preset = SECTION_PRESETS.find(p=>p.type===s.type)||{icon:'📦',name:s.type};
+    const cfg = s.settings||{};
+    return `<div class="hb-card" id="hbc-${s.id}" draggable="true" ondragstart="dragStart(event,'${s.id}')" ondragover="dragOver(event)" ondrop="dragDrop(event,'${s.id}')">
+      <div class="hb-head" onclick="toggleHbBody('${s.id}')">
+        <span class="hb-drag">⠿</span>
+        <span class="hb-icon">${preset.icon}</span>
+        <div>
+          <div class="hb-name">${s.label||preset.name}</div>
+          <div class="hb-type">${s.type}</div>
+        </div>
+        <div class="hb-actions">
+          <label class="tgl" onclick="event.stopPropagation()"><input type="checkbox" ${s.is_active?'checked':''} onchange="toggleSection('${s.id}',this.checked)"/><span class="tgl-s"></span></label>
+          <button class="btn-del btn-sm" onclick="event.stopPropagation();deleteSection('${s.id}')">Del</button>
+        </div>
+      </div>
+      <div class="hb-body" id="hbb-${s.id}">
+        ${renderSectionSettings(s)}
+        <div style="display:flex;gap:.5rem;margin-top:.875rem">
+          <button class="btn btn-p btn-sm" onclick="saveSectionSettings('${s.id}')">Save</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
-async function unfeature(slug){await sb.from('kits').update({is_featured:false}).eq('slug',slug);loadHp();toast('Removed from featured');}
+
+function renderSectionSettings(s) {
+  const cfg = s.settings||{};
+  const field = (label,id,val,type='text') => `<div class="field" style="margin-bottom:.6rem"><label>${label}</label><input id="hbs-${s.id}-${id}" type="${type}" value="${(val||'').replace(/"/g,'&quot;')}"/></div>`;
+  const textarea = (label,id,val) => `<div class="field" style="margin-bottom:.6rem"><label>${label}</label><textarea id="hbs-${s.id}-${id}" style="min-height:60px">${val||''}</textarea></div>`;
+  switch(s.type) {
+    case 'hero': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">${field('Title','title',cfg.title)}${field('Subtitle','subtitle',cfg.subtitle)}${field('CTA Button Text','cta_text',cfg.cta_text)}${field('CTA URL','cta_url',cfg.cta_url)}</div>`;
+    case 'banner': return `${field('Text','text',cfg.text)}${field('Background Color','bg_color',cfg.bg_color,'color')}${field('Text Color','text_color',cfg.text_color,'color')}`;
+    case 'featured_kits': return `${field('Section Title','title',cfg.title)}${field('Max Kits to Show','limit',cfg.limit,'number')}`;
+    case 'latest_kits': return `${field('Section Title','title',cfg.title)}${field('Max Kits','limit',cfg.limit,'number')}`;
+    case 'blog_posts': return `${field('Section Title','title',cfg.title)}${field('Max Posts','limit',cfg.limit,'number')}`;
+    case 'newsletter': return `${field('Title','title',cfg.title)}${field('Subtitle','subtitle',cfg.subtitle)}${field('Button Text','button_text',cfg.button_text)}`;
+    case 'content': return `${field('Title','title',cfg.title)}${textarea('Body HTML','body',cfg.body)}`;
+    case 'custom_html': return `${textarea('Custom HTML','html',cfg.html)}`;
+    case 'kit_filter': return `${field('Title','title',cfg.title)}${field('Filter by (league/type/season)','filter_type',cfg.filter_type)}`;
+    default: return `${field('Title','title',cfg.title||'')}`;
+  }
+}
+
+function toggleHbBody(id) { const el=document.getElementById('hbb-'+id); el.classList.toggle('open'); }
+
+async function toggleSection(id, active) {
+  await sb.from('homepage_sections').update({is_active:active}).eq('id',id);
+  toast(active?'Section enabled':'Section disabled');
+}
+
+async function saveSectionSettings(id) {
+  const section = document.querySelectorAll('[id^="hbs-'+id+'-"]');
+  const settings = {};
+  section.forEach(el => { const key=el.id.replace('hbs-'+id+'-',''); settings[key]=el.value||el.textContent; });
+  await sb.from('homepage_sections').update({settings,updated_at:new Date().toISOString()}).eq('id',id);
+  toast('Section saved!');
+}
+
+async function deleteSection(id) {
+  if(!confirm('Delete this section?'))return;
+  await sb.from('homepage_sections').delete().eq('id',id);
+  toast('Section deleted');loadHpBuilder();
+}
+
+// Drag to reorder
+let dragId=null;
+function dragStart(e,id){dragId=id;e.dataTransfer.effectAllowed='move';}
+function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+async function dragDrop(e,targetId){
+  e.preventDefault();if(!dragId||dragId===targetId)return;
+  const cards=[...document.querySelectorAll('.hb-card')];
+  const ids=cards.map(c=>c.id.replace('hbc-',''));
+  const fromIdx=ids.indexOf(dragId),toIdx=ids.indexOf(targetId);
+  ids.splice(fromIdx,1);ids.splice(toIdx,0,dragId);
+  for(let i=0;i<ids.length;i++) await sb.from('homepage_sections').update({sort_order:i+1}).eq('id',ids[i]);
+  loadHpBuilder();toast('Order saved!');dragId=null;
+}
+async function saveHpOrder(){toast('Order saved automatically when dragging!');}
+
+function addPresetSection() {
+  document.getElementById('preset-grid').innerHTML = SECTION_PRESETS.map(p =>
+    `<div class="preset-card" onclick="addSection('${p.type}','${p.name}')">
+      <div class="preset-icon">${p.icon}</div>
+      <div class="preset-name">${p.name}</div>
+      <div class="preset-desc">${p.desc}</div>
+    </div>`
+  ).join('');
+  document.getElementById('preset-ov').classList.add('open');
+}
+async function addSection(type, name) {
+  const { data: existing } = await sb.from('homepage_sections').select('sort_order').order('sort_order',{ascending:false}).limit(1);
+  const nextOrder = (existing?.[0]?.sort_order||0)+1;
+  await sb.from('homepage_sections').insert({type,label:name,is_active:false,sort_order:nextOrder,settings:{}});
+  document.getElementById('preset-ov').classList.remove('open');
+  toast('Section added!');loadHpBuilder();
+}
+
+// ══ BLOG ══════════════════════════════════════════════════
+async function loadBlog() {
+  const { data } = await sb.from('blog_posts').select('*').order('created_at',{ascending:false});
+  document.getElementById('blog-tb').innerHTML = (data||[]).map(p => `<tr>
+    <td style="font-weight:600;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</td>
+    <td><span class="badge ${p.is_published?'pub-y':'pub-n'}">${p.is_published?'Live':'Draft'}</span></td>
+    <td style="font-size:.75rem;color:var(--w4)">${p.published_at?new Date(p.published_at).toLocaleDateString('en-GB'):'-'}</td>
+    <td style="font-size:.72rem;color:var(--w3)">${(p.tags||[]).slice(0,3).join(', ')||'—'}</td>
+    <td><div style="display:flex;gap:.35rem"><button class="btn-ed" onclick="openBlogForm(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button><button class="btn-del" onclick="delBlog('${p.id}','${p.title.replace(/'/g,"\\'")}')">Del</button></div></td>
+  </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No posts yet.</td></tr>';
+}
+
+function openBlogForm(post) {
+  const p = post||{};
+  document.getElementById('bf-title').innerHTML = p.id?'EDIT <span>POST</span>':'NEW <span>POST</span>';
+  document.getElementById('bf-title-input').value = p.title||'';
+  document.getElementById('bf-slug').value = p.slug||'';
+  document.getElementById('bf-cover').value = p.cover_image||'';
+  document.getElementById('bf-excerpt').value = p.excerpt||'';
+  document.getElementById('bf-seo-title').value = p.seo_title||'';
+  document.getElementById('bf-seo-desc').value = p.seo_description||'';
+  document.getElementById('bf-og-img').value = p.og_image||'';
+  document.getElementById('bf-pub').checked = !!p.is_published;
+  document.getElementById('bf-id').value = p.id||'';
+  document.getElementById('tiptap-editor').innerHTML = p.content||'';
+  // tags
+  blogTags = p.tags||[];
+  renderTags();
+  document.getElementById('blog-ov').classList.add('open');
+}
+function closeBlogForm(){document.getElementById('blog-ov').classList.remove('open');}
+
+function autoBlogSlug(){
+  if(document.getElementById('bf-id').value)return;
+  const title=document.getElementById('bf-title-input').value.trim();
+  if(title)document.getElementById('bf-slug').value=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+function handleTagInput(e){
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const val=e.target.value.trim().replace(',','');
+    if(val&&!blogTags.includes(val)){blogTags.push(val);renderTags();}
+    e.target.value='';
+  }
+}
+function removeTag(tag){blogTags=blogTags.filter(t=>t!==tag);renderTags();}
+function renderTags(){
+  const wrap=document.getElementById('tags-wrap');
+  const input=document.getElementById('tags-input');
+  wrap.innerHTML='';
+  blogTags.forEach(t=>{const span=document.createElement('span');span.className='tag-item';span.innerHTML=`${t}<button onclick="removeTag('${t}')">✕</button>`;wrap.appendChild(span);});
+  wrap.appendChild(input);
+}
+
+async function saveBlogPost(){
+  const title=document.getElementById('bf-title-input').value.trim();
+  const slug=document.getElementById('bf-slug').value.trim();
+  const id=document.getElementById('bf-id').value;
+  if(!title||!slug){toast('Title and Slug required','err');return;}
+  const isPublished=document.getElementById('bf-pub').checked;
+  const payload={
+    title,slug,
+    cover_image:document.getElementById('bf-cover').value.trim()||null,
+    excerpt:document.getElementById('bf-excerpt').value.trim()||null,
+    content:document.getElementById('tiptap-editor').innerHTML,
+    seo_title:document.getElementById('bf-seo-title').value.trim()||null,
+    seo_description:document.getElementById('bf-seo-desc').value.trim()||null,
+    og_image:document.getElementById('bf-og-img').value.trim()||null,
+    is_published:isPublished,
+    published_at:isPublished?new Date().toISOString():null,
+    tags:blogTags,
+    updated_at:new Date().toISOString(),
+    author_id:adminProfile.id,
+  };
+  let error;
+  if(id){({error}=await sb.from('blog_posts').update(payload).eq('id',id));}
+  else{({error}=await sb.from('blog_posts').insert(payload));}
+  if(error){toast('Error: '+error.message,'err');return;}
+  toast(id?'Post updated!':'Post published!');closeBlogForm();loadBlog();
+}
+async function delBlog(id,title){if(!confirm(`Delete "${title}"?`))return;await sb.from('blog_posts').delete().eq('id',id);toast('Deleted');loadBlog();}
+
+// Simple rich editor commands (no TipTap dependency needed)
+function edCmd(cmd){
+  const ed=document.getElementById('tiptap-editor');ed.focus();
+  const cmds={bold:()=>document.execCommand('bold'),italic:()=>document.execCommand('italic'),strike:()=>document.execCommand('strikeThrough'),h1:()=>document.execCommand('formatBlock',false,'h1'),h2:()=>document.execCommand('formatBlock',false,'h2'),h3:()=>document.execCommand('formatBlock',false,'h3'),bulletList:()=>document.execCommand('insertUnorderedList'),orderedList:()=>document.execCommand('insertOrderedList'),blockquote:()=>document.execCommand('formatBlock',false,'blockquote'),code:()=>document.execCommand('insertHTML','<code>code</code>'),codeBlock:()=>document.execCommand('formatBlock',false,'pre'),undo:()=>document.execCommand('undo'),redo:()=>document.execCommand('redo'),link:()=>{const url=prompt('URL:');if(url)document.execCommand('createLink',false,url);}};
+  if(cmds[cmd])cmds[cmd]();
+}
+function edInsertImg(){const url=prompt('Image URL:');if(url){document.getElementById('tiptap-editor').focus();document.execCommand('insertHTML',false,`<img src="${url}" style="max-width:100%;border-radius:8px;margin:1rem 0"/>`)}}
+function edInsertVideo(){const url=prompt('YouTube/Vimeo URL:');if(url){const embedUrl=url.includes('youtube.com/watch?v=')?url.replace('watch?v=','embed/'):url.includes('youtu.be/')?'https://www.youtube.com/embed/'+url.split('youtu.be/')[1]:url;document.getElementById('tiptap-editor').focus();document.execCommand('insertHTML',false,`<iframe src="${embedUrl}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;margin:1rem 0"></iframe>`);}}
+
+function pgCmd(cmd){document.getElementById('page-editor').focus();edCmd(cmd);}
+
+// ══ PAGES ═════════════════════════════════════════════════
+async function loadPages(){
+  const{data}=await sb.from('pages').select('*').order('sort_order');
+  document.getElementById('pages-tb').innerHTML=(data||[]).map(p=>`<tr>
+    <td style="font-weight:600">${p.title}</td>
+    <td style="font-family:var(--fm);font-size:.72rem;color:var(--g)">${p.slug}</td>
+    <td style="text-align:center">${p.show_in_footer?'✓':'—'}</td>
+    <td style="text-align:center">${p.show_in_nav?'✓':'—'}</td>
+    <td><span class="badge ${p.is_published?'pub-y':'pub-n'}">${p.is_published?'Live':'Draft'}</span></td>
+    <td><div style="display:flex;gap:.35rem"><button class="btn-ed" onclick="openPageForm(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button><button class="btn-del" onclick="delPage('${p.id}','${p.title.replace(/'/g,"\\'")}')">Del</button><a href="/page.html?slug=${p.slug}" target="_blank" class="btn-ed">↗</a></div></td>
+  </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--w4)">No pages yet.</td></tr>';
+}
+function openPageForm(page){
+  const p=page||{};
+  document.getElementById('pf-title').innerHTML=p.id?'EDIT <span>PAGE</span>':'NEW <span>PAGE</span>';
+  document.getElementById('pf-title-input').value=p.title||'';
+  document.getElementById('pf-slug').value=p.slug||'';
+  document.getElementById('pf-seo-title').value=p.seo_title||'';
+  document.getElementById('pf-seo-desc').value=p.seo_description||'';
+  document.getElementById('pf-og-img').value=p.og_image||'';
+  document.getElementById('pf-pub').checked=p.is_published!==false;
+  document.getElementById('pf-footer').checked=p.show_in_footer!==false;
+  document.getElementById('pf-nav').checked=!!p.show_in_nav;
+  document.getElementById('pf-id').value=p.id||'';
+  document.getElementById('page-editor').innerHTML=p.content||'';
+  document.getElementById('page-ov').classList.add('open');
+}
+function closePageForm(){document.getElementById('page-ov').classList.remove('open');}
+function autoPageSlug(){if(document.getElementById('pf-id').value)return;const t=document.getElementById('pf-title-input').value.trim();if(t)document.getElementById('pf-slug').value=t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+async function savePage(){
+  const title=document.getElementById('pf-title-input').value.trim(),slug=document.getElementById('pf-slug').value.trim(),id=document.getElementById('pf-id').value;
+  if(!title||!slug){toast('Title and Slug required','err');return;}
+  const payload={title,slug,content:document.getElementById('page-editor').innerHTML,seo_title:document.getElementById('pf-seo-title').value.trim()||null,seo_description:document.getElementById('pf-seo-desc').value.trim()||null,og_image:document.getElementById('pf-og-img').value.trim()||null,is_published:document.getElementById('pf-pub').checked,show_in_footer:document.getElementById('pf-footer').checked,show_in_nav:document.getElementById('pf-nav').checked,updated_at:new Date().toISOString()};
+  let error;
+  if(id){({error}=await sb.from('pages').update(payload).eq('id',id));}
+  else{({error}=await sb.from('pages').insert(payload));}
+  if(error){toast('Error: '+error.message,'err');return;}
+  toast(id?'Page updated!':'Page created!');closePageForm();loadPages();
+}
+async function delPage(id,title){if(!confirm(`Delete "${title}"?`))return;await sb.from('pages').delete().eq('id',id);toast('Deleted');loadPages();}
+
+// ══ SEO ═══════════════════════════════════════════════════
+async function loadSEO(){
+  const{data}=await sb.from('site_settings').select('*');if(!data)return;
+  const s=Object.fromEntries(data.map(r=>[r.key,r.value]));
+  document.getElementById('seo-name').value=s.site_name||'';
+  document.getElementById('seo-title').value=s.global_seo_title||'';
+  document.getElementById('seo-desc').value=s.global_seo_desc||'';
+  document.getElementById('seo-og').value=s.global_og_image||'';
+  document.getElementById('seo-ga').value=s.google_analytics_id||'';
+  document.getElementById('seo-head').value=s.custom_head_code||'';
+  document.getElementById('seo-body').value=s.custom_body_code||'';
+  document.getElementById('seo-robots').value=s.robots_txt||'User-agent: *\nAllow: /';
+  if(s.site_url)siteUrl=s.site_url.replace('https://','').replace('http://','');
+  updateSeoPreview();
+}
+function updateSeoPreview(){
+  document.getElementById('sp-url').textContent=siteUrl;
+  document.getElementById('sp-title').textContent=document.getElementById('seo-title').value||'KitDB — Football Kit Encyclopedia';
+  document.getElementById('sp-desc').textContent=document.getElementById('seo-desc').value||'Browse, rate and collect football kits.';
+}
+async function saveSEO(){
+  const updates=[['global_seo_title','seo-title'],['global_seo_desc','seo-desc'],['global_og_image','seo-og'],['site_name','seo-name']];
+  for(const[key,id]of updates)await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});
+  toast('SEO saved!');
+}
+async function saveAnalytics(){
+  const updates=[['google_analytics_id','seo-ga'],['custom_head_code','seo-head'],['custom_body_code','seo-body']];
+  for(const[key,id]of updates)await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});
+  toast('Analytics saved!');
+}
+async function saveRobots(){await sb.from('site_settings').upsert({key:'robots_txt',value:document.getElementById('seo-robots').value},{onConflict:'key'});toast('Robots.txt saved!');}
 
 // ══ ADS ═══════════════════════════════════════════════════
 async function loadAds(){
@@ -771,51 +1328,29 @@ async function loadAds(){
     </div>`).join('');
 }
 async function saveAd(id){const{error}=await sb.from('ad_slots').update({ad_code:document.getElementById('acode-'+id).value,updated_at:new Date().toISOString()}).eq('id',id);if(error){toast('Error','err');return;}toast('Ad slot saved!');}
-async function toggleAd(id,v){await sb.from('ad_slots').update({is_active:v}).eq('id',id);toast(v?'Slot enabled':'Slot disabled');}
+async function toggleAd(id,v){await sb.from('ad_slots').update({is_active:v}).eq('id',id);toast(v?'Enabled':'Disabled');}
 
 // ══ USERS ═════════════════════════════════════════════════
-async function loadUsers(){
-  const{data}=await sb.from('profiles').select('*').eq('role','subscriber').order('created_at',{ascending:false});
-  allUsers=data||[];renderUsers(allUsers);
-}
+async function loadUsers(){const{data}=await sb.from('profiles').select('*').eq('role','subscriber').order('created_at',{ascending:false});allUsers=data||[];renderUsers(allUsers);}
 function filterUsers(){const q=document.getElementById('user-q').value.toLowerCase();renderUsers(q?allUsers.filter(u=>[u.username,u.full_name,u.country,u.fav_club].join(' ').toLowerCase().includes(q)):allUsers);}
-function renderUsers(users){
-  document.getElementById('users-tb').innerHTML=users.map(u=>`<tr>
-    <td style="font-weight:600">${u.username||'—'}</td>
-    <td style="color:var(--w3);font-size:.78rem">${u.country||'—'}</td>
-    <td style="color:var(--w3);font-size:.78rem">${u.fav_club||'—'}</td>
-    <td style="color:var(--w4);font-size:.72rem">${new Date(u.created_at).toLocaleDateString('en-GB')}</td>
-    <td><button class="btn-del" onclick="banUser('${u.id}','${u.username}')">Remove</button></td>
-  </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No users yet.</td></tr>';
-}
-async function banUser(id,name){if(!confirm(`Remove "${name}"?`))return;await sb.from('profiles').delete().eq('id',id);toast('User removed');loadUsers();}
+function renderUsers(users){document.getElementById('users-tb').innerHTML=users.map(u=>`<tr><td style="font-weight:600">${u.username||'—'}</td><td style="color:var(--w3);font-size:.78rem">${u.country||'—'}</td><td style="color:var(--w3);font-size:.78rem">${u.fav_club||'—'}</td><td style="color:var(--w4);font-size:.72rem">${new Date(u.created_at).toLocaleDateString('en-GB')}</td><td><button class="btn-del" onclick="banUser('${u.id}','${(u.username||'').replace(/'/g,"\\'")}')">Remove</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No users yet.</td></tr>';}
+async function banUser(id,name){if(!confirm(`Remove "${name}"?`))return;await sb.from('profiles').delete().eq('id',id);toast('Removed');loadUsers();}
 
 // ══ ADMINS ════════════════════════════════════════════════
-async function loadAdmins(){
-  const{data}=await sb.from('profiles').select('username,id,created_at').eq('role','admin');
-  document.getElementById('admins-list').innerHTML=(data||[]).map(a=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd)">
-      <div><div style="font-weight:600;font-size:.875rem">⚙️ ${a.username||'Admin'}</div><div style="font-size:.7rem;color:var(--w4)">${new Date(a.created_at).toLocaleDateString('en-GB')}</div></div>
-      ${a.id!==adminProfile?.id?`<button class="btn-del btn-sm" onclick="demoteAdmin('${a.id}','${a.username}')">Demote</button>`:'<span style="font-size:.7rem;color:var(--g)">You</span>'}
-    </div>`).join('')||'<div style="font-size:.8rem;color:var(--w4)">No other admins.</div>';
-}
-async function createAdmin(){
-  const email=document.getElementById('na-email').value.trim(),pass=document.getElementById('na-pass').value,uname=document.getElementById('na-user').value.trim();
-  if(!email||!pass||!uname){toast('All fields required','err');return;}
-  const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username:uname}}});
-  if(error){toast('Error: '+error.message,'err');return;}
-  if(data.user){setTimeout(async()=>{await sb.from('profiles').update({role:'admin'}).eq('id',data.user.id);toast('Admin created!');loadAdmins();},1500);}
-  ['na-email','na-pass','na-user'].forEach(id=>document.getElementById(id).value='');
-}
+async function loadAdmins(){const{data}=await sb.from('profiles').select('username,id,created_at').eq('role','admin');document.getElementById('admins-list').innerHTML=(data||[]).map(a=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd)"><div><div style="font-weight:600;font-size:.875rem">⚙️ ${a.username||'Admin'}</div><div style="font-size:.7rem;color:var(--w4)">${new Date(a.created_at).toLocaleDateString('en-GB')}</div></div>${a.id!==adminProfile?.id?`<button class="btn-del btn-sm" onclick="demoteAdmin('${a.id}','${(a.username||'').replace(/'/g,"\\'")}')">Demote</button>`:'<span style="font-size:.7rem;color:var(--g)">You</span>'}</div>`).join('')||'<div style="font-size:.8rem;color:var(--w4)">No other admins.</div>';}
+async function createAdmin(){const email=document.getElementById('na-email').value.trim(),pass=document.getElementById('na-pass').value,uname=document.getElementById('na-user').value.trim();if(!email||!pass||!uname){toast('All fields required','err');return;}const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{username:uname}}});if(error){toast('Error: '+error.message,'err');return;}if(data.user){setTimeout(async()=>{await sb.from('profiles').update({role:'admin'}).eq('id',data.user.id);toast('Admin created!');loadAdmins();},1500);}['na-email','na-pass','na-user'].forEach(id=>document.getElementById(id).value='');}
 async function demoteAdmin(id,name){if(!confirm(`Demote "${name}"?`))return;await sb.from('profiles').update({role:'subscriber'}).eq('id',id);toast('Demoted');loadAdmins();}
 
+// ══ SETTINGS ══════════════════════════════════════════════
+async function loadSettings(){const{data}=await sb.from('site_settings').select('*');if(!data)return;const s=Object.fromEntries(data.map(r=>[r.key,r.value]));document.getElementById('ss-name').value=s.site_name||'';document.getElementById('ss-tagline').value=s.site_tagline||'';document.getElementById('ss-url').value=s.site_url||'';document.getElementById('ss-email').value=s.contact_email||'';document.getElementById('ss-footer').value=s.footer_text||'';document.getElementById('ss-twitter').value=s.social_twitter||'';document.getElementById('ss-instagram').value=s.social_instagram||'';document.getElementById('ss-facebook').value=s.social_facebook||'';}
+async function saveSettings(){const updates=[['site_name','ss-name'],['site_tagline','ss-tagline'],['site_url','ss-url'],['contact_email','ss-email']];for(const[key,id]of updates)await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});toast('Settings saved!');}
+async function saveFooter(){const updates=[['footer_text','ss-footer'],['social_twitter','ss-twitter'],['social_instagram','ss-instagram'],['social_facebook','ss-facebook']];for(const[key,id]of updates)await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});toast('Footer saved!');}
+
+// ══ DASHBOARD ═════════════════════════════════════════════
+async function loadDash(){const[{count:kc},{count:uc},{count:rc}]=await Promise.all([sb.from('kits').select('*',{count:'exact',head:true}),sb.from('profiles').select('*',{count:'exact',head:true}).eq('role','subscriber'),sb.from('ratings').select('*',{count:'exact',head:true})]);document.getElementById('d-kits').textContent=kc||0;document.getElementById('d-clubs').textContent=allClubs.length;document.getElementById('d-users').textContent=uc||0;document.getElementById('d-ratings').textContent=rc||0;const{data:rk}=await sb.from('kits').select('team,season,type,created_at').order('created_at',{ascending:false}).limit(6);document.getElementById('d-rk').innerHTML=(rk||[]).map(k=>`<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem"><span>${k.team} <span style="color:var(--w4)">${k.season} ${k.type}</span></span><span style="font-size:.68rem;color:var(--w4)">${new Date(k.created_at).toLocaleDateString('en-GB')}</span></div>`).join('');const{data:ru}=await sb.from('profiles').select('username,country,created_at').eq('role','subscriber').order('created_at',{ascending:false}).limit(6);document.getElementById('d-ru').innerHTML=(ru||[]).map(u=>`<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem"><span>${u.username||'—'} <span style="color:var(--w4)">${u.country||''}</span></span><span style="font-size:.68rem;color:var(--w4)">${new Date(u.created_at).toLocaleDateString('en-GB')}</span></div>`).join('');}
+
 // ══ TOAST ═════════════════════════════════════════════════
-function toast(msg,type='ok'){
-  const t=document.getElementById('toast');
-  t.textContent=(type==='ok'?'✓ ':'✗ ')+msg;
-  t.className='toast show '+(type==='ok'?'ok':'err');
-  setTimeout(()=>t.className='toast',3000);
-}
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=(type==='ok'?'✓ ':'✗ ')+msg;t.className='toast show '+(type==='ok'?'ok':'err');setTimeout(()=>t.className='toast',3000);}
 
 // ══ INIT ══════════════════════════════════════════════════
 checkSession();

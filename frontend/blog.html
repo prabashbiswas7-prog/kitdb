@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title id="page-title">Blog — KitDB</title>
+<meta name="description" id="page-desc" content="Latest football kit news, reviews and updates from KitDB."/>
+<meta property="og:title" id="og-title" content="Blog — KitDB"/>
+<meta property="og:description" id="og-desc" content="Latest football kit news from KitDB."/>
+<meta property="og:image" id="og-img" content=""/>
+<meta property="og:type" content="website"/>
+<link rel="stylesheet" href="/assets/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.blog-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1.5rem; }
+.blog-card { background:var(--s1); border:1px solid var(--bd); border-radius:12px; overflow:hidden; cursor:pointer; transition:all .2s; display:block; }
+.blog-card:hover { border-color:var(--bdg); transform:translateY(-3px); box-shadow:0 12px 35px rgba(0,200,83,.07); }
+.blog-cover { height:200px; background:var(--s2); overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:3rem; opacity:.2; }
+.blog-cover img { width:100%; height:100%; object-fit:cover; opacity:1; }
+.blog-body { padding:1.25rem; }
+.blog-tags { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.75rem; }
+.blog-tag { font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; background:var(--gf); color:var(--g); border:1px solid var(--bdg); padding:.18rem .5rem; border-radius:4px; }
+.blog-title { font-family:var(--fd); font-size:1.3rem; letter-spacing:1px; margin-bottom:.5rem; line-height:1.2; }
+.blog-excerpt { font-size:.83rem; color:var(--w3); line-height:1.6; margin-bottom:.875rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.blog-meta { display:flex; align-items:center; justify-content:space-between; font-size:.72rem; color:var(--w4); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/browse.html" class="nav-link">Browse</a>
+    <a href="/blog.html" class="nav-link active">Blog</a>
+    <a href="/search.html" class="nav-link">Search</a>
+  </div>
+  <div id="nav-auth"></div>
+</nav>
+
+<div class="container" style="padding-top:2rem">
+  <div id="ad-top-banner" class="ad-slot ad-banner"></div>
+  <div class="section-head">
+    <span class="section-title">LATEST <span>NEWS</span></span>
+  </div>
+  <div class="blog-grid" id="blog-grid"><div class="spinner" style="grid-column:1/-1"></div></div>
+</div>
+
+<div style="height:3rem"></div>
+<footer>
+  <strong>KitDB</strong> &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a> &nbsp;·&nbsp; <a href="/blog.html">Blog</a>
+  <div style="margin-top:.75rem;color:var(--w4)" id="footer-text"></div>
+</footer>
+
+<script src="/assets/js/config.js"></script>
+<script>
+(async () => {
+  await initNav();
+  await loadSEO();
+  await loadPosts();
+  injectAd('top_banner','ad-top-banner');
+})();
+
+async function loadSEO() {
+  const { data } = await sb.from('site_settings').select('*');
+  if (!data) return;
+  const s = Object.fromEntries(data.map(r => [r.key, r.value]));
+  if (s.footer_text) document.getElementById('footer-text').textContent = s.footer_text;
+  if (s.google_analytics_id) loadGA(s.google_analytics_id);
+}
+
+async function loadPosts() {
+  const { data } = await sb.from('blog_posts').select('*').eq('is_published', true).order('published_at', { ascending: false });
+  const grid = document.getElementById('blog-grid');
+  if (!data?.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📝</div><h3>NO POSTS YET</h3><p>Check back soon.</p></div>`; return; }
+  grid.innerHTML = data.map(p => `
+    <a href="/blog-post.html?slug=${p.slug}" class="blog-card" onclick="trackClick()">
+      <div class="blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${p.title}"/>` : '📝'}</div>
+      <div class="blog-body">
+        ${p.tags?.length ? `<div class="blog-tags">${p.tags.map(t=>`<span class="blog-tag">${t}</span>`).join('')}</div>` : ''}
+        <div class="blog-title">${p.title}</div>
+        ${p.excerpt ? `<div class="blog-excerpt">${p.excerpt}</div>` : ''}
+        <div class="blog-meta">
+          <span>${p.published_at ? new Date(p.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : ''}</span>
+          <span style="color:var(--g)">Read more →</span>
+        </div>
+      </div>
+    </a>`).join('');
+}
+function loadGA(id) {
+  const s = document.createElement('script');
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+  s.async = true; document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);} gtag('js',new Date()); gtag('config',id);
+}
+</script>
+</body>
+</html>
