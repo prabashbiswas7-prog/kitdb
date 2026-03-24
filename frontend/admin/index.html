@@ -716,7 +716,7 @@ let selectedKits=new Set();
 let dragMenuId=null,dragSecId=null;
 
 // ══ LOGIN ══════════════════════════════════════════════════
-async function doLogin(){
+window.doLogin = async function(){
   const email=document.getElementById('l-email').value.trim(),pass=document.getElementById('l-pass').value;
   const err=document.getElementById('lerr'),btn=document.getElementById('lbtn');
   err.style.display='none';
