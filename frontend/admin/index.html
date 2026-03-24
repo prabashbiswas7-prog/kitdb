@@ -3,27 +3,34 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>KitDB Admin v4</title>
+<title>KitDB Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<!-- TipTap Rich Editor -->
+<script src="https://cdn.jsdelivr.net/npm/@tiptap/core@2.1.13/dist/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2.1.13/dist/index.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --g:#00C853;--gd:#009c41;--gf:rgba(0,200,83,.08);--gb:rgba(0,200,83,.2);
   --bk:#080808;--s1:#101010;--s2:#171717;--s3:#1e1e1e;--s4:#262626;
   --bd:#222;--bdg:rgba(0,200,83,.2);--w:#f0f0f0;--w2:#bbb;--w3:#777;--w4:#444;
-  --red:#ff4444;--gold:#ffcc00;--blue:#4488ff;
+  --red:#ff4444;--gold:#ffcc00;
   --fd:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bk);color:var(--w);font-family:var(--fb);min-height:100vh;display:flex;flex-direction:column}
 button{cursor:pointer;font-family:var(--fb)}
 input,select,textarea{font-family:var(--fb)}
-::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--s1)}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}::-webkit-scrollbar-thumb:hover{background:var(--g)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--s1)}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--g)}
 
 /* LOGIN */
-#ls{position:fixed;inset:0;background:var(--bk);display:flex;align-items:center;justify-content:center;z-index:999;padding:1.5rem}
+#login-screen{position:fixed;inset:0;background:var(--bk);display:flex;align-items:center;justify-content:center;z-index:999;padding:1.5rem}
 .lbox{background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:380px;padding:2rem}
-.llogo{font-family:var(--fd);font-size:1.6rem;letter-spacing:3px;text-align:center;margin-bottom:.2rem}.llogo span{color:var(--g)}
+.llogo{font-family:var(--fd);font-size:1.6rem;letter-spacing:3px;text-align:center;margin-bottom:.2rem}
+.llogo span{color:var(--g)}
 .lsub{text-align:center;font-size:.7rem;color:var(--w4);margin-bottom:1.75rem;text-transform:uppercase;letter-spacing:1.5px}
 .lf{margin-bottom:1rem}
 .lf label{display:block;font-size:.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.38rem}
@@ -33,10 +40,11 @@ input,select,textarea{font-family:var(--fb)}
 .lbtn{width:100%;background:var(--g);color:var(--bk);border:none;border-radius:8px;padding:.7rem;font-weight:700;font-size:.95rem;transition:background .15s}
 .lbtn:hover{background:var(--gd)}
 
-/* APP */
+/* APP LAYOUT */
 #app{display:none;flex-direction:column;height:100vh;overflow:hidden}
 .topbar{height:52px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;flex-shrink:0;z-index:50}
-.tb-logo{font-family:var(--fd);font-size:1.4rem;letter-spacing:3px}.tb-logo span{color:var(--g)}
+.tb-logo{font-family:var(--fd);font-size:1.4rem;letter-spacing:3px}
+.tb-logo span{color:var(--g)}
 .tb-badge{font-family:var(--fb);font-size:.55rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:var(--gf);color:var(--g);border:1px solid var(--bdg);padding:.18rem .5rem;border-radius:100px;margin-left:.4rem}
 .tb-right{display:flex;gap:.6rem;align-items:center}
 .tb-user{font-size:.75rem;color:var(--w4)}
@@ -44,51 +52,59 @@ input,select,textarea{font-family:var(--fb)}
 
 /* LEFT NAV */
 .leftnav{width:52px;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;padding:.5rem 0;gap:.2rem;flex-shrink:0;overflow-y:auto}
-.ln{width:36px;height:36px;border-radius:8px;background:none;border:none;color:var(--w4);font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;flex-shrink:0}
-.ln:hover{background:var(--s3);color:var(--w)}.ln.active{background:var(--gf);color:var(--g)}
+.ln-btn{width:36px;height:36px;border-radius:8px;background:none;border:none;color:var(--w4);font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;flex-shrink:0}
+.ln-btn:hover{background:var(--s3);color:var(--w)}
+.ln-btn.active{background:var(--gf);color:var(--g)}
 .ln-tip{position:absolute;left:44px;background:var(--s3);border:1px solid var(--bd);color:var(--w);font-size:.72rem;padding:.3rem .65rem;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:99}
-.ln:hover .ln-tip{opacity:1}
-.ln-sep{width:28px;height:1px;background:var(--bd);margin:.2rem 0;flex-shrink:0}
+.ln-btn:hover .ln-tip{opacity:1}
+.ln-sep{width:28px;height:1px;background:var(--bd);margin:.25rem 0;flex-shrink:0}
 
-/* THREE PANE */
+/* THREE PANE KIT MANAGER */
 .three-pane{display:flex;flex:1;overflow:hidden}
 .pane{overflow-y:auto;flex-shrink:0}
-.p1{width:185px;border-right:1px solid var(--bd);background:var(--s1)}
-.p2{width:230px;border-right:1px solid var(--bd);background:var(--s2)}
-.p3{flex:1;background:var(--bk);overflow-y:auto}
+.pane-1{width:185px;border-right:1px solid var(--bd);background:var(--s1)}
+.pane-2{width:230px;border-right:1px solid var(--bd);background:var(--s2)}
+.pane-3{flex:1;background:var(--bk);overflow-y:auto}
 .ph{padding:.7rem 1rem;font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:inherit;position:sticky;top:0;z-index:10}
-.ph-add{background:none;border:none;color:var(--g);font-size:.95rem;padding:.1rem .3rem;border-radius:4px;line-height:1}.ph-add:hover{background:var(--gf)}
-.tsearch{padding:.55rem .75rem;border-bottom:1px solid var(--bd);position:sticky;top:38px;z-index:9;background:inherit}
-.tsearch input{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:6px;padding:.35rem .6rem;color:var(--w);font-size:.76rem;outline:none;transition:border-color .15s}
-.tsearch input:focus{border-color:var(--bdg)}.tsearch input::placeholder{color:var(--w4)}
+.ph-add{background:none;border:none;color:var(--g);font-size:.95rem;padding:.1rem .3rem;border-radius:4px;line-height:1}
+.ph-add:hover{background:var(--gf)}
+.tree-search{padding:.55rem .75rem;border-bottom:1px solid var(--bd);position:sticky;top:38px;z-index:9;background:inherit}
+.tree-search input{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:6px;padding:.35rem .6rem;color:var(--w);font-size:.76rem;outline:none;transition:border-color .15s}
+.tree-search input:focus{border-color:var(--bdg)}
+.tree-search input::placeholder{color:var(--w4)}
 .ti{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;cursor:pointer;transition:background .12s;font-size:.81rem;color:var(--w3);border-left:2px solid transparent}
-.ti:hover{background:var(--s3);color:var(--w)}.ti.active{background:var(--gf);color:var(--g);border-left-color:var(--g)}
-.ti .tic{width:13px;text-align:center;font-size:.78rem;opacity:.7;flex-shrink:0}
-.ti .tict{margin-left:auto;font-family:var(--fm);font-size:.6rem;color:var(--w4);background:var(--s4);padding:.1rem .32rem;border-radius:100px;flex-shrink:0}
-.ti.active .tict{background:var(--gf);color:var(--g)}
+.ti:hover{background:var(--s3);color:var(--w)}
+.ti.active{background:var(--gf);color:var(--g);border-left-color:var(--g)}
+.ti .ti-ic{width:13px;text-align:center;font-size:.78rem;opacity:.7;flex-shrink:0}
+.ti .ti-ct{margin-left:auto;font-family:var(--fm);font-size:.6rem;color:var(--w4);background:var(--s4);padding:.1rem .32rem;border-radius:100px;flex-shrink:0}
+.ti.active .ti-ct{background:var(--gf);color:var(--g)}
 
-/* PANE 3 KIT VIEW */
-.p3h{padding:1.1rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-.p3t{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}.p3t span{color:var(--g)}
-.p3s{font-size:.72rem;color:var(--w4);margin-top:.15rem}
+/* PANE 3 */
+.p3-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.p3-title{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}
+.p3-title span{color:var(--g)}
+.p3-sub{font-size:.72rem;color:var(--w4);margin-top:.15rem}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;padding:1.25rem 1.5rem 0}
+.type-label{font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);margin-bottom:.75rem;grid-column:1/-1}
+.tc{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:1rem;cursor:pointer;transition:all .2s;text-align:center;position:relative}
+.tc:hover{border-color:var(--bdg);transform:translateY(-2px)}
+.tc.filled{border-color:var(--g)}
+.tc.filled::after{content:'✓';position:absolute;top:.5rem;right:.6rem;font-size:.68rem;color:var(--g);font-weight:700}
+.tc-img{height:75px;display:flex;align-items:center;justify-content:center;font-size:2.2rem;opacity:.12;margin-bottom:.45rem}
+.tc-img img{height:65px;object-fit:contain;opacity:1}
+.kits-table{padding:1.25rem 1.5rem}
 
-/* KIT TABLE in p3 */
-.kt-wrap{padding:1.25rem 1.5rem}
-.kt-toolbar{display:flex;gap:.5rem;margin-bottom:.875rem;flex-wrap:wrap;align-items:center}
-.kt-count{font-family:var(--fm);font-size:.72rem;color:var(--w4);margin-left:auto}
-
-/* FULL PAGE */
-.fp{flex:1;overflow-y:auto;display:none;flex-direction:column}
-.fp.active{display:flex}
-.fpi{padding:1.75rem;flex:1}
-.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem}
-.st{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}.st span{color:var(--g)}
+/* FULL PAGE VIEWS */
+.full-page{flex:1;overflow-y:auto;display:none;flex-direction:column}
+.full-page.active{display:flex}
+.fp-inner{padding:1.75rem;flex:1}
 
 /* DASHBOARD */
-.dg{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem}
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem}
+@media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr)}}
 .dc{background:var(--s1);border:1px solid var(--bd);border-radius:11px;padding:1.2rem}
-.dcn{font-family:var(--fd);font-size:2rem;color:var(--g);letter-spacing:2px;display:block}
-.dcl{font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);margin-top:.2rem;display:block}
+.dc-n{font-family:var(--fd);font-size:2rem;color:var(--g);letter-spacing:2px;display:block}
+.dc-l{font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);margin-top:.2rem;display:block}
 
 /* BUTTONS */
 .btn{border:none;border-radius:7px;font-family:var(--fb);font-weight:600;padding:.45rem 1rem;font-size:.8rem;transition:all .15s;display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
@@ -96,50 +112,106 @@ input,select,textarea{font-family:var(--fb)}
 .btn-g{background:none;border:1px solid var(--bd);color:var(--w3)}.btn-g:hover{border-color:var(--bdg);color:var(--w)}
 .btn-r{background:none;border:1px solid rgba(255,68,68,.3);color:var(--red)}.btn-r:hover{background:rgba(255,68,68,.07)}
 .btn-sm{padding:.3rem .65rem;font-size:.72rem}
-.btn-xs{padding:.2rem .5rem;font-size:.68rem}
 .btn-ed{background:none;border:1px solid var(--bd);color:var(--w3);border-radius:5px;padding:.25rem .55rem;font-size:.7rem}.btn-ed:hover{border-color:var(--bdg);color:var(--g)}
 .btn-del{background:none;border:1px solid rgba(255,68,68,.25);color:var(--red);border-radius:5px;padding:.25rem .55rem;font-size:.7rem}.btn-del:hover{background:rgba(255,68,68,.07)}
-.btn-pub{background:var(--gf);border:1px solid var(--bdg);color:var(--g);border-radius:5px;padding:.25rem .55rem;font-size:.7rem}
 
 /* FORMS */
-.fg{display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:.875rem}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:.875rem}
 .ff{grid-column:1/-1}
 .fsec{font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--g);padding:.4rem 0;border-bottom:1px solid var(--bdg);margin-bottom:.875rem;grid-column:1/-1}
 .field label{display:block;font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.38rem}
 .field input,.field select,.field textarea{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.6rem .88rem;color:var(--w);font-size:.875rem;outline:none;transition:border-color .15s}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--bdg)}
-.field select option{background:var(--s2)}.field textarea{resize:vertical;min-height:80px}
+.field select option{background:var(--s2)}
+.field textarea{resize:vertical;min-height:80px}
 
 /* AUTOCOMPLETE */
 .acw{position:relative}
 .acl{position:absolute;top:100%;left:0;right:0;background:var(--s2);border:1px solid var(--bdg);border-top:none;border-radius:0 0 8px 8px;z-index:50;max-height:180px;overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .acl.open{display:block}
-.aci{padding:.45rem .88rem;font-size:.84rem;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--bd)}
-.aci:last-child{border-bottom:none}.aci:hover{background:var(--gf);color:var(--g)}
+.aci{padding:.48rem .88rem;font-size:.84rem;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--bd)}
+.aci:last-child{border-bottom:none}
+.aci:hover{background:var(--gf);color:var(--g)}
 .aci-new{color:var(--g);font-style:italic;font-size:.8rem}
 
 /* TOGGLES */
-.tr{display:flex;align-items:center;justify-content:space-between;padding:.68rem .88rem;background:var(--s2);border:1px solid var(--bd);border-radius:7px}
+.tgl-row{display:flex;align-items:center;justify-content:space-between;padding:.68rem .88rem;background:var(--s2);border:1px solid var(--bd);border-radius:7px}
 .tgl{position:relative;width:38px;height:21px;cursor:pointer}
 .tgl input{opacity:0;width:0;height:0}
 .tgl-s{position:absolute;cursor:pointer;inset:0;background:var(--s4);border-radius:11px;transition:.2s}
 .tgl-s::before{content:"";position:absolute;height:15px;width:15px;left:3px;bottom:3px;background:var(--w3);border-radius:50%;transition:.2s}
-.tgl input:checked+.tgl-s{background:var(--g)}.tgl input:checked+.tgl-s::before{transform:translateX(17px);background:var(--bk)}
+.tgl input:checked+.tgl-s{background:var(--g)}
+.tgl input:checked+.tgl-s::before{transform:translateX(17px);background:var(--bk)}
 
 /* MODAL */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;padding:1.25rem}
 .ov.open{display:flex}
 .mbox{background:var(--s1);border:1px solid var(--bd);border-radius:14px;max-width:780px;width:100%;position:relative;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column}
 .mbox-lg{max-width:1000px}
-.mh{padding:1.1rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;background:var(--s1);z-index:5}
-.mt{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}.mt span{color:var(--g)}
-.mc{background:var(--s3);border:none;color:var(--w3);width:27px;height:27px;border-radius:6px;font-size:.8rem}.mc:hover{color:var(--w)}
-.mb{padding:1.5rem;flex:1}
-.mf{padding:1rem 1.5rem;border-top:1px solid var(--bd);display:flex;gap:.6rem;justify-content:flex-end;flex-shrink:0;position:sticky;bottom:0;background:var(--s1)}
+.mbox-head{padding:1.1rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;background:var(--s1);z-index:5}
+.mtitle{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}
+.mtitle span{color:var(--g)}
+.mclose{background:var(--s3);border:none;color:var(--w3);width:27px;height:27px;border-radius:6px;font-size:.8rem}
+.mclose:hover{color:var(--w)}
+.mbox-body{padding:1.5rem;flex:1}
+.mbox-foot{padding:1rem 1.5rem;border-top:1px solid var(--bd);display:flex;gap:.6rem;justify-content:flex-end;flex-shrink:0;position:sticky;bottom:0;background:var(--s1)}
 
-/* IMG PREV */
-.ip{width:70px;height:70px;background:var(--s3);border-radius:7px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1.3rem;overflow:hidden;flex-shrink:0}
-.ip img{width:100%;height:100%;object-fit:contain}
+/* IMG UPLOAD */
+.img-prev{width:70px;height:70px;background:var(--s3);border-radius:7px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1.3rem;overflow:hidden;flex-shrink:0}
+.img-prev img{width:100%;height:100%;object-fit:contain}
+.upload-zone{background:var(--s2);border:2px dashed var(--bd);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--g);background:var(--gf)}
+.upload-zone p{font-size:.83rem;color:var(--w3);margin-top:.5rem}
+.upload-zone .uz-icon{font-size:1.75rem;opacity:.3}
+.upload-progress{display:none;margin-top:.75rem}
+.progress-bar{height:4px;background:var(--s4);border-radius:2px;overflow:hidden;margin-bottom:.4rem}
+.progress-fill{height:100%;background:var(--g);border-radius:2px;transition:width .2s;width:0%}
+.img-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:.5rem;margin-top:.75rem}
+.img-thumb{position:relative;width:80px;height:80px;border-radius:7px;overflow:hidden;border:1px solid var(--bd);cursor:pointer}
+.img-thumb img{width:100%;height:100%;object-fit:contain;background:var(--s3)}
+.img-thumb.selected{border-color:var(--g)}
+.img-thumb .thumb-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;color:var(--red);width:18px;height:18px;border-radius:3px;font-size:.65rem;display:none;align-items:center;justify-content:center}
+.img-thumb:hover .thumb-del{display:flex}
+
+/* RICH EDITOR */
+.editor-toolbar{display:flex;gap:.25rem;flex-wrap:wrap;padding:.6rem .75rem;background:var(--s2);border:1px solid var(--bd);border-radius:8px 8px 0 0;border-bottom:none}
+.editor-toolbar button{background:none;border:1px solid transparent;color:var(--w3);border-radius:5px;padding:.25rem .5rem;font-size:.8rem;transition:all .15s;min-width:28px}
+.editor-toolbar button:hover{border-color:var(--bd);color:var(--w)}
+.editor-toolbar button.active{background:var(--gf);border-color:var(--bdg);color:var(--g)}
+.editor-toolbar .sep{width:1px;background:var(--bd);margin:0 .15rem;align-self:stretch}
+.tiptap-editor{background:var(--s2);border:1px solid var(--bd);border-radius:0 0 8px 8px;padding:1rem 1.1rem;min-height:320px;outline:none;font-size:.9rem;line-height:1.7;color:var(--w2)}
+.tiptap-editor:focus{border-color:var(--bdg)}
+.tiptap-editor h1,.tiptap-editor h2,.tiptap-editor h3{font-family:var(--fd);letter-spacing:2px;color:var(--w);margin:1.5rem 0 .75rem}
+.tiptap-editor h1{font-size:1.8rem}.tiptap-editor h2{font-size:1.4rem}.tiptap-editor h3{font-size:1.1rem}
+.tiptap-editor p{margin-bottom:1rem}
+.tiptap-editor a{color:var(--g);text-decoration:underline}
+.tiptap-editor blockquote{border-left:3px solid var(--g);padding-left:1rem;color:var(--w3);font-style:italic;margin:1rem 0}
+.tiptap-editor ul,.tiptap-editor ol{padding-left:1.5rem;margin-bottom:1rem}
+.tiptap-editor code{background:var(--s3);padding:.1rem .35rem;border-radius:3px;font-family:var(--fm);font-size:.85rem}
+.tiptap-editor pre{background:var(--s3);border-radius:7px;padding:.875rem;margin-bottom:1rem;overflow-x:auto}
+.tiptap-editor table{width:100%;border-collapse:collapse;margin-bottom:1rem}
+.tiptap-editor th,.tiptap-editor td{border:1px solid var(--bd);padding:.5rem .75rem;font-size:.85rem}
+.tiptap-editor th{background:var(--s3)}
+.tiptap-editor .is-editor-empty:first-child::before{content:attr(data-placeholder);float:left;color:var(--w4);pointer-events:none;height:0}
+
+/* HOMEPAGE BUILDER */
+.section-builder{display:flex;flex-direction:column;gap:.75rem}
+.hb-card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;overflow:hidden;transition:border-color .15s}
+.hb-card:hover{border-color:var(--bdg)}
+.hb-head{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;cursor:pointer}
+.hb-drag{color:var(--w4);font-size:.9rem;cursor:grab}
+.hb-icon{font-size:1rem}
+.hb-name{font-weight:600;font-size:.88rem;flex:1}
+.hb-type{font-family:var(--fm);font-size:.65rem;color:var(--w4)}
+.hb-actions{display:flex;align-items:center;gap:.5rem;margin-left:auto}
+.hb-body{padding:0 1rem 1rem;display:none;border-top:1px solid var(--bd);margin-top:.25rem;padding-top:.875rem}
+.hb-body.open{display:block}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem;margin-bottom:1.25rem}
+.preset-card{background:var(--s3);border:1px solid var(--bd);border-radius:8px;padding:.875rem;text-align:center;cursor:pointer;transition:all .15s}
+.preset-card:hover{border-color:var(--bdg);transform:translateY(-1px)}
+.preset-icon{font-size:1.5rem;margin-bottom:.4rem}
+.preset-name{font-size:.75rem;font-weight:600}
+.preset-desc{font-size:.65rem;color:var(--w4);margin-top:.2rem}
 
 /* TABLE */
 .tw{border:1px solid var(--bd);border-radius:9px;overflow:hidden}
@@ -148,16 +220,16 @@ thead th{background:var(--s2);padding:.6rem .9rem;text-align:left;font-size:.6re
 tbody tr{border-bottom:1px solid var(--bd);transition:background .12s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--s2)}
-td{padding:.62rem .9rem;vertical-align:middle}
-.tdi{width:38px;height:38px;background:var(--s3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.95rem;overflow:hidden}
-.tdi img{width:100%;height:100%;object-fit:contain}
+td{padding:.65rem .9rem;vertical-align:middle}
+.td-img{width:38px;height:38px;background:var(--s3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.95rem;overflow:hidden}
+.td-img img{width:100%;height:100%;object-fit:contain}
 
-/* CHECKBOX */
-.cb{width:15px;height:15px;accent-color:var(--g);cursor:pointer}
-
-/* PANEL */
+/* PANELS */
 .panel{background:var(--s1);border:1px solid var(--bd);border-radius:11px;padding:1.25rem}
 .pt{font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);margin-bottom:1rem}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem}
+.st{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}
+.st span{color:var(--g)}
 
 /* BADGES */
 .badge{font-size:.6rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:.18rem .5rem;border-radius:4px}
@@ -168,88 +240,43 @@ td{padding:.62rem .9rem;vertical-align:middle}
 .pub-y{background:var(--gf);color:var(--g);border:1px solid var(--bdg)}
 .pub-n{background:rgba(255,68,68,.07);color:var(--red);border:1px solid rgba(255,68,68,.2)}
 
-/* MENU BUILDER */
-.menu-list{display:flex;flex-direction:column;gap:.5rem}
-.menu-item-card{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:.875rem 1rem;display:flex;align-items:center;gap:.75rem;cursor:grab;transition:border-color .15s}
-.menu-item-card:hover{border-color:var(--bdg)}
-.menu-drag{color:var(--w4);font-size:1rem}
-.menu-icon{font-size:.9rem}
-.menu-label{font-weight:600;font-size:.88rem;flex:1}
-.menu-url{font-family:var(--fm);font-size:.7rem;color:var(--w4)}
-
-/* HOMEPAGE SECTIONS */
-.hb-card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;overflow:hidden;transition:border-color .15s;cursor:grab}
-.hb-card:hover{border-color:var(--bdg)}
-.hb-head{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem}
-.hb-body{padding:0 1rem 1rem;display:none;border-top:1px solid var(--bd);margin-top:.25rem;padding-top:.875rem}
-.hb-body.open{display:block}
-.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem}
-.preset-card{background:var(--s3);border:1px solid var(--bd);border-radius:8px;padding:.875rem;text-align:center;cursor:pointer;transition:all .15s}
-.preset-card:hover{border-color:var(--bdg);transform:translateY(-1px)}
-
-/* RICH EDITOR */
-.etb{display:flex;gap:.25rem;flex-wrap:wrap;padding:.6rem .75rem;background:var(--s2);border:1px solid var(--bd);border-radius:8px 8px 0 0;border-bottom:none}
-.etb button{background:none;border:1px solid transparent;color:var(--w3);border-radius:5px;padding:.25rem .5rem;font-size:.8rem;transition:all .15s;min-width:28px}
-.etb button:hover{border-color:var(--bd);color:var(--w)}
-.etb .esep{width:1px;background:var(--bd);margin:0 .15rem;align-self:stretch}
-.editor{background:var(--s2);border:1px solid var(--bd);border-radius:0 0 8px 8px;padding:1rem 1.1rem;min-height:280px;outline:none;font-size:.9rem;line-height:1.7;color:var(--w2)}
-.editor:focus{border-color:var(--bdg)}
-.editor h1,.editor h2,.editor h3{font-family:var(--fd);letter-spacing:2px;color:var(--w);margin:1.5rem 0 .75rem}
-.editor h1{font-size:1.8rem}.editor h2{font-size:1.4rem}.editor h3{font-size:1.1rem}
-.editor p{margin-bottom:1rem}.editor a{color:var(--g);text-decoration:underline}
-.editor blockquote{border-left:3px solid var(--g);padding-left:1rem;color:var(--w3);font-style:italic;margin:1rem 0}
-.editor ul,.editor ol{padding-left:1.5rem;margin-bottom:1rem}
-.editor img{max-width:100%;border-radius:10px;margin:1rem 0}
-.editor table{width:100%;border-collapse:collapse;margin-bottom:1rem}
-.editor th,.editor td{border:1px solid var(--bd);padding:.5rem .75rem;font-size:.85rem}
-.editor th{background:var(--s3)}
-
-/* KIT TYPE CHIPS */
-.type-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .65rem;border-radius:5px;font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border:1px solid var(--bd);cursor:pointer;transition:all .15s}
-.type-chip:hover{border-color:var(--bdg)}
-
-/* AD */
+/* AD SLOTS */
 .adc{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:1.1rem;margin-bottom:.9rem}
-.adc-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem}
-.adca{width:100%;background:var(--bk);border:1px solid var(--bd);border-radius:6px;padding:.7rem .9rem;color:#4ecca3;font-family:var(--fm);font-size:.73rem;min-height:75px;resize:vertical;outline:none;line-height:1.6;transition:border-color .15s}
-.adca:focus{border-color:var(--bdg)}
+.adc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem}
+.ad-code-area{width:100%;background:var(--bk);border:1px solid var(--bd);border-radius:6px;padding:.7rem .9rem;color:#4ecca3;font-family:var(--fm);font-size:.73rem;min-height:75px;resize:vertical;outline:none;line-height:1.6;transition:border-color .15s}
+.ad-code-area:focus{border-color:var(--bdg)}
 
-/* SEO */
-.seo-prev{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:1rem;margin-top:.75rem}
+/* TAGS INPUT */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:.35rem;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.45rem .6rem;min-height:42px;cursor:text;transition:border-color .15s}
+.tags-wrap:focus-within{border-color:var(--bdg)}
+.tag-item{background:var(--gf);border:1px solid var(--bdg);color:var(--g);font-size:.72rem;padding:.15rem .5rem;border-radius:4px;display:flex;align-items:center;gap:.3rem}
+.tag-item button{background:none;border:none;color:var(--g);font-size:.75rem;padding:0;line-height:1}
+.tags-input{background:none;border:none;outline:none;color:var(--w);font-size:.85rem;min-width:80px;flex:1}
+
+/* SEO PREVIEW */
+.seo-preview{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:1rem;margin-top:.75rem}
 .seo-url{font-size:.72rem;color:#8ab4f8;margin-bottom:.25rem}
-.seo-t{font-size:.95rem;color:#8ab4f8;font-weight:500;margin-bottom:.2rem}
-.seo-d{font-size:.78rem;color:var(--w3);line-height:1.4}
+.seo-title{font-size:.95rem;color:#8ab4f8;font-weight:500;margin-bottom:.2rem}
+.seo-desc{font-size:.78rem;color:var(--w3);line-height:1.4}
 
-/* TAGS */
-.tw2{display:flex;flex-wrap:wrap;gap:.35rem;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.45rem .6rem;min-height:42px;cursor:text;transition:border-color .15s}
-.tw2:focus-within{border-color:var(--bdg)}
-.tag{background:var(--gf);border:1px solid var(--bdg);color:var(--g);font-size:.72rem;padding:.15rem .5rem;border-radius:4px;display:flex;align-items:center;gap:.3rem}
-.tag button{background:none;border:none;color:var(--g);font-size:.75rem;padding:0;line-height:1}
-.ti2{background:none;border:none;outline:none;color:var(--w);font-size:.85rem;min-width:80px;flex:1}
-
-/* SPINNER */
+/* MISC */
 .spinner{width:22px;height:22px;border:2px solid var(--s4);border-top-color:var(--g);border-radius:50%;animation:spin .6s linear infinite;margin:2.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:3rem 1rem;color:var(--w4)}
 .empty-i{font-size:2rem;opacity:.18;margin-bottom:.65rem}
-
-/* TOAST */
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--s3);border:1px solid var(--bdg);border-radius:8px;padding:.75rem 1.2rem;font-size:.83rem;font-weight:500;z-index:9999;transform:translateY(60px);opacity:0;transition:all .28s;pointer-events:none}
-.toast.show{transform:translateY(0);opacity:1}.toast.ok{color:var(--g)}.toast.err{border-color:rgba(255,68,68,.4);color:var(--red)}
-
-/* BULK ACTIONS BAR */
-.bulk-bar{background:var(--gf);border:1px solid var(--bdg);border-radius:8px;padding:.65rem 1rem;display:none;align-items:center;gap:.75rem;margin-bottom:.75rem}
-.bulk-bar.show{display:flex}
-.bulk-count{font-size:.82rem;font-weight:600;color:var(--g)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{color:var(--g)}
+.toast.err{border-color:rgba(255,68,68,.4);color:var(--red)}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="ls">
+<div id="login-screen">
   <div class="lbox">
     <div class="llogo">Kit<span>DB</span></div>
-    <div class="lsub">Admin Panel v4</div>
+    <div class="lsub">Admin Panel</div>
     <div class="lerr" id="lerr"></div>
     <div class="lf"><label>Email</label><input id="l-email" type="email" autocomplete="email"/></div>
     <div class="lf"><label>Password</label><input id="l-pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
@@ -260,7 +287,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
 <!-- APP -->
 <div id="app">
   <div class="topbar">
-    <div class="tb-logo">Kit<span>DB</span><span class="tb-badge">Admin v4</span></div>
+    <div class="tb-logo">Kit<span>DB</span><span class="tb-badge">Admin</span></div>
     <div class="tb-right">
       <span class="tb-user" id="tb-user"></span>
       <a href="/" target="_blank" class="btn btn-g btn-sm">↗ View Site</a>
@@ -272,194 +299,181 @@ td{padding:.62rem .9rem;vertical-align:middle}
   <div class="app-body">
     <!-- LEFT NAV -->
     <div class="leftnav">
-      <button class="ln active" id="lnb-kits" onclick="sv('kits',this)">👕<span class="ln-tip">Kit Manager</span></button>
+      <button class="ln-btn active" id="lnb-kits" onclick="sv('kits',this)">👕<span class="ln-tip">Kit Manager</span></button>
+      <button class="ln-btn" id="lnb-images" onclick="sv('images',this)">🖼️<span class="ln-tip">Image Manager</span></button>
       <div class="ln-sep"></div>
-      <button class="ln" id="lnb-hp" onclick="sv('hp',this)">🏠<span class="ln-tip">Homepage Builder</span></button>
-      <button class="ln" id="lnb-menu" onclick="sv('menu',this)">☰<span class="ln-tip">Menu Manager</span></button>
-      <button class="ln" id="lnb-blog" onclick="sv('blog',this)">📝<span class="ln-tip">Blog</span></button>
-      <button class="ln" id="lnb-pages" onclick="sv('pages',this)">📄<span class="ln-tip">Pages</span></button>
+      <button class="ln-btn" id="lnb-hp" onclick="sv('hp',this)">🏠<span class="ln-tip">Homepage Builder</span></button>
+      <button class="ln-btn" id="lnb-blog" onclick="sv('blog',this)">📝<span class="ln-tip">Blog</span></button>
+      <button class="ln-btn" id="lnb-pages" onclick="sv('pages',this)">📄<span class="ln-tip">Pages</span></button>
       <div class="ln-sep"></div>
-      <button class="ln" id="lnb-types" onclick="sv('types',this)">🏷️<span class="ln-tip">Kit Types</span></button>
-      <button class="ln" id="lnb-kotw" onclick="sv('kotw',this)">🏆<span class="ln-tip">Kit of the Week</span></button>
-      <button class="ln" id="lnb-comments" onclick="sv('comments',this)">💬<span class="ln-tip">Comments</span></button>
-      <button class="ln" id="lnb-badges" onclick="sv('badges',this)">🎖️<span class="ln-tip">Badges & Rewards</span></button>
+      <button class="ln-btn" id="lnb-seo" onclick="sv('seo',this)">🔍<span class="ln-tip">SEO & Analytics</span></button>
+      <button class="ln-btn" id="lnb-ads" onclick="sv('ads',this)">📢<span class="ln-tip">Ad Slots</span></button>
       <div class="ln-sep"></div>
-      <button class="ln" id="lnb-seo" onclick="sv('seo',this)">🔍<span class="ln-tip">SEO & Analytics</span></button>
-      <button class="ln" id="lnb-ads" onclick="sv('ads',this)">📢<span class="ln-tip">Ad Slots</span></button>
-      <button class="ln" id="lnb-users" onclick="sv('users',this)">👥<span class="ln-tip">Users</span></button>
-      <button class="ln" id="lnb-admins" onclick="sv('admins',this)">🔑<span class="ln-tip">Admins</span></button>
-      <button class="ln" id="lnb-settings" onclick="sv('settings',this)">⚙️<span class="ln-tip">Site Settings</span></button>
+      <button class="ln-btn" id="lnb-users" onclick="sv('users',this)">👥<span class="ln-tip">Users</span></button>
+      <button class="ln-btn" id="lnb-admins" onclick="sv('admins',this)">🔑<span class="ln-tip">Admins</span></button>
+      <button class="ln-btn" id="lnb-settings" onclick="sv('settings',this)">⚙️<span class="ln-tip">Site Settings</span></button>
       <div class="ln-sep"></div>
-      <button class="ln" id="lnb-dash" onclick="sv('dash',this)">📊<span class="ln-tip">Dashboard</span></button>
+      <button class="ln-btn" id="lnb-dash" onclick="sv('dash',this)">📊<span class="ln-tip">Dashboard</span></button>
     </div>
 
-    <!-- KIT MANAGER -->
+    <!-- ── KIT MANAGER 3-PANE ── -->
     <div class="three-pane" id="view-kits">
-      <div class="pane p1">
+      <div class="pane pane-1">
         <div class="ph">SEASON<button class="ph-add" onclick="promptAddSeason()">+</button></div>
-        <div class="tsearch"><input type="text" id="p1-q" placeholder="Search season…" oninput="renderP1()"/></div>
+        <div class="tree-search"><input type="text" id="p1-q" placeholder="Search season…" oninput="renderP1()"/></div>
         <div id="p1-list"></div>
       </div>
-      <div class="pane p2">
+      <div class="pane pane-2">
         <div class="ph" id="p2-head">LEAGUE<button class="ph-add" onclick="promptAddLeague()">+</button></div>
-        <div class="tsearch"><input type="text" id="p2-q" placeholder="Search…" oninput="renderP2()"/></div>
+        <div class="tree-search"><input type="text" id="p2-q" placeholder="Search…" oninput="renderP2()"/></div>
         <div id="p2-list"></div>
       </div>
-      <div class="pane p3" id="p3">
+      <div class="pane pane-3" id="p3">
         <div class="empty" style="margin-top:5rem"><div class="empty-i">👕</div><p style="font-size:.85rem">Season → League → Club</p></div>
       </div>
     </div>
 
-    <!-- HOMEPAGE BUILDER -->
-    <div class="fp" id="view-hp">
-      <div class="fpi">
+    <!-- ── IMAGE MANAGER ── -->
+    <div class="full-page" id="view-images">
+      <div class="fp-inner">
+        <div class="sh"><span class="st">IMAGE <span>MANAGER</span></span></div>
+        <div class="upload-zone" id="img-upload-zone" ondragover="e=>{e.preventDefault();this.classList.add('dragover')}" ondragleave="this.classList.remove('dragover')" ondrop="handleImgDrop(event)" onclick="document.getElementById('img-file-input').click()">
+          <div class="uz-icon">🖼️</div>
+          <p><strong>Drag & drop kit images here</strong> or click to browse</p>
+          <p style="font-size:.72rem;margin-top:.25rem">Multiple files supported · Auto-renamed · JPEG/PNG/WebP</p>
+          <input type="file" id="img-file-input" accept="image/*" multiple style="display:none" onchange="handleImgSelect(event)"/>
+        </div>
+        <div class="upload-progress" id="upload-progress">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div style="font-size:.75rem;color:var(--w3)" id="progress-text">Uploading…</div>
+        </div>
+        <div style="margin-top:1.5rem">
+          <div class="sh">
+            <span style="font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4)">Uploaded Images</span>
+            <input type="text" id="img-search" placeholder="Search images…" oninput="filterImages()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.35rem .75rem;color:var(--w);font-size:.78rem;outline:none;width:200px"/>
+          </div>
+          <div class="img-gallery" id="img-gallery"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HOMEPAGE BUILDER ── -->
+    <div class="full-page" id="view-hp">
+      <div class="fp-inner">
         <div class="sh">
           <span class="st">HOMEPAGE <span>BUILDER</span></span>
           <div style="display:flex;gap:.6rem">
-            <button class="btn btn-g btn-sm" onclick="openPresetModal()">+ Add Section</button>
-            <button class="btn btn-p btn-sm" onclick="toast('Drag to reorder — auto-saves!')">Save Order</button>
+            <button class="btn btn-g btn-sm" onclick="addPresetSection()">+ Add Section</button>
+            <button class="btn btn-p btn-sm" onclick="saveHpOrder()">Save Order</button>
           </div>
         </div>
-        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Drag sections to reorder. Toggle on/off. Click ▼ to edit each section.</p>
-        <div id="section-builder" style="display:flex;flex-direction:column;gap:.6rem"></div>
+        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Drag sections to reorder. Toggle on/off. Click to edit settings.</p>
+        <div class="section-builder" id="section-builder"></div>
       </div>
     </div>
 
-    <!-- PRESET MODAL -->
-    <div class="ov" id="preset-ov" onclick="if(event.target===this)document.getElementById('preset-ov').classList.remove('open')">
+    <!-- ADD SECTION PRESETS -->
+    <div class="ov" id="preset-ov" onclick="if(event.target===this)this.classList.remove('open')">
       <div class="mbox">
-        <div class="mh"><div class="mt">ADD <span>SECTION</span></div><button class="mc" onclick="document.getElementById('preset-ov').classList.remove('open')">✕</button></div>
-        <div class="mb"><div class="preset-grid" id="preset-grid"></div></div>
+        <div class="mbox-head">
+          <div class="mtitle">ADD <span>SECTION</span></div>
+          <button class="mclose" onclick="document.getElementById('preset-ov').classList.remove('open')">✕</button>
+        </div>
+        <div class="mbox-body">
+          <div class="preset-grid" id="preset-grid"></div>
+        </div>
       </div>
     </div>
 
-    <!-- MENU MANAGER -->
-    <div class="fp" id="view-menu">
-      <div class="fpi">
+    <!-- ── BLOG MANAGER ── -->
+    <div class="full-page" id="view-blog">
+      <div class="fp-inner">
         <div class="sh">
-          <span class="st">MENU <span>MANAGER</span></span>
-          <button class="btn btn-p btn-sm" onclick="openMenuForm(null)">+ Add Item</button>
+          <span class="st">BLOG <span>MANAGER</span></span>
+          <button class="btn btn-p btn-sm" onclick="openBlogForm(null)">+ New Post</button>
         </div>
-        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Drag to reorder. Toggle to show/hide. Changes apply to site navigation instantly.</p>
-        <div class="menu-list" id="menu-list"></div>
+        <div class="tw"><table>
+          <thead><tr><th>Title</th><th>Status</th><th>Published</th><th>Tags</th><th>Actions</th></tr></thead>
+          <tbody id="blog-tb"></tbody>
+        </table></div>
       </div>
     </div>
 
-    <!-- BLOG -->
-    <div class="fp" id="view-blog">
-      <div class="fpi">
-        <div class="sh"><span class="st">BLOG <span>MANAGER</span></span><button class="btn btn-p btn-sm" onclick="openBlogForm(null)">+ New Post</button></div>
-        <div class="tw"><table><thead><tr><th>Title</th><th>Status</th><th>Published</th><th>Tags</th><th>Actions</th></tr></thead><tbody id="blog-tb"></tbody></table></div>
-      </div>
-    </div>
-
-    <!-- PAGES -->
-    <div class="fp" id="view-pages">
-      <div class="fpi">
-        <div class="sh"><span class="st">PAGES <span>MANAGER</span></span><button class="btn btn-p btn-sm" onclick="openPageForm(null)">+ New Page</button></div>
-        <div class="tw"><table><thead><tr><th>Title</th><th>Slug</th><th>Footer</th><th>Nav</th><th>Status</th><th>Actions</th></tr></thead><tbody id="pages-tb"></tbody></table></div>
-      </div>
-    </div>
-
-    <!-- KIT TYPES -->
-    <div class="fp" id="view-types">
-      <div class="fpi">
-        <div class="sh"><span class="st">KIT <span>TYPES</span></span><button class="btn btn-p btn-sm" onclick="openTypeForm(null)">+ Add Type</button></div>
-        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Add unlimited custom kit types. These appear in the kit form dropdown.</p>
-        <div class="tw"><table><thead><tr><th>Type Name</th><th>Badge Preview</th><th>Active</th><th>Order</th><th>Actions</th></tr></thead><tbody id="types-tb"></tbody></table></div>
-      </div>
-    </div>
-
-    <!-- KIT OF THE WEEK -->
-    <div class="fp" id="view-kotw">
-      <div class="fpi">
-        <div class="sh"><span class="st">KIT OF <span>THE WEEK</span></span><button class="btn btn-p btn-sm" onclick="openKotwForm()">+ Set This Week</button></div>
-        <div class="tw"><table><thead><tr><th>Kit</th><th>Week</th><th>Votes</th><th>Active</th><th>Actions</th></tr></thead><tbody id="kotw-tb"></tbody></table></div>
-      </div>
-    </div>
-
-    <!-- COMMENTS -->
-    <div class="fp" id="view-comments">
-      <div class="fpi">
+    <!-- ── PAGES MANAGER ── -->
+    <div class="full-page" id="view-pages">
+      <div class="fp-inner">
         <div class="sh">
-          <span class="st">COMMENTS <span>MANAGER</span></span>
-          <input type="text" id="comment-q" placeholder="Search comments…" oninput="filterComments()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.38rem .8rem;color:var(--w);font-size:.8rem;outline:none;width:200px"/>
+          <span class="st">PAGES <span>MANAGER</span></span>
+          <button class="btn btn-p btn-sm" onclick="openPageForm(null)">+ New Page</button>
         </div>
-        <div class="tw"><table><thead><tr><th>User</th><th>Comment</th><th>Kit</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="comments-tb"></tbody></table></div>
+        <div class="tw"><table>
+          <thead><tr><th>Title</th><th>Slug</th><th>Footer</th><th>Nav</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="pages-tb"></tbody>
+        </table></div>
       </div>
     </div>
 
-    <!-- BADGES & REWARDS -->
-    <div class="fp" id="view-badges">
-      <div class="fpi">
-        <div class="sh"><span class="st">BADGES & <span>REWARDS</span></span><button class="btn btn-p btn-sm" onclick="openBadgeForm(null)">+ Add Badge</button></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem">
-          <div class="panel">
-            <div class="pt">Badge System</div>
-            <p style="font-size:.82rem;color:var(--w3);line-height:1.6">Badges are automatically awarded when users hit milestones. Each badge awards points which can later be redeemed for rewards.</p>
-          </div>
-          <div class="panel">
-            <div class="pt">Points Summary</div>
-            <div id="points-summary"></div>
-          </div>
-        </div>
-        <div class="tw"><table><thead><tr><th>Badge</th><th>Condition</th><th>Points Reward</th><th>Earned By</th><th>Actions</th></tr></thead><tbody id="badges-tb"></tbody></table></div>
-      </div>
-    </div>
-
-    <!-- SEO -->
-    <div class="fp" id="view-seo">
-      <div class="fpi">
+    <!-- ── SEO & ANALYTICS ── -->
+    <div class="full-page" id="view-seo">
+      <div class="fp-inner">
         <div class="sh"><span class="st">SEO & <span>ANALYTICS</span></span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
           <div class="panel">
             <div class="pt">Global SEO</div>
             <div style="display:flex;flex-direction:column;gap:.875rem">
+              <div class="field"><label>Site Name</label><input id="seo-name"/></div>
               <div class="field"><label>Global SEO Title</label><input id="seo-title" oninput="updateSeoPreview()"/></div>
-              <div class="field"><label>SEO Description</label><textarea id="seo-desc" style="min-height:70px" oninput="updateSeoPreview()"></textarea></div>
+              <div class="field"><label>Global SEO Description</label><textarea id="seo-desc" style="min-height:70px" oninput="updateSeoPreview()"></textarea></div>
               <div class="field"><label>Global OG Image URL</label><input id="seo-og"/></div>
-              <div class="seo-prev">
+              <div class="seo-preview" id="seo-preview">
                 <div class="seo-url" id="sp-url">yoursite.com</div>
-                <div class="seo-t" id="sp-t">Title preview</div>
-                <div class="seo-d" id="sp-d">Description preview</div>
+                <div class="seo-title" id="sp-title">Title preview</div>
+                <div class="seo-desc" id="sp-desc">Description preview</div>
               </div>
-              <button class="btn btn-p btn-sm" onclick="saveSEO()">Save SEO</button>
+              <button class="btn btn-p btn-sm" onclick="saveSEO()">Save Global SEO</button>
             </div>
           </div>
           <div class="panel">
-            <div class="pt">Analytics & Code</div>
+            <div class="pt">Analytics & Tracking</div>
             <div style="display:flex;flex-direction:column;gap:.875rem">
-              <div class="field"><label>Google Analytics ID</label><input id="seo-ga" placeholder="G-XXXXXXXXXX"/></div>
-              <div class="field"><label>Custom &lt;head&gt; Code</label><textarea id="seo-head" style="min-height:75px;font-family:var(--fm);font-size:.75rem"></textarea></div>
-              <div class="field"><label>Custom &lt;body&gt; Code</label><textarea id="seo-body" style="min-height:75px;font-family:var(--fm);font-size:.75rem"></textarea></div>
-              <button class="btn btn-p btn-sm" onclick="saveAnalytics()">Save</button>
+              <div class="field"><label>Google Analytics ID (G-XXXXXXXXXX)</label><input id="seo-ga" placeholder="G-XXXXXXXXXX"/></div>
+              <div class="field"><label>Custom &lt;head&gt; Code</label><textarea id="seo-head" style="min-height:80px;font-family:var(--fm);font-size:.75rem" placeholder="&lt;!-- Any code to inject in &lt;head&gt; --&gt;"></textarea></div>
+              <div class="field"><label>Custom &lt;body&gt; Code</label><textarea id="seo-body" style="min-height:80px;font-family:var(--fm);font-size:.75rem" placeholder="&lt;!-- Facebook Pixel, etc --&gt;"></textarea></div>
+              <button class="btn btn-p btn-sm" onclick="saveAnalytics()">Save Analytics</button>
             </div>
           </div>
         </div>
-        <div class="panel"><div class="pt">Robots.txt</div><textarea id="seo-robots" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.7rem .9rem;color:#4ecca3;font-family:var(--fm);font-size:.78rem;min-height:100px;outline:none;resize:vertical;line-height:1.6"></textarea><button class="btn btn-p btn-sm" style="margin-top:.75rem" onclick="saveRobots()">Save</button></div>
+        <div class="panel">
+          <div class="pt">Robots.txt</div>
+          <textarea id="seo-robots" style="width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.7rem .9rem;color:#4ecca3;font-family:var(--fm);font-size:.78rem;min-height:100px;outline:none;resize:vertical;line-height:1.6"></textarea>
+          <button class="btn btn-p btn-sm" style="margin-top:.75rem" onclick="saveRobots()">Save Robots.txt</button>
+        </div>
       </div>
     </div>
 
-    <!-- ADS -->
-    <div class="fp" id="view-ads">
-      <div class="fpi">
+    <!-- ── AD SLOTS ── -->
+    <div class="full-page" id="view-ads">
+      <div class="fp-inner">
         <div class="sh"><span class="st">AD <span>SLOTS</span></span></div>
-        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Paste Google AdSense or any HTML. Toggle on/off without losing the code.</p>
+        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Paste Google AdSense or any HTML ad code. Toggle each slot on/off.</p>
         <div id="ads-list"></div>
       </div>
     </div>
 
-    <!-- USERS -->
-    <div class="fp" id="view-users">
-      <div class="fpi">
-        <div class="sh"><span class="st">USERS</span><input type="text" id="user-q" placeholder="Search…" oninput="filterUsers()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.38rem .8rem;color:var(--w);font-size:.8rem;outline:none;width:180px"/></div>
-        <div class="tw"><table><thead><tr><th>Username</th><th>Country</th><th>Fav Club</th><th>Points</th><th>Badges</th><th>Joined</th><th>Action</th></tr></thead><tbody id="users-tb"></tbody></table></div>
+    <!-- ── USERS ── -->
+    <div class="full-page" id="view-users">
+      <div class="fp-inner">
+        <div class="sh">
+          <span class="st">USERS</span>
+          <input type="text" id="user-q" placeholder="Search users…" oninput="filterUsers()" style="background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:.38rem .8rem;color:var(--w);font-size:.8rem;outline:none;width:200px"/>
+        </div>
+        <div class="tw"><table><thead><tr><th>Username</th><th>Country</th><th>Fav Club</th><th>Joined</th><th>Action</th></tr></thead><tbody id="users-tb"></tbody></table></div>
       </div>
     </div>
 
-    <!-- ADMINS -->
-    <div class="fp" id="view-admins">
-      <div class="fpi">
+    <!-- ── ADMINS ── -->
+    <div class="full-page" id="view-admins">
+      <div class="fp-inner">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
           <div class="panel">
             <div class="pt">Create New Admin</div>
@@ -475,43 +489,43 @@ td{padding:.62rem .9rem;vertical-align:middle}
       </div>
     </div>
 
-    <!-- SETTINGS -->
-    <div class="fp" id="view-settings">
-      <div class="fpi">
+    <!-- ── SITE SETTINGS ── -->
+    <div class="full-page" id="view-settings">
+      <div class="fp-inner">
         <div class="sh"><span class="st">SITE <span>SETTINGS</span></span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
           <div class="panel">
             <div class="pt">General</div>
             <div style="display:flex;flex-direction:column;gap:.875rem">
               <div class="field"><label>Site Name</label><input id="ss-name"/></div>
-              <div class="field"><label>Tagline</label><input id="ss-tagline"/></div>
+              <div class="field"><label>Site Tagline</label><input id="ss-tagline"/></div>
               <div class="field"><label>Site URL</label><input id="ss-url" placeholder="https://yoursite.com"/></div>
               <div class="field"><label>Contact Email</label><input id="ss-email" type="email"/></div>
-              <button class="btn btn-p btn-sm" onclick="saveSettings()">Save</button>
+              <button class="btn btn-p btn-sm" onclick="saveSettings()">Save Settings</button>
             </div>
           </div>
           <div class="panel">
-            <div class="pt">Footer & Social</div>
+            <div class="pt">Footer</div>
             <div style="display:flex;flex-direction:column;gap:.875rem">
               <div class="field"><label>Footer Text</label><input id="ss-footer"/></div>
-              <div class="field"><label>Twitter / X URL</label><input id="ss-twitter"/></div>
-              <div class="field"><label>Instagram URL</label><input id="ss-instagram"/></div>
-              <div class="field"><label>Facebook URL</label><input id="ss-facebook"/></div>
-              <button class="btn btn-p btn-sm" onclick="saveFooter()">Save</button>
+              <div class="field"><label>Twitter URL</label><input id="ss-twitter" placeholder="https://twitter.com/…"/></div>
+              <div class="field"><label>Instagram URL</label><input id="ss-instagram" placeholder="https://instagram.com/…"/></div>
+              <div class="field"><label>Facebook URL</label><input id="ss-facebook" placeholder="https://facebook.com/…"/></div>
+              <button class="btn btn-p btn-sm" onclick="saveFooter()">Save Footer</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- DASHBOARD -->
-    <div class="fp" id="view-dash">
-      <div class="fpi">
-        <div class="dg">
-          <div class="dc"><span class="dcn" id="d-kits">—</span><span class="dcl">Total Kits</span></div>
-          <div class="dc"><span class="dcn" id="d-users">—</span><span class="dcl">Users</span></div>
-          <div class="dc"><span class="dcn" id="d-ratings">—</span><span class="dcl">Ratings</span></div>
-          <div class="dc"><span class="dcn" id="d-comments">—</span><span class="dcl">Comments</span></div>
+    <!-- ── DASHBOARD ── -->
+    <div class="full-page" id="view-dash">
+      <div class="fp-inner">
+        <div class="dash-grid">
+          <div class="dc"><span class="dc-n" id="d-kits">—</span><span class="dc-l">Total Kits</span></div>
+          <div class="dc"><span class="dc-n" id="d-clubs">—</span><span class="dc-l">Clubs</span></div>
+          <div class="dc"><span class="dc-n" id="d-users">—</span><span class="dc-l">Users</span></div>
+          <div class="dc"><span class="dc-n" id="d-ratings">—</span><span class="dc-l">Ratings</span></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
           <div class="panel"><div class="pt">Recent Kits</div><div id="d-rk"></div></div>
@@ -520,259 +534,256 @@ td{padding:.62rem .9rem;vertical-align:middle}
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- /app-body -->
+</div><!-- /app -->
 
-<!-- KIT FORM MODAL -->
+<!-- ── KIT FORM MODAL ── -->
 <div class="ov" id="kit-ov" onclick="if(event.target===this)closeKitForm()">
   <div class="mbox">
-    <div class="mh"><div class="mt" id="kf-title">ADD <span>KIT</span></div><button class="mc" onclick="closeKitForm()">✕</button></div>
-    <div class="mb">
-      <div class="fg">
+    <div class="mbox-head">
+      <div class="mtitle" id="kf-title">ADD <span>KIT</span></div>
+      <button class="mclose" onclick="closeKitForm()">✕</button>
+    </div>
+    <div class="mbox-body">
+      <div class="fgrid">
         <div class="fsec">Kit Identity</div>
         <div class="field"><label>Club / Team *</label><div class="acw"><input id="kf-team" placeholder="Start typing…" autocomplete="off" oninput="acIn('team')" onfocus="acIn('team')" onblur="setTimeout(()=>acClose('team'),180)"/><div class="acl" id="acl-team"></div></div></div>
         <div class="field"><label>Season *</label><div class="acw"><input id="kf-season" placeholder="e.g. 2024/25" autocomplete="off" oninput="acIn('season')" onfocus="acIn('season')" onblur="setTimeout(()=>acClose('season'),180)"/><div class="acl" id="acl-season"></div></div></div>
         <div class="field"><label>League</label><div class="acw"><input id="kf-league" placeholder="Start typing…" autocomplete="off" oninput="acIn('league')" onfocus="acIn('league')" onblur="setTimeout(()=>acClose('league'),180)"/><div class="acl" id="acl-league"></div></div></div>
-        <div class="field"><label>Kit Type *</label><select id="kf-type" onchange="autoSlug()"><option>Home</option></select></div>
+        <div class="field"><label>Kit Type *</label><select id="kf-type" onchange="autoSlug()"><option>Home</option><option>Away</option><option>Third</option><option>GK Home</option><option>GK Away</option><option>Special Edition</option></select></div>
         <div class="field"><label>Manufacturer</label><div class="acw"><input id="kf-maker" placeholder="e.g. Adidas…" autocomplete="off" oninput="acIn('maker')" onfocus="acIn('maker')" onblur="setTimeout(()=>acClose('maker'),180)"/><div class="acl" id="acl-maker"></div></div></div>
         <div class="field"><label>Primary Color</label><input id="kf-color"/></div>
 
-        <div class="fsec">Images</div>
-        <div class="field ff" style="display:flex;gap:.875rem;align-items:flex-start">
-          <div style="flex:1"><label>Main Image URL</label><input id="kf-img" placeholder="https://… or /assets/img/kits/filename.jpg" oninput="prevImg()"/></div>
-          <div class="ip" id="img-prev">📷</div>
+        <div class="fsec">Images — drag & drop or paste URLs</div>
+        <div class="field ff">
+          <label>Upload Images (auto-renamed)</label>
+          <div class="upload-zone" style="padding:1rem" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleKitImgDrop(event)" onclick="document.getElementById('kit-img-input').click()">
+            <div>📂 Drop images or click to upload</div>
+            <input type="file" id="kit-img-input" accept="image/*" multiple style="display:none" onchange="handleKitImgSelect(event)"/>
+          </div>
+          <div class="img-gallery" id="kit-img-gallery" style="margin-top:.5rem"></div>
         </div>
-        <div class="field"><label>Image 2 URL</label><input id="kf-img2" placeholder="https://…"/></div>
-        <div class="field"><label>Image 3 URL</label><input id="kf-img3" placeholder="https://…"/></div>
+        <div class="field"><label>Image URL 1</label><input id="kf-img" placeholder="https://… or upload above" oninput="prevImg()"/><div class="img-prev" id="img-prev" style="margin-top:.5rem">📷</div></div>
+        <div class="field"><label>Image URL 2</label><input id="kf-img2" placeholder="https://…"/></div>
+        <div class="field"><label>Image URL 3</label><input id="kf-img3" placeholder="https://…"/></div>
 
         <div class="fsec">Commerce</div>
-        <div class="field"><label>Price Label</label><input id="kf-price" placeholder="From £89.95"/></div>
-        <div class="field"><label>Current Market Price (£)</label><input id="kf-market-price" type="number" placeholder="89.95" step="0.01"/></div>
+        <div class="field"><label>Price Label</label><input id="kf-price" placeholder="e.g. From £89.95"/></div>
         <div class="field"><label>Affiliate Buy URL</label><input id="kf-buy" placeholder="https://…"/></div>
         <div class="field"><label>Buy Button Label</label><input id="kf-buylabel" placeholder="Buy Now"/></div>
         <div class="field"><label>URL Slug *</label><input id="kf-slug" placeholder="auto-generated"/></div>
 
-        <div class="fsec">SEO & Content</div>
+        <div class="fsec">Content & SEO</div>
         <div class="field ff"><label>Description</label><textarea id="kf-desc" placeholder="Describe this kit…"></textarea></div>
-        <div class="field"><label>SEO Title</label><input id="kf-seo-title" placeholder="Auto-generated if blank"/></div>
-        <div class="field"><label>SEO Description</label><input id="kf-seo-desc" placeholder="Auto from description if blank"/></div>
+        <div class="field"><label>SEO Title</label><input id="kf-seo-title" placeholder="Leave blank to auto-generate"/></div>
+        <div class="field"><label>SEO Description</label><input id="kf-seo-desc" placeholder="Leave blank to use kit description"/></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Published (Live)</span><label class="tgl"><input type="checkbox" id="kf-pub" checked/><span class="tgl-s"></span></label></div>
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Featured on Homepage</span><label class="tgl"><input type="checkbox" id="kf-feat"/><span class="tgl-s"></span></label></div>
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Published (Live)</span><label class="tgl"><input type="checkbox" id="kf-pub" checked/><span class="tgl-s"></span></label></div>
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Featured on Homepage</span><label class="tgl"><input type="checkbox" id="kf-feat"/><span class="tgl-s"></span></label></div>
       </div>
       <input type="hidden" id="kf-id"/>
     </div>
-    <div class="mf">
+    <div class="mbox-foot">
       <button class="btn btn-g" onclick="closeKitForm()">Cancel</button>
       <button class="btn btn-p" onclick="saveKit()">Save Kit</button>
     </div>
   </div>
 </div>
 
-<!-- MENU FORM MODAL -->
-<div class="ov" id="menu-ov" onclick="if(event.target===this)closeMenuForm()">
-  <div class="mbox" style="max-width:480px">
-    <div class="mh"><div class="mt" id="mf-title">ADD MENU <span>ITEM</span></div><button class="mc" onclick="closeMenuForm()">✕</button></div>
-    <div class="mb">
-      <div style="display:flex;flex-direction:column;gap:.875rem">
-        <div class="field"><label>Label *</label><input id="mf-label" placeholder="e.g. Browse Kits"/></div>
-        <div class="field"><label>URL *</label><input id="mf-url" placeholder="e.g. /browse.html or https://…"/></div>
-        <div class="field"><label>Open in</label><select id="mf-target"><option value="_self">Same tab</option><option value="_blank">New tab</option></select></div>
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Visible in nav</span><label class="tgl"><input type="checkbox" id="mf-active" checked/><span class="tgl-s"></span></label></div>
-        <input type="hidden" id="mf-id"/>
-      </div>
-    </div>
-    <div class="mf"><button class="btn btn-g" onclick="closeMenuForm()">Cancel</button><button class="btn btn-p" onclick="saveMenuItem()">Save</button></div>
-  </div>
-</div>
-
-<!-- KIT TYPE FORM -->
-<div class="ov" id="type-ov" onclick="if(event.target===this)closeTypeForm()">
-  <div class="mbox" style="max-width:420px">
-    <div class="mh"><div class="mt" id="tf-title">ADD KIT <span>TYPE</span></div><button class="mc" onclick="closeTypeForm()">✕</button></div>
-    <div class="mb">
-      <div style="display:flex;flex-direction:column;gap:.875rem">
-        <div class="field"><label>Type Name *</label><input id="tf-name" placeholder="e.g. Champions League Away"/></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.875rem">
-          <div class="field"><label>Badge Text Color</label><input id="tf-color" type="color" value="#00C853" style="height:40px;padding:.25rem"/></div>
-          <div class="field"><label>Badge Background</label><input id="tf-bg" type="color" value="#0a1f0a" style="height:40px;padding:.25rem"/></div>
-        </div>
-        <div class="field"><label>Preview</label><div id="tf-preview" style="padding:.5rem 0"><span class="badge" id="tf-badge-prev" style="background:#0a1f0a;color:#00C853;border-color:rgba(0,200,83,.3)">New Type</span></div></div>
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Active</span><label class="tgl"><input type="checkbox" id="tf-active" checked/><span class="tgl-s"></span></label></div>
-        <input type="hidden" id="tf-id"/>
-      </div>
-    </div>
-    <div class="mf"><button class="btn btn-g" onclick="closeTypeForm()">Cancel</button><button class="btn btn-p" onclick="saveKitType()">Save Type</button></div>
-  </div>
-</div>
-
-<!-- BLOG FORM MODAL -->
+<!-- ── BLOG FORM MODAL ── -->
 <div class="ov" id="blog-ov" onclick="if(event.target===this)closeBlogForm()">
   <div class="mbox mbox-lg">
-    <div class="mh"><div class="mt" id="bf-title">NEW <span>POST</span></div><button class="mc" onclick="closeBlogForm()">✕</button></div>
-    <div class="mb">
-      <div class="fg">
+    <div class="mbox-head">
+      <div class="mtitle" id="bf-title">NEW <span>POST</span></div>
+      <button class="mclose" onclick="closeBlogForm()">✕</button>
+    </div>
+    <div class="mbox-body">
+      <div class="fgrid">
         <div class="fsec">Post Details</div>
-        <div class="field ff"><label>Title *</label><input id="bf-title-in" placeholder="Post title…" oninput="autoBlogSlug()"/></div>
-        <div class="field"><label>Slug *</label><input id="bf-slug"/></div>
-        <div class="field"><label>Cover Image URL</label><input id="bf-cover" placeholder="https://… or /assets/img/…"/></div>
-        <div class="field ff"><label>Excerpt</label><textarea id="bf-excerpt" style="min-height:60px" placeholder="Short summary…"></textarea></div>
-        <div class="field ff"><label>Tags</label><div class="tw2" id="tags-wrap" onclick="document.getElementById('tags-in').focus()"><input class="ti2" id="tags-in" placeholder="Type tag and press Enter…" onkeydown="handleTag(event)"/></div></div>
+        <div class="field ff"><label>Title *</label><input id="bf-title-input" placeholder="Post title…" oninput="autoBlogSlug()"/></div>
+        <div class="field"><label>Slug *</label><input id="bf-slug" placeholder="auto-generated"/></div>
+        <div class="field"><label>Cover Image URL</label><input id="bf-cover" placeholder="https://…"/></div>
+        <div class="field ff"><label>Excerpt</label><textarea id="bf-excerpt" placeholder="Short summary shown in blog listings…" style="min-height:60px"></textarea></div>
+        <div class="field ff">
+          <label>Tags</label>
+          <div class="tags-wrap" id="tags-wrap" onclick="document.getElementById('tags-input').focus()">
+            <input class="tags-input" id="tags-input" placeholder="Type tag and press Enter…" onkeydown="handleTagInput(event)"/>
+          </div>
+        </div>
+
         <div class="fsec">Content</div>
         <div class="field ff">
-          <div class="etb">
-            <button onclick="ec('bold')"><b>B</b></button><button onclick="ec('italic')"><i>I</i></button><button onclick="ec('strike')"><s>S</s></button>
-            <div class="esep"></div>
-            <button onclick="ec('h1')">H1</button><button onclick="ec('h2')">H2</button><button onclick="ec('h3')">H3</button>
-            <div class="esep"></div>
-            <button onclick="ec('ul')">• List</button><button onclick="ec('ol')">1. List</button><button onclick="ec('quote')">" "</button>
-            <div class="esep"></div>
-            <button onclick="ec('link')">🔗</button><button onclick="edImg()">🖼</button><button onclick="edVideo()">▶</button>
-            <div class="esep"></div>
-            <button onclick="ec('undo')">↩</button><button onclick="ec('redo')">↪</button>
+          <label>Post Content</label>
+          <div class="editor-toolbar" id="editor-toolbar">
+            <button onclick="edCmd('bold')" title="Bold"><b>B</b></button>
+            <button onclick="edCmd('italic')" title="Italic"><i>I</i></button>
+            <button onclick="edCmd('strike')" title="Strike"><s>S</s></button>
+            <div class="sep"></div>
+            <button onclick="edCmd('h1')" title="H1">H1</button>
+            <button onclick="edCmd('h2')" title="H2">H2</button>
+            <button onclick="edCmd('h3')" title="H3">H3</button>
+            <div class="sep"></div>
+            <button onclick="edCmd('bulletList')" title="Bullet list">• List</button>
+            <button onclick="edCmd('orderedList')" title="Numbered list">1. List</button>
+            <button onclick="edCmd('blockquote')" title="Quote">" "</button>
+            <div class="sep"></div>
+            <button onclick="edCmd('link')" title="Link">🔗</button>
+            <button onclick="edInsertImg()" title="Image">🖼</button>
+            <button onclick="edInsertVideo()" title="Embed video">▶</button>
+            <button onclick="edCmd('table')" title="Table">⊞</button>
+            <div class="sep"></div>
+            <button onclick="edCmd('code')" title="Code">&lt;/&gt;</button>
+            <button onclick="edCmd('codeBlock')" title="Code block">{ }</button>
+            <button onclick="edCmd('undo')" title="Undo">↩</button>
+            <button onclick="edCmd('redo')" title="Redo">↪</button>
           </div>
-          <div class="editor" id="blog-editor" contenteditable="true" data-placeholder="Write your post…"></div>
+          <div class="tiptap-editor" id="tiptap-editor" contenteditable="true" data-placeholder="Start writing your post…"></div>
         </div>
+
         <div class="fsec">SEO</div>
-        <div class="field"><label>SEO Title</label><input id="bf-seo-t"/></div>
-        <div class="field"><label>SEO Description</label><input id="bf-seo-d"/></div>
-        <div class="field"><label>OG Image</label><input id="bf-og"/></div>
+        <div class="field"><label>SEO Title</label><input id="bf-seo-title" placeholder="Leave blank to use post title"/></div>
+        <div class="field"><label>SEO Description</label><input id="bf-seo-desc" placeholder="Leave blank to use excerpt"/></div>
+        <div class="field"><label>OG Image URL</label><input id="bf-og-img" placeholder="Leave blank to use cover image"/></div>
       </div>
-      <div class="tr"><span style="font-size:.82rem;font-weight:500">Published</span><label class="tgl"><input type="checkbox" id="bf-pub"/><span class="tgl-s"></span></label></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Published</span><label class="tgl"><input type="checkbox" id="bf-pub"/><span class="tgl-s"></span></label></div>
+        <div></div>
+      </div>
       <input type="hidden" id="bf-id"/>
       <input type="hidden" id="bf-tags-data" value="[]"/>
     </div>
-    <div class="mf"><button class="btn btn-g" onclick="closeBlogForm()">Cancel</button><button class="btn btn-p" onclick="saveBlog()">Save Post</button></div>
+    <div class="mbox-foot">
+      <button class="btn btn-g" onclick="closeBlogForm()">Cancel</button>
+      <button class="btn btn-p" onclick="saveBlogPost()">Save Post</button>
+    </div>
   </div>
 </div>
 
-<!-- PAGE FORM MODAL -->
+<!-- ── PAGE FORM MODAL ── -->
 <div class="ov" id="page-ov" onclick="if(event.target===this)closePageForm()">
   <div class="mbox mbox-lg">
-    <div class="mh"><div class="mt" id="pf-title">NEW <span>PAGE</span></div><button class="mc" onclick="closePageForm()">✕</button></div>
-    <div class="mb">
-      <div class="fg">
-        <div class="fsec">Page</div>
-        <div class="field ff"><label>Title *</label><input id="pf-title-in" oninput="autoPageSlug()"/></div>
-        <div class="field"><label>Slug *</label><input id="pf-slug"/></div>
+    <div class="mbox-head">
+      <div class="mtitle" id="pf-title">NEW <span>PAGE</span></div>
+      <button class="mclose" onclick="closePageForm()">✕</button>
+    </div>
+    <div class="mbox-body">
+      <div class="fgrid">
+        <div class="fsec">Page Details</div>
+        <div class="field ff"><label>Page Title *</label><input id="pf-title-input" placeholder="e.g. About Us" oninput="autoPageSlug()"/></div>
+        <div class="field"><label>Slug *</label><input id="pf-slug" placeholder="e.g. about"/></div>
         <div class="field ff">
           <label>Content</label>
-          <div class="etb">
-            <button onclick="pc('bold')"><b>B</b></button><button onclick="pc('italic')"><i>I</i></button>
-            <div class="esep"></div>
-            <button onclick="pc('h2')">H2</button><button onclick="pc('h3')">H3</button>
-            <div class="esep"></div>
-            <button onclick="pc('ul')">• List</button><button onclick="pc('link')">🔗</button>
+          <div class="editor-toolbar">
+            <button onclick="pgCmd('bold')"><b>B</b></button>
+            <button onclick="pgCmd('italic')"><i>I</i></button>
+            <div class="sep"></div>
+            <button onclick="pgCmd('h2')">H2</button>
+            <button onclick="pgCmd('h3')">H3</button>
+            <div class="sep"></div>
+            <button onclick="pgCmd('bulletList')">• List</button>
+            <button onclick="pgCmd('link')">🔗</button>
+            <button onclick="pgCmd('table')">⊞</button>
           </div>
-          <div class="editor" id="page-editor" contenteditable="true" data-placeholder="Write page content…" style="min-height:240px"></div>
+          <div class="tiptap-editor" id="page-editor" contenteditable="true" data-placeholder="Write page content…" style="min-height:260px"></div>
         </div>
         <div class="fsec">SEO</div>
-        <div class="field"><label>SEO Title</label><input id="pf-seo-t"/></div>
-        <div class="field"><label>SEO Description</label><input id="pf-seo-d"/></div>
+        <div class="field"><label>SEO Title</label><input id="pf-seo-title"/></div>
+        <div class="field"><label>SEO Description</label><input id="pf-seo-desc"/></div>
+        <div class="field"><label>OG Image</label><input id="pf-og-img"/></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem">
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Published</span><label class="tgl"><input type="checkbox" id="pf-pub" checked/><span class="tgl-s"></span></label></div>
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Show in Footer</span><label class="tgl"><input type="checkbox" id="pf-footer" checked/><span class="tgl-s"></span></label></div>
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Show in Nav</span><label class="tgl"><input type="checkbox" id="pf-nav"/><span class="tgl-s"></span></label></div>
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Published</span><label class="tgl"><input type="checkbox" id="pf-pub" checked/><span class="tgl-s"></span></label></div>
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Show in Footer</span><label class="tgl"><input type="checkbox" id="pf-footer" checked/><span class="tgl-s"></span></label></div>
+        <div class="tgl-row"><span style="font-size:.82rem;font-weight:500">Show in Nav</span><label class="tgl"><input type="checkbox" id="pf-nav"/><span class="tgl-s"></span></label></div>
       </div>
       <input type="hidden" id="pf-id"/>
     </div>
-    <div class="mf"><button class="btn btn-g" onclick="closePageForm()">Cancel</button><button class="btn btn-p" onclick="savePage()">Save Page</button></div>
-  </div>
-</div>
-
-<!-- KOTW FORM -->
-<div class="ov" id="kotw-ov" onclick="if(event.target===this)document.getElementById('kotw-ov').classList.remove('open')">
-  <div class="mbox" style="max-width:480px">
-    <div class="mh"><div class="mt">KIT OF THE <span>WEEK</span></div><button class="mc" onclick="document.getElementById('kotw-ov').classList.remove('open')">✕</button></div>
-    <div class="mb">
-      <div style="display:flex;flex-direction:column;gap:.875rem">
-        <div class="field"><label>Kit Slug *</label><div class="acw"><input id="kotw-kit" placeholder="Search kit slug…" autocomplete="off" oninput="acKotw()"/><div class="acl" id="acl-kotw"></div></div></div>
-        <div class="field"><label>Week Start</label><input id="kotw-start" type="date"/></div>
-        <div class="field"><label>Week End</label><input id="kotw-end" type="date"/></div>
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Active</span><label class="tgl"><input type="checkbox" id="kotw-active" checked/><span class="tgl-s"></span></label></div>
-      </div>
+    <div class="mbox-foot">
+      <button class="btn btn-g" onclick="closePageForm()">Cancel</button>
+      <button class="btn btn-p" onclick="savePage()">Save Page</button>
     </div>
-    <div class="mf"><button class="btn btn-g" onclick="document.getElementById('kotw-ov').classList.remove('open')">Cancel</button><button class="btn btn-p" onclick="saveKotw()">Save</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://dpelurhaljmnogdxqpoj.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZWx1cmhhbGptbm9nZHhxcG9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTE4MzksImV4cCI6MjA4OTc2NzgzOX0.cvWry3iR8MZg7zV6ewKyw8YIOxIUCaV3gUBZlPsykNM';
-const {createClient}=supabase;
-const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const {createClient} = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let adminProfile=null;
-let allSeasons=[],allLeagues=[],allClubs=[],allMakers=[],allKitTypes=[],allKits=[];
-let selSeason=null,selLeague=null,selClub=null,p2Mode='leagues';
-let allUsers=[],allComments=[],allBlogs=[],allPages=[],blogTags=[];
-let editKitId=null,editMenuId=null,editTypeId=null,editBlogId=null,editPageId=null;
+let allSeasons=[], allLeagues=[], allClubs=[], allMakers=[];
+let selSeason=null, selLeague=null, selClub=null;
+let allUsers=[], editKitId=null, p2Mode='leagues';
+let allImages=[], blogTags=[];
 let siteUrl='yoursite.com';
-let selectedKits=new Set();
-let dragMenuId=null,dragSecId=null;
 
 // ══ LOGIN ══════════════════════════════════════════════════
-window.doLogin = async function(){
-  const email=document.getElementById('l-email').value.trim(),pass=document.getElementById('l-pass').value;
+async function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pass=document.getElementById('l-pass').value;
   const err=document.getElementById('lerr'),btn=document.getElementById('lbtn');
   err.style.display='none';
   if(!email||!pass){err.textContent='Enter email and password.';err.style.display='block';return;}
   btn.textContent='Signing in…';btn.disabled=true;
-  const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
   btn.textContent='Sign In to Admin';btn.disabled=false;
   if(error){err.textContent=error.message;err.style.display='block';return;}
-  const{data:p}=await sb.from('profiles').select('*').eq('id',data.user.id).single();
+  const {data:p}=await sb.from('profiles').select('*').eq('id',data.user.id).single();
   if(!p||p.role!=='admin'){await sb.auth.signOut();err.textContent='Access denied.';err.style.display='block';return;}
   adminProfile=p;showApp();
 }
 async function checkSession(){
-  const{data:{user}}=await sb.auth.getUser();if(!user)return;
-  const{data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  const {data:{user}}=await sb.auth.getUser();if(!user)return;
+  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
   if(p&&p.role==='admin'){adminProfile=p;showApp();}
 }
 async function doSignOut(){await sb.auth.signOut();location.reload();}
-
 async function showApp(){
-  document.getElementById('ls').style.display='none';
+  document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('tb-user').textContent='⚙️ '+adminProfile.username;
-  await loadMaster();renderP1();
+  await loadMaster();
+  renderP1();
 }
 
+// ══ MASTER DATA ════════════════════════════════════════════
 async function loadMaster(){
-  const[s,l,c,kt,ss]=await Promise.all([
+  const [s,l,c,ss]=await Promise.all([
     sb.from('seasons').select('*').order('year_start',{ascending:false}),
     sb.from('leagues').select('*').order('name'),
     sb.from('clubs').select('*').order('name'),
-    sb.from('kit_types').select('*').order('sort_order'),
     sb.from('site_settings').select('*'),
   ]);
-  allSeasons=s.data||[];allLeagues=l.data||[];allClubs=c.data||[];allKitTypes=kt.data||[];
-  if(ss.data){const cfg=Object.fromEntries(ss.data.map(r=>[r.key,r.value]));if(cfg.site_url)siteUrl=cfg.site_url.replace(/https?:\/\//,'');}
-  const{data:km}=await sb.from('kits').select('maker,slug,team,season,type').not('maker','is',null);
-  allKits=km||[];
+  allSeasons=s.data||[];allLeagues=l.data||[];allClubs=c.data||[];
+  if(ss.data){const cfg=Object.fromEntries(ss.data.map(r=>[r.key,r.value]));if(cfg.site_url)siteUrl=cfg.site_url.replace('https://','').replace('http://','');}
+  const {data:km}=await sb.from('kits').select('maker').not('maker','is',null);
   const db=[...new Set((km||[]).map(k=>k.maker).filter(Boolean))];
   const def=['Adidas','Nike','Puma','Umbro','Kappa','Hummel','New Balance','Under Armour','Joma','Macron','Castore','Errea'];
   allMakers=[...new Set([...db,...def])].sort();
-  // populate kit type select
-  const sel=document.getElementById('kf-type');
-  sel.innerHTML=allKitTypes.map(t=>`<option value="${t.name}">${t.name}</option>`).join('');
 }
 
 // ══ VIEW SWITCHER ══════════════════════════════════════════
 function sv(v,btn){
   document.getElementById('view-kits').style.display='none';
-  document.querySelectorAll('.fp').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.ln').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.full-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ln-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if(v==='kits'){document.getElementById('view-kits').style.display='flex';}
   else{const el=document.getElementById('view-'+v);if(el)el.classList.add('active');}
-  const loaders={hp:loadHp,menu:loadMenu,blog:loadBlog,pages:loadPages,types:loadTypes,kotw:loadKotw,comments:loadComments,badges:loadBadges,seo:loadSEO,ads:loadAds,users:loadUsers,admins:loadAdmins,settings:loadSettings,dash:loadDash};
-  if(loaders[v])loaders[v]();
+  if(v==='images')loadImages();
+  if(v==='hp')loadHpBuilder();
+  if(v==='blog')loadBlog();
+  if(v==='pages')loadPages();
+  if(v==='seo')loadSEO();
+  if(v==='ads')loadAds();
+  if(v==='users')loadUsers();
+  if(v==='admins')loadAdmins();
+  if(v==='settings')loadSettings();
+  if(v==='dash')loadDash();
 }
 
 // ══ PANE 1 ═════════════════════════════════════════════════
@@ -780,11 +791,22 @@ function renderP1(){
   const q=document.getElementById('p1-q').value.toLowerCase();
   const f=allSeasons.filter(s=>s.name.toLowerCase().includes(q));
   document.getElementById('p1-list').innerHTML=f.length
-    ?f.map(s=>`<div class="ti ${selSeason?.id===s.id?'active':''}" onclick="selectSeason('${s.id}')"><span class="tic">📅</span>${s.name}</div>`).join('')
+    ?f.map(s=>`<div class="ti ${selSeason?.id===s.id?'active':''}" onclick="selectSeason('${s.id}')"><span class="ti-ic">📅</span>${s.name}</div>`).join('')
     :'<div class="empty"><p style="font-size:.8rem">No seasons</p></div>';
 }
-async function selectSeason(id){selSeason=allSeasons.find(s=>s.id===id);selLeague=null;selClub=null;p2Mode='leagues';renderP1();renderP2Leagues();document.getElementById('p3').innerHTML='<div class="empty" style="margin-top:5rem"><div class="empty-i">🏆</div><p style="font-size:.85rem">Select a league</p></div>';}
-async function promptAddSeason(){const name=prompt('Season (e.g. 2025/26):');if(!name)return;const parts=name.split('/');const ys=parseInt(parts[0]);const ye=parts[1]?(parts[1].length===2?parseInt(parts[0].substring(0,2)+parts[1]):parseInt(parts[1])):ys+1;const{error}=await sb.from('seasons').insert({name:name.trim(),year_start:ys,year_end:ye});if(error){toast('Error: '+error.message,'err');return;}toast('Season added!');await loadMaster();renderP1();}
+async function selectSeason(id){
+  selSeason=allSeasons.find(s=>s.id===id);selLeague=null;selClub=null;p2Mode='leagues';
+  renderP1();renderP2Leagues();
+  document.getElementById('p3').innerHTML='<div class="empty" style="margin-top:5rem"><div class="empty-i">🏆</div><p style="font-size:.85rem">Select a league</p></div>';
+}
+async function promptAddSeason(){
+  const name=prompt('Season (e.g. 2025/26):');if(!name)return;
+  const parts=name.split('/');const ys=parseInt(parts[0]);
+  const ye=parts[1]?(parts[1].length===2?parseInt(parts[0].substring(0,2)+parts[1]):parseInt(parts[1])):ys+1;
+  const{error}=await sb.from('seasons').insert({name:name.trim(),year_start:ys,year_end:ye});
+  if(error){toast('Error: '+error.message,'err');return;}
+  toast('Season added!');await loadMaster();renderP1();
+}
 
 // ══ PANE 2 ═════════════════════════════════════════════════
 function renderP2(){if(p2Mode==='leagues')renderP2Leagues();else renderP2Clubs();}
@@ -794,16 +816,25 @@ function renderP2Leagues(){
   document.getElementById('p2-q').placeholder='Search league…';
   const q=document.getElementById('p2-q').value.toLowerCase();
   const f=allLeagues.filter(l=>l.name.toLowerCase().includes(q));
-  document.getElementById('p2-list').innerHTML=f.map(l=>{const cc=allClubs.filter(c=>c.league_id===l.id).length;return `<div class="ti ${selLeague?.id===l.id?'active':''}" onclick="selectLeague('${l.id}')"><span class="tic">🏆</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</span><span class="tict">${cc}</span></div>`;}).join('')||'<div class="empty"><p>No leagues</p></div>';
+  document.getElementById('p2-list').innerHTML=f.map(l=>{
+    const cc=allClubs.filter(c=>c.league_id===l.id).length;
+    return `<div class="ti ${selLeague?.id===l.id?'active':''}" onclick="selectLeague('${l.id}')"><span class="ti-ic">🏆</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</span><span class="ti-ct">${cc}</span></div>`;
+  }).join('')||'<div class="empty"><p>No leagues</p></div>';
 }
-async function selectLeague(id){selLeague=allLeagues.find(l=>l.id===id);selClub=null;renderP2Clubs();document.getElementById('p3').innerHTML='<div class="empty" style="margin-top:5rem"><div class="empty-i">⚽</div><p style="font-size:.85rem">Select a club</p></div>';}
+async function selectLeague(id){
+  selLeague=allLeagues.find(l=>l.id===id);selClub=null;
+  renderP2Clubs();
+  document.getElementById('p3').innerHTML='<div class="empty" style="margin-top:5rem"><div class="empty-i">⚽</div><p style="font-size:.85rem">Select a club</p></div>';
+}
 function renderP2Clubs(){
   p2Mode='clubs';
   document.getElementById('p2-head').innerHTML=`<span style="cursor:pointer;color:var(--w3);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px" onclick="selLeague=null;selClub=null;renderP2Leagues()">← ${selLeague?.name||''}</span> <button class="ph-add" onclick="promptAddClub()">+</button>`;
   document.getElementById('p2-q').placeholder='Search club…';
   const q=document.getElementById('p2-q').value.toLowerCase();
   const clubs=allClubs.filter(c=>c.league_id===selLeague?.id&&c.name.toLowerCase().includes(q));
-  document.getElementById('p2-list').innerHTML=clubs.length?clubs.map(c=>`<div class="ti ${selClub?.id===c.id?'active':''}" onclick="selectClub('${c.id}')"><span class="tic">⚽</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span></div>`).join(''):'<div class="empty"><p style="font-size:.8rem">No clubs — click + to add</p></div>';
+  document.getElementById('p2-list').innerHTML=clubs.length
+    ?clubs.map(c=>`<div class="ti ${selClub?.id===c.id?'active':''}" onclick="selectClub('${c.id}')"><span class="ti-ic">⚽</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span></div>`).join('')
+    :'<div class="empty"><p style="font-size:.8rem">No clubs — click + to add</p></div>';
 }
 async function selectClub(id){selClub=allClubs.find(c=>c.id===id);renderP2Clubs();loadP3();}
 async function promptAddLeague(){const name=prompt('League name:');if(!name)return;const country=prompt('Country:');const{error}=await sb.from('leagues').insert({name:name.trim(),country:country||null});if(error){toast('Error: '+error.message,'err');return;}toast('League added!');await loadMaster();renderP2Leagues();}
@@ -814,88 +845,30 @@ async function loadP3(){
   if(!selSeason||!selClub)return;
   const p3=document.getElementById('p3');
   p3.innerHTML='<div class="spinner"></div>';
-  const{data:kits}=await sb.from('kits_with_stats').select('*').eq('team',selClub.name).eq('season',selSeason.name).order('type');
-  selectedKits.clear();
-
+  const{data:kits}=await sb.from('kits_with_stats').select('*').eq('team',selClub.name).eq('season',selSeason.name);
+  const types=['Home','Away','Third','GK Home','GK Away','Special Edition'];
+  const bc=t=>t==='Home'?'bh':t==='Away'?'ba':t.includes('Special')?'bsp':'bt';
   p3.innerHTML=`
-    <div class="p3h">
-      <div><div class="p3t">${selClub.name} <span>${selSeason.name}</span></div><div class="p3s">${selLeague?.name||''} · ${(kits||[]).length} kit${(kits||[]).length!==1?'s':''}</div></div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="duplicateToSeason()">⊕ Copy to Season</button>
-        <button class="btn btn-p btn-sm" onclick="openKitForm(null,'${selClub.name.replace(/'/g,"\\'")}','${selSeason.name}','${(selLeague?.name||'').replace(/'/g,"\\'")}')">+ Add Kit</button>
-      </div>
+    <div class="p3-head">
+      <div><div class="p3-title">${selClub.name} <span>${selSeason.name}</span></div><div class="p3-sub">${selLeague?.name||''} · ${(kits||[]).length} kit${(kits||[]).length!==1?'s':''}</div></div>
+      <button class="btn btn-p btn-sm" onclick="openKitForm(null,'${selClub.name.replace(/'/g,"\\'")}','${selSeason.name}','${(selLeague?.name||'').replace(/'/g,"\\'")}')">+ Add Kit</button>
     </div>
-    <div class="kt-wrap">
-      <!-- BULK BAR -->
-      <div class="bulk-bar" id="bulk-bar">
-        <span class="bulk-count" id="bulk-count">0 selected</span>
-        <button class="btn btn-p btn-sm" onclick="bulkPublish(true)">✓ Publish All</button>
-        <button class="btn btn-g btn-sm" onclick="bulkPublish(false)">✕ Unpublish All</button>
-        <button class="btn btn-r btn-sm" onclick="bulkDelete()">🗑 Delete Selected</button>
-      </div>
-      ${(kits||[]).length?`
-      <table>
-        <thead><tr>
-          <th><input type="checkbox" class="cb" onchange="selectAllKits(this)" title="Select all"/></th>
-          <th>Img</th><th>Type</th><th>Maker</th><th>Color</th><th>Price</th><th>Status</th><th>Featured</th><th>Actions</th>
-        </tr></thead>
-        <tbody>${(kits||[]).map(k=>{
-          const typ=allKitTypes.find(t=>t.name===k.type);
-          const badgeStyle=typ?`style="background:${typ.bg_color};color:${typ.color};border-color:${typ.color}40"`:'';
-          return `<tr id="krow-${k.id}">
-            <td><input type="checkbox" class="cb kit-cb" data-id="${k.id}" onchange="toggleKitSelect('${k.id}',this.checked)"/></td>
-            <td><div class="tdi">${k.image_url?`<img src="${k.image_url}"/>`:'👕'}</div></td>
-            <td><span class="badge" ${badgeStyle}>${k.type}</span></td>
-            <td style="color:var(--w3);font-size:.78rem">${k.maker||'—'}</td>
-            <td style="color:var(--w3);font-size:.78rem">${k.color||'—'}</td>
-            <td style="font-family:var(--fm);font-size:.72rem;color:var(--g)">${k.price_label||'—'}</td>
-            <td><span class="badge ${k.is_published?'pub-y':'pub-n'}">${k.is_published?'Live':'Draft'}</span></td>
-            <td style="text-align:center">${k.is_featured?'⭐':'—'}</td>
-            <td><div style="display:flex;gap:.35rem">
-              <button class="btn-ed" onclick='openKitForm(${JSON.stringify(k).replace(/'/g,"&#39;")})'>Edit</button>
-              <button class="btn ${k.is_published?'btn-g':'btn-pub'} btn-xs" onclick="quickTogglePublish('${k.id}',${!k.is_published})">${k.is_published?'Unpub':'Pub'}</button>
-              <button class="btn-del" onclick="delKit('${k.id}','${k.team.replace(/'/g,"\\'")}')">Del</button>
-            </div></td>
-          </tr>`;
-        }).join('')}</tbody>
-      </table>`
-      :`<div class="empty"><div class="empty-i">👕</div><p>No kits yet — click + Add Kit</p></div>`}
-    </div>`;
-}
-
-// ══ KIT SELECTION & BULK ══════════════════════════════════
-function toggleKitSelect(id,checked){if(checked)selectedKits.add(id);else selectedKits.delete(id);updateBulkBar();}
-function selectAllKits(cb){document.querySelectorAll('.kit-cb').forEach(c=>{c.checked=cb.checked;toggleKitSelect(c.dataset.id,cb.checked);});}
-function updateBulkBar(){const bar=document.getElementById('bulk-bar');const cnt=document.getElementById('bulk-count');bar.classList.toggle('show',selectedKits.size>0);if(cnt)cnt.textContent=`${selectedKits.size} selected`;}
-async function bulkPublish(pub){if(!selectedKits.size)return;const ids=[...selectedKits];for(const id of ids)await sb.from('kits').update({is_published:pub}).eq('id',id);toast(`${ids.length} kits ${pub?'published':'unpublished'}!`);loadP3();}
-async function bulkDelete(){if(!selectedKits.size)return;if(!confirm(`Delete ${selectedKits.size} kits?`))return;const ids=[...selectedKits];for(const id of ids)await sb.from('kits').delete().eq('id',id);toast(`${ids.length} kits deleted`);loadP3();}
-async function quickTogglePublish(id,pub){await sb.from('kits').update({is_published:pub}).eq('id',id);toast(pub?'Published!':'Unpublished!');loadP3();}
-
-async function duplicateToSeason(){
-  const target=prompt('Copy all kits from '+selSeason.name+' to season (e.g. 2025/26):');
-  if(!target)return;
-  const{data:kits}=await sb.from('kits').select('*').eq('team',selClub.name).eq('season',selSeason.name);
-  if(!kits?.length){toast('No kits to copy','err');return;}
-  let count=0;
-  for(const k of kits){
-    const newSlug=(k.slug||'').replace(selSeason.name.replace('/','').toLowerCase(),target.replace('/','').toLowerCase())+'-copy';
-    const{error}=await sb.from('kits').insert({...k,id:undefined,season:target,slug:newSlug+'-'+Date.now(),is_published:false,views:0,created_at:undefined,updated_at:undefined});
-    if(!error)count++;
-  }
-  toast(`${count} kits copied to ${target}!`);await loadMaster();
+    <div class="type-grid">
+      <div class="type-label">Kit Types — click to add or edit</div>
+      ${types.map(t=>{const k=(kits||[]).find(x=>x.type===t);return `<div class="tc ${k?'filled':''}" onclick="${k?`openKitForm(${JSON.stringify(k).replace(/"/g,'&quot;')})`:`openKitForm(null,'${selClub.name.replace(/'/g,"\\'")}','${selSeason.name}','${(selLeague?.name||'').replace(/'/g,"\\'")}','${t}')`}"><div class="tc-img">${k?.image_url?`<img src="${k.image_url}" alt="${t}"/>`:'👕'}</div><span class="badge ${bc(t)}">${t}</span><div style="font-size:.62rem;color:var(--w4);margin-top:.2rem">${k?`★ ${parseFloat(k.avg_rating||0).toFixed(1)} · ${k.is_published?'Live':'Draft'}`:'Not added yet'}</div></div>`;}).join('')}
+    </div>
+    ${(kits||[]).length?`<div class="kits-table"><table><thead><tr><th>Img</th><th>Type</th><th>Maker</th><th>Status</th><th>Actions</th></tr></thead><tbody>${(kits||[]).map(k=>`<tr><td><div class="td-img">${k.image_url?`<img src="${k.image_url}"/>`:'👕'}</div></td><td><span class="badge ${bc(k.type)}">${k.type}</span></td><td style="color:var(--w3);font-size:.78rem">${k.maker||'—'}</td><td><span class="badge ${k.is_published?'pub-y':'pub-n'}">${k.is_published?'Live':'Draft'}</span></td><td><div style="display:flex;gap:.35rem"><button class="btn-ed" onclick='openKitForm(${JSON.stringify(k).replace(/'/g,"&#39;")})'>Edit</button><button class="btn-del" onclick="delKit('${k.id}','${k.team.replace(/'/g,"\\'")}')">Del</button></div></td></tr>`).join('')}</tbody></table></div>`:''}`;
 }
 
 // ══ KIT FORM ══════════════════════════════════════════════
-function openKitForm(kit,preTeam='',preSeason='',preLeague='',preType=''){
+function openKitForm(kit,preTeam='',preSeason='',preLeague='',preType='Home'){
   editKitId=kit?.id||null;
   document.getElementById('kf-title').innerHTML=kit?'EDIT <span>KIT</span>':'ADD <span>KIT</span>';
   const f=kit||{};
-  // repopulate type select with all types
-  const sel=document.getElementById('kf-type');
-  sel.innerHTML=allKitTypes.map(t=>`<option value="${t.name}" ${(f.type||preType||'Home')===t.name?'selected':''}>${t.name}</option>`).join('');
   document.getElementById('kf-team').value    =f.team||preTeam||selClub?.name||'';
   document.getElementById('kf-season').value  =f.season||preSeason||selSeason?.name||'';
   document.getElementById('kf-league').value  =f.league||preLeague||selLeague?.name||'';
+  document.getElementById('kf-type').value    =f.type||preType||'Home';
   document.getElementById('kf-maker').value   =f.maker||'';
   document.getElementById('kf-color').value   =f.color||'';
   document.getElementById('kf-price').value   =f.price_label||'';
@@ -910,9 +883,10 @@ function openKitForm(kit,preTeam='',preSeason='',preLeague='',preType=''){
   document.getElementById('kf-seo-desc').value =f.seo_description||'';
   document.getElementById('kf-pub').checked   =f.is_published!==false;
   document.getElementById('kf-feat').checked  =!!f.is_featured;
-  document.getElementById('kf-market-price').value='';
   document.getElementById('kf-id').value      =f.id||'';
-  prevImg();if(!kit)setTimeout(autoSlug,50);
+  document.getElementById('kit-img-gallery').innerHTML='';
+  prevImg();
+  if(!kit)setTimeout(autoSlug,50);
   document.getElementById('kit-ov').classList.add('open');
 }
 function closeKitForm(){document.getElementById('kit-ov').classList.remove('open');}
@@ -926,20 +900,15 @@ async function saveKit(){
   let slug=document.getElementById('kf-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
   if(!team||!season){toast('Team and Season required','err');return;}
   if(!slug){autoSlug();slug=document.getElementById('kf-slug').value.trim();}
-  const marketPrice=parseFloat(document.getElementById('kf-market-price').value);
-  const kitId=editKitId;
   const payload={team,season,slug,league:document.getElementById('kf-league').value.trim()||null,type:document.getElementById('kf-type').value,maker:document.getElementById('kf-maker').value.trim()||null,color:document.getElementById('kf-color').value.trim()||null,price_label:document.getElementById('kf-price').value.trim()||null,buy_url:document.getElementById('kf-buy').value.trim()||null,buy_label:document.getElementById('kf-buylabel').value.trim()||'Buy Now',image_url:document.getElementById('kf-img').value.trim()||null,image_url_2:document.getElementById('kf-img2').value.trim()||null,image_url_3:document.getElementById('kf-img3').value.trim()||null,description:document.getElementById('kf-desc').value.trim()||null,seo_title:document.getElementById('kf-seo-title').value.trim()||null,seo_description:document.getElementById('kf-seo-desc').value.trim()||null,is_published:document.getElementById('kf-pub').checked,is_featured:document.getElementById('kf-feat').checked,updated_at:new Date().toISOString()};
-  let error,data;
-  if(kitId){({error}=await sb.from('kits').update(payload).eq('id',kitId));}
-  else{({data,error}=await sb.from('kits').insert(payload).select().single());}
+  let error;
+  if(editKitId){({error}=await sb.from('kits').update(payload).eq('id',editKitId));}
+  else{({error}=await sb.from('kits').insert(payload));}
   if(error){toast('Error: '+error.message,'err');return;}
-  // log price history if market price entered
-  const savedId=kitId||(data?.id);
-  if(marketPrice&&savedId){await sb.from('kit_prices').insert({kit_id:savedId,price:marketPrice,currency:'GBP',source:'Admin'});}
-  const maker=payload.maker;if(maker&&!allMakers.includes(maker)){allMakers.push(maker);allMakers.sort();}
-  toast(kitId?'Kit updated!':'Kit added!');closeKitForm();if(selClub&&selSeason)loadP3();
+  toast(editKitId?'Kit updated!':'Kit added!');
+  closeKitForm();if(selClub&&selSeason)loadP3();
 }
-async function delKit(id,name){if(!confirm(`Delete "${name}"?`))return;await sb.from('kits').delete().eq('id',id);toast('Deleted');if(selClub&&selSeason)loadP3();}
+async function delKit(id,name){if(!confirm(`Delete "${name}"?`))return;const{error}=await sb.from('kits').delete().eq('id',id);if(error){toast('Error: '+error.message,'err');return;}toast('Deleted');if(selClub&&selSeason)loadP3();}
 
 // ══ AUTOCOMPLETE ══════════════════════════════════════════
 const acSrc={team:()=>allClubs.map(c=>c.name),season:()=>allSeasons.map(s=>s.name),league:()=>allLeagues.map(l=>l.name),maker:()=>allMakers};
@@ -948,313 +917,327 @@ function acSet(key,val){document.getElementById('kf-'+key).value=val;acClose(key
 function acClose(key){document.getElementById('acl-'+key)?.classList.remove('open');}
 function autoFill(){const name=document.getElementById('kf-team').value.trim();const club=allClubs.find(c=>c.name.toLowerCase()===name.toLowerCase());if(club?.league_id){const lg=allLeagues.find(l=>l.id===club.league_id);if(lg&&!document.getElementById('kf-league').value)document.getElementById('kf-league').value=lg.name;}}
 
-// KOTW autocomplete
-async function acKotw(){const q=document.getElementById('kotw-kit').value.toLowerCase();const{data}=await sb.from('kits').select('slug,team,season').ilike('team','%'+q+'%').limit(8);const list=document.getElementById('acl-kotw');list.innerHTML=(data||[]).map(k=>`<div class="aci" onmousedown="document.getElementById('kotw-kit').value='${k.slug}';document.getElementById('acl-kotw').classList.remove('open')">${k.team} ${k.season}</div>`).join('');list.classList.add('open');}
-
-// ══ MENU MANAGER ══════════════════════════════════════════
-async function loadMenu(){
-  const{data}=await sb.from('menu_items').select('*').order('sort_order');
-  const list=document.getElementById('menu-list');
-  list.innerHTML=(data||[]).map(item=>`
-    <div class="menu-item-card" id="mi-${item.id}" draggable="true" ondragstart="dragMenuStart(event,'${item.id}')" ondragover="event.preventDefault()" ondrop="dragMenuDrop(event,'${item.id}')">
-      <span class="menu-drag">⠿</span>
-      <span class="menu-icon">${item.url.startsWith('http')?'🔗':'📄'}</span>
-      <div style="flex:1;min-width:0">
-        <div class="menu-label">${item.label}</div>
-        <div class="menu-url">${item.url} ${item.target==='_blank'?'↗':''}</div>
-      </div>
-      <label class="tgl"><input type="checkbox" ${item.is_active?'checked':''} onchange="toggleMenuItem('${item.id}',this.checked)"/><span class="tgl-s"></span></label>
-      <button class="btn-ed" onclick="openMenuForm(${JSON.stringify(item).replace(/"/g,'&quot;')})">Edit</button>
-      <button class="btn-del" onclick="delMenuItem('${item.id}','${item.label.replace(/'/g,"\\'")}')">Del</button>
-    </div>`).join('')||'<div class="empty"><p>No menu items</p></div>';
-}
-let dragMenuId=null;
-function dragMenuStart(e,id){dragMenuId=id;e.dataTransfer.effectAllowed='move';}
-async function dragMenuDrop(e,targetId){
-  e.preventDefault();if(!dragMenuId||dragMenuId===targetId)return;
-  const cards=[...document.querySelectorAll('.menu-item-card')];
-  const ids=cards.map(c=>c.id.replace('mi-',''));
-  const fi=ids.indexOf(dragMenuId),ti=ids.indexOf(targetId);
-  ids.splice(fi,1);ids.splice(ti,0,dragMenuId);
-  for(let i=0;i<ids.length;i++)await sb.from('menu_items').update({sort_order:i+1}).eq('id',ids[i]);
-  dragMenuId=null;loadMenu();toast('Menu order saved!');
-}
-async function toggleMenuItem(id,active){await sb.from('menu_items').update({is_active:active}).eq('id',id);toast(active?'Shown':'Hidden');}
-function openMenuForm(item){
-  editMenuId=item?.id||null;
-  document.getElementById('mf-title').innerHTML=item?'EDIT MENU <span>ITEM</span>':'ADD MENU <span>ITEM</span>';
-  document.getElementById('mf-label').value=item?.label||'';
-  document.getElementById('mf-url').value=item?.url||'';
-  document.getElementById('mf-target').value=item?.target||'_self';
-  document.getElementById('mf-active').checked=item?.is_active!==false;
-  document.getElementById('mf-id').value=item?.id||'';
-  document.getElementById('menu-ov').classList.add('open');
-}
-function closeMenuForm(){document.getElementById('menu-ov').classList.remove('open');}
-async function saveMenuItem(){
-  const label=document.getElementById('mf-label').value.trim(),url=document.getElementById('mf-url').value.trim();
-  if(!label||!url){toast('Label and URL required','err');return;}
-  const payload={label,url,target:document.getElementById('mf-target').value,is_active:document.getElementById('mf-active').checked};
-  const id=document.getElementById('mf-id').value;
-  let error;
-  if(id){({error}=await sb.from('menu_items').update(payload).eq('id',id));}
-  else{const{data:all}=await sb.from('menu_items').select('sort_order').order('sort_order',{ascending:false}).limit(1);({error}=await sb.from('menu_items').insert({...payload,sort_order:(all?.[0]?.sort_order||0)+1}));}
-  if(error){toast('Error: '+error.message,'err');return;}
-  toast('Menu saved!');closeMenuForm();loadMenu();
-}
-async function delMenuItem(id,label){if(!confirm(`Remove "${label}" from menu?`))return;await sb.from('menu_items').delete().eq('id',id);toast('Removed');loadMenu();}
-
-// ══ HOMEPAGE BUILDER ══════════════════════════════════════
-const PRESETS=[
-  {type:'hero',icon:'🦸',name:'Hero Banner',desc:'Main hero section'},
-  {type:'featured_kits',icon:'⭐',name:'Featured Kits',desc:'Showcase selected kits'},
-  {type:'latest_kits',icon:'🆕',name:'Latest Kits',desc:'Auto newest kits'},
-  {type:'kit_filter',icon:'🔍',name:'Kit Filter',desc:'Filterable kit grid'},
-  {type:'blog_posts',icon:'📝',name:'Blog Posts',desc:'Latest articles'},
-  {type:'banner',icon:'📢',name:'Banner',desc:'Announcement strip'},
-  {type:'newsletter',icon:'✉️',name:'Newsletter',desc:'Email signup'},
-  {type:'content',icon:'📄',name:'Content Block',desc:'Title + text'},
-  {type:'custom_html',icon:'</>',name:'Custom HTML',desc:'Any HTML/embed'},
-  {type:'kit_of_week',icon:'🏆',name:'Kit of Week',desc:'Weekly featured kit'},
-];
-
-async function loadHp(){
-  const{data}=await sb.from('homepage_sections').select('*').order('sort_order');
-  const builder=document.getElementById('section-builder');
-  builder.innerHTML=(data||[]).map(s=>{
-    const pre=PRESETS.find(p=>p.type===s.type)||{icon:'📦',name:s.type};
-    const cfg=s.settings||{};
-    return `<div class="hb-card" id="hbc-${s.id}" draggable="true" ondragstart="dragSecStart(event,'${s.id}')" ondragover="event.preventDefault()" ondrop="dragSecDrop(event,'${s.id}')">
-      <div class="hb-head" onclick="toggleHbBody('${s.id}')">
-        <span style="color:var(--w4);font-size:1rem;cursor:grab">⠿</span>
-        <span>${pre.icon}</span>
-        <div style="flex:1"><div style="font-weight:600;font-size:.88rem">${s.label||pre.name}</div><div style="font-family:var(--fm);font-size:.65rem;color:var(--w4)">${s.type}</div></div>
-        <label class="tgl" onclick="event.stopPropagation()"><input type="checkbox" ${s.is_active?'checked':''} onchange="toggleSec('${s.id}',this.checked)"/><span class="tgl-s"></span></label>
-        <button class="btn-del btn-xs" onclick="event.stopPropagation();delSec('${s.id}')">Del</button>
-        <span style="color:var(--w4);font-size:.8rem;margin-left:.25rem">▼</span>
-      </div>
-      <div class="hb-body" id="hbb-${s.id}">${renderSecSettings(s)}<div style="display:flex;gap:.5rem;margin-top:.875rem"><button class="btn btn-p btn-sm" onclick="saveSecSettings('${s.id}')">Save</button></div></div>
-    </div>`;
-  }).join('')||'<div class="empty"><p>No sections yet. Click + Add Section.</p></div>';
+// ══ IMAGE UPLOAD ══════════════════════════════════════════
+function makeImgName(file, teamName='', season='', type='') {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const base = (teamName||'kit').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const s = (season||'').replace(/\//g,'-').replace(/[^a-z0-9-]/g,'');
+  const t = (type||'').toLowerCase().replace(/\s+/g,'-');
+  const ts = Date.now();
+  return `${base}${s?'-'+s:''}${t?'-'+t:''}-${ts}.${ext}`;
 }
 
-function renderSecSettings(s){
-  const cfg=s.settings||{};
-  const f=(label,key,val,type='text')=>`<div class="field" style="margin-bottom:.6rem"><label>${label}</label><input id="hbs-${s.id}-${key}" type="${type}" value="${String(val||'').replace(/"/g,'&quot;')}"/></div>`;
-  const ta=(label,key,val)=>`<div class="field" style="margin-bottom:.6rem"><label>${label}</label><textarea id="hbs-${s.id}-${key}" style="min-height:60px">${val||''}</textarea></div>`;
-  switch(s.type){
-    case 'hero':return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">${f('Title','title',cfg.title)}${f('Subtitle','subtitle',cfg.subtitle)}${f('CTA Text','cta_text',cfg.cta_text)}${f('CTA URL','cta_url',cfg.cta_url)}</div>`;
-    case 'banner':return `${f('Text','text',cfg.text)}${f('Background Color','bg_color',cfg.bg_color,'color')}${f('Text Color','text_color',cfg.text_color,'color')}`;
-    case 'featured_kits':case 'latest_kits':case 'blog_posts':return `${f('Section Title','title',cfg.title)}${f('Max Items','limit',cfg.limit,'number')}`;
-    case 'newsletter':return `${f('Title','title',cfg.title)}${f('Subtitle','subtitle',cfg.subtitle)}${f('Button Text','button_text',cfg.button_text)}`;
-    case 'content':return `${f('Title','title',cfg.title)}${ta('Body HTML','body',cfg.body)}`;
-    case 'custom_html':return ta('HTML','html',cfg.html);
-    case 'kit_filter':return `${f('Title','title',cfg.title)}${f('Filter by (league/type/season)','filter_type',cfg.filter_type)}`;
-    case 'kit_of_week':return `${f('Title','title',cfg.title||'Kit of the Week')}`;
-    default:return f('Label','label',s.label);
+async function uploadImgToSupabase(file, filename) {
+  const { data, error } = await sb.storage.from('kits').upload(filename, file, { contentType: file.type, upsert: true });
+  if (error) throw error;
+  const { data: urlData } = sb.storage.from('kits').getPublicUrl(filename);
+  return urlData.publicUrl;
+}
+
+// Kit form image upload
+async function handleKitImgSelect(e) { await processKitImages([...e.target.files]); }
+async function handleKitImgDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); await processKitImages([...e.dataTransfer.files]); }
+
+async function processKitImages(files) {
+  const team = document.getElementById('kf-team').value.trim();
+  const season = document.getElementById('kf-season').value.trim();
+  const type = document.getElementById('kf-type').value;
+  const gallery = document.getElementById('kit-img-gallery');
+  const imgFields = ['kf-img','kf-img2','kf-img3'];
+  let fieldIdx = imgFields.findIndex(id => !document.getElementById(id).value);
+  if (fieldIdx === -1) fieldIdx = 0;
+
+  for (const file of files.slice(0, 3)) {
+    const name = makeImgName(file, team, season, type);
+    try {
+      const url = await uploadImgToSupabase(file, name);
+      if (fieldIdx < 3) {
+        document.getElementById(imgFields[fieldIdx]).value = url;
+        if (fieldIdx === 0) prevImg();
+        fieldIdx++;
+      }
+      const thumb = document.createElement('div');
+      thumb.className = 'img-thumb selected';
+      thumb.innerHTML = `<img src="${url}" alt="${name}"/>`;
+      gallery.appendChild(thumb);
+      toast('Image uploaded!');
+    } catch(err) { toast('Upload failed: '+err.message,'err'); }
   }
 }
-function toggleHbBody(id){document.getElementById('hbb-'+id).classList.toggle('open');}
-async function toggleSec(id,active){await sb.from('homepage_sections').update({is_active:active}).eq('id',id);toast(active?'Section enabled':'Section disabled');}
-async function saveSecSettings(id){
-  const inputs=document.querySelectorAll(`[id^="hbs-${id}-"]`);
-  const settings={};inputs.forEach(el=>{const key=el.id.replace(`hbs-${id}-`,'');settings[key]=el.tagName==='TEXTAREA'?el.value:el.value;});
-  await sb.from('homepage_sections').update({settings,updated_at:new Date().toISOString()}).eq('id',id);toast('Saved!');
+
+// Image Manager
+async function loadImages() {
+  const gallery = document.getElementById('img-gallery');
+  try {
+    const { data, error } = await sb.storage.from('kits').list('', { limit: 200, sortBy: { column: 'created_at', order: 'desc' } });
+    if (error) throw error;
+    allImages = data || [];
+    renderImageGallery(allImages);
+  } catch(e) {
+    gallery.innerHTML = `<div style="grid-column:1/-1;color:var(--red);font-size:.82rem">⚠ Could not load images. Make sure the "kits" storage bucket exists and is public.</div>`;
+  }
 }
-async function delSec(id){if(!confirm('Delete this section?'))return;await sb.from('homepage_sections').delete().eq('id',id);toast('Deleted');loadHp();}
-let dragSecId=null;
-function dragSecStart(e,id){dragSecId=id;e.dataTransfer.effectAllowed='move';}
-async function dragSecDrop(e,targetId){
-  e.preventDefault();if(!dragSecId||dragSecId===targetId)return;
-  const cards=[...document.querySelectorAll('.hb-card')];const ids=cards.map(c=>c.id.replace('hbc-',''));
-  const fi=ids.indexOf(dragSecId),ti=ids.indexOf(targetId);ids.splice(fi,1);ids.splice(ti,0,dragSecId);
-  for(let i=0;i<ids.length;i++)await sb.from('homepage_sections').update({sort_order:i+1}).eq('id',ids[i]);
-  dragSecId=null;loadHp();toast('Order saved!');
+function filterImages() {
+  const q = document.getElementById('img-search').value.toLowerCase();
+  renderImageGallery(q ? allImages.filter(i=>i.name.toLowerCase().includes(q)) : allImages);
 }
-function openPresetModal(){
-  document.getElementById('preset-grid').innerHTML=PRESETS.map(p=>`<div class="preset-card" onclick="addSec('${p.type}','${p.name}')"><div style="font-size:1.5rem;margin-bottom:.4rem">${p.icon}</div><div style="font-weight:600;font-size:.78rem">${p.name}</div><div style="font-size:.65rem;color:var(--w4);margin-top:.2rem">${p.desc}</div></div>`).join('');
+function renderImageGallery(images) {
+  const gallery = document.getElementById('img-gallery');
+  if (!images.length) { gallery.innerHTML = '<div style="grid-column:1/-1;font-size:.82rem;color:var(--w4)">No images yet. Upload some above.</div>'; return; }
+  gallery.innerHTML = images.map(img => {
+    const { data } = sb.storage.from('kits').getPublicUrl(img.name);
+    return `<div class="img-thumb" title="${img.name}" onclick="copyImgUrl('${data.publicUrl}')">
+      <img src="${data.publicUrl}" alt="${img.name}" loading="lazy"/>
+      <button class="thumb-del" onclick="event.stopPropagation();deleteImg('${img.name}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function copyImgUrl(url) {
+  navigator.clipboard.writeText(url);
+  toast('URL copied to clipboard!');
+}
+async function deleteImg(name) {
+  if (!confirm(`Delete image "${name}"?`)) return;
+  const { error } = await sb.storage.from('kits').remove([name]);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  toast('Image deleted'); loadImages();
+}
+
+// Image Manager upload zone
+async function handleImgDrop(e) { e.preventDefault(); document.getElementById('img-upload-zone').classList.remove('dragover'); await processManagerImages([...e.dataTransfer.files]); }
+async function handleImgSelect(e) { await processManagerImages([...e.target.files]); }
+async function processManagerImages(files) {
+  const prog = document.getElementById('upload-progress');
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  prog.style.display = 'block';
+  let done = 0;
+  for (const file of files) {
+    const name = makeImgName(file);
+    try {
+      text.textContent = `Uploading ${file.name}…`;
+      await uploadImgToSupabase(file, name);
+      done++;
+      fill.style.width = Math.round((done/files.length)*100)+'%';
+    } catch(err) { toast('Failed: '+err.message,'err'); }
+  }
+  text.textContent = `✓ ${done} image${done!==1?'s':''} uploaded`;
+  setTimeout(() => { prog.style.display='none'; fill.style.width='0%'; }, 2000);
+  loadImages();
+  toast(`${done} image${done!==1?'s':''} uploaded!`);
+}
+
+// ══ HOMEPAGE BUILDER ══════════════════════════════════════
+const SECTION_PRESETS = [
+  {type:'hero',icon:'🦸',name:'Hero Banner',desc:'Main hero with title, subtitle & CTA'},
+  {type:'featured_kits',icon:'⭐',name:'Featured Kits',desc:'Showcase selected kits'},
+  {type:'latest_kits',icon:'🆕',name:'Latest Kits',desc:'Auto-show newest kits'},
+  {type:'kit_filter',icon:'🔍',name:'Kit Filter',desc:'Filterable kit grid'},
+  {type:'blog_posts',icon:'📝',name:'Blog Posts',desc:'Latest blog articles'},
+  {type:'banner',icon:'📢',name:'Banner/Announcement',desc:'Coloured announcement strip'},
+  {type:'newsletter',icon:'✉️',name:'Newsletter',desc:'Email signup form'},
+  {type:'content',icon:'📄',name:'Content Block',desc:'Title + rich text content'},
+  {type:'gallery',icon:'🖼️',name:'Image Gallery',desc:'Kit image gallery'},
+  {type:'custom_html',icon:'</>', name:'Custom HTML',desc:'Any custom HTML/embed'},
+];
+
+async function loadHpBuilder() {
+  const { data } = await sb.from('homepage_sections').select('*').order('sort_order');
+  renderSectionBuilder(data||[]);
+}
+function renderSectionBuilder(sections) {
+  const el = document.getElementById('section-builder');
+  el.innerHTML = sections.map(s => {
+    const preset = SECTION_PRESETS.find(p=>p.type===s.type)||{icon:'📦',name:s.type};
+    const cfg = s.settings||{};
+    return `<div class="hb-card" id="hbc-${s.id}" draggable="true" ondragstart="dragStart(event,'${s.id}')" ondragover="dragOver(event)" ondrop="dragDrop(event,'${s.id}')">
+      <div class="hb-head" onclick="toggleHbBody('${s.id}')">
+        <span class="hb-drag">⠿</span>
+        <span class="hb-icon">${preset.icon}</span>
+        <div>
+          <div class="hb-name">${s.label||preset.name}</div>
+          <div class="hb-type">${s.type}</div>
+        </div>
+        <div class="hb-actions">
+          <label class="tgl" onclick="event.stopPropagation()"><input type="checkbox" ${s.is_active?'checked':''} onchange="toggleSection('${s.id}',this.checked)"/><span class="tgl-s"></span></label>
+          <button class="btn-del btn-sm" onclick="event.stopPropagation();deleteSection('${s.id}')">Del</button>
+        </div>
+      </div>
+      <div class="hb-body" id="hbb-${s.id}">
+        ${renderSectionSettings(s)}
+        <div style="display:flex;gap:.5rem;margin-top:.875rem">
+          <button class="btn btn-p btn-sm" onclick="saveSectionSettings('${s.id}')">Save</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSectionSettings(s) {
+  const cfg = s.settings||{};
+  const field = (label,id,val,type='text') => `<div class="field" style="margin-bottom:.6rem"><label>${label}</label><input id="hbs-${s.id}-${id}" type="${type}" value="${(val||'').replace(/"/g,'&quot;')}"/></div>`;
+  const textarea = (label,id,val) => `<div class="field" style="margin-bottom:.6rem"><label>${label}</label><textarea id="hbs-${s.id}-${id}" style="min-height:60px">${val||''}</textarea></div>`;
+  switch(s.type) {
+    case 'hero': return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">${field('Title','title',cfg.title)}${field('Subtitle','subtitle',cfg.subtitle)}${field('CTA Button Text','cta_text',cfg.cta_text)}${field('CTA URL','cta_url',cfg.cta_url)}</div>`;
+    case 'banner': return `${field('Text','text',cfg.text)}${field('Background Color','bg_color',cfg.bg_color,'color')}${field('Text Color','text_color',cfg.text_color,'color')}`;
+    case 'featured_kits': return `${field('Section Title','title',cfg.title)}${field('Max Kits to Show','limit',cfg.limit,'number')}`;
+    case 'latest_kits': return `${field('Section Title','title',cfg.title)}${field('Max Kits','limit',cfg.limit,'number')}`;
+    case 'blog_posts': return `${field('Section Title','title',cfg.title)}${field('Max Posts','limit',cfg.limit,'number')}`;
+    case 'newsletter': return `${field('Title','title',cfg.title)}${field('Subtitle','subtitle',cfg.subtitle)}${field('Button Text','button_text',cfg.button_text)}`;
+    case 'content': return `${field('Title','title',cfg.title)}${textarea('Body HTML','body',cfg.body)}`;
+    case 'custom_html': return `${textarea('Custom HTML','html',cfg.html)}`;
+    case 'kit_filter': return `${field('Title','title',cfg.title)}${field('Filter by (league/type/season)','filter_type',cfg.filter_type)}`;
+    default: return `${field('Title','title',cfg.title||'')}`;
+  }
+}
+
+function toggleHbBody(id) { const el=document.getElementById('hbb-'+id); el.classList.toggle('open'); }
+
+async function toggleSection(id, active) {
+  await sb.from('homepage_sections').update({is_active:active}).eq('id',id);
+  toast(active?'Section enabled':'Section disabled');
+}
+
+async function saveSectionSettings(id) {
+  const section = document.querySelectorAll('[id^="hbs-'+id+'-"]');
+  const settings = {};
+  section.forEach(el => { const key=el.id.replace('hbs-'+id+'-',''); settings[key]=el.value||el.textContent; });
+  await sb.from('homepage_sections').update({settings,updated_at:new Date().toISOString()}).eq('id',id);
+  toast('Section saved!');
+}
+
+async function deleteSection(id) {
+  if(!confirm('Delete this section?'))return;
+  await sb.from('homepage_sections').delete().eq('id',id);
+  toast('Section deleted');loadHpBuilder();
+}
+
+// Drag to reorder
+let dragId=null;
+function dragStart(e,id){dragId=id;e.dataTransfer.effectAllowed='move';}
+function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+async function dragDrop(e,targetId){
+  e.preventDefault();if(!dragId||dragId===targetId)return;
+  const cards=[...document.querySelectorAll('.hb-card')];
+  const ids=cards.map(c=>c.id.replace('hbc-',''));
+  const fromIdx=ids.indexOf(dragId),toIdx=ids.indexOf(targetId);
+  ids.splice(fromIdx,1);ids.splice(toIdx,0,dragId);
+  for(let i=0;i<ids.length;i++) await sb.from('homepage_sections').update({sort_order:i+1}).eq('id',ids[i]);
+  loadHpBuilder();toast('Order saved!');dragId=null;
+}
+async function saveHpOrder(){toast('Order saved automatically when dragging!');}
+
+function addPresetSection() {
+  document.getElementById('preset-grid').innerHTML = SECTION_PRESETS.map(p =>
+    `<div class="preset-card" onclick="addSection('${p.type}','${p.name}')">
+      <div class="preset-icon">${p.icon}</div>
+      <div class="preset-name">${p.name}</div>
+      <div class="preset-desc">${p.desc}</div>
+    </div>`
+  ).join('');
   document.getElementById('preset-ov').classList.add('open');
 }
-async function addSec(type,name){
-  const{data:ex}=await sb.from('homepage_sections').select('sort_order').order('sort_order',{ascending:false}).limit(1);
-  await sb.from('homepage_sections').insert({type,label:name,is_active:false,sort_order:(ex?.[0]?.sort_order||0)+1,settings:{}});
-  document.getElementById('preset-ov').classList.remove('open');toast('Section added!');loadHp();
+async function addSection(type, name) {
+  const { data: existing } = await sb.from('homepage_sections').select('sort_order').order('sort_order',{ascending:false}).limit(1);
+  const nextOrder = (existing?.[0]?.sort_order||0)+1;
+  await sb.from('homepage_sections').insert({type,label:name,is_active:false,sort_order:nextOrder,settings:{}});
+  document.getElementById('preset-ov').classList.remove('open');
+  toast('Section added!');loadHpBuilder();
 }
-
-// ══ KIT TYPES ═════════════════════════════════════════════
-async function loadTypes(){
-  const{data}=await sb.from('kit_types').select('*').order('sort_order');
-  document.getElementById('types-tb').innerHTML=(data||[]).map(t=>`<tr>
-    <td style="font-weight:600">${t.name}</td>
-    <td><span class="badge" style="background:${t.bg_color};color:${t.color};border-color:${t.color}40">${t.name}</span></td>
-    <td><span class="badge ${t.is_active?'pub-y':'pub-n'}">${t.is_active?'Active':'Hidden'}</span></td>
-    <td style="font-family:var(--fm);font-size:.72rem;color:var(--w4)">${t.sort_order}</td>
-    <td><div style="display:flex;gap:.35rem"><button class="btn-ed" onclick="openTypeForm(${JSON.stringify(t).replace(/"/g,'&quot;')})">Edit</button><button class="btn-del" onclick="delType('${t.id}','${t.name.replace(/'/g,"\\'")}')">Del</button></div></td>
-  </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No types yet.</td></tr>';
-}
-function openTypeForm(type){
-  editTypeId=type?.id||null;
-  document.getElementById('tf-title').innerHTML=type?'EDIT KIT <span>TYPE</span>':'ADD KIT <span>TYPE</span>';
-  document.getElementById('tf-name').value=type?.name||'';
-  document.getElementById('tf-color').value=type?.color||'#00C853';
-  document.getElementById('tf-bg').value=type?.bg_color||'#0a1f0a';
-  document.getElementById('tf-active').checked=type?.is_active!==false;
-  document.getElementById('tf-id').value=type?.id||'';
-  updateTypePrev();
-  document.getElementById('type-ov').classList.add('open');
-}
-function closeTypeForm(){document.getElementById('type-ov').classList.remove('open');}
-function updateTypePrev(){const n=document.getElementById('tf-name').value||'New Type',c=document.getElementById('tf-color').value,bg=document.getElementById('tf-bg').value;document.getElementById('tf-badge-prev').textContent=n;document.getElementById('tf-badge-prev').style.cssText=`background:${bg};color:${c};border-color:${c}40`;}
-document.getElementById('tf-name').addEventListener('input',updateTypePrev);
-document.getElementById('tf-color').addEventListener('input',updateTypePrev);
-document.getElementById('tf-bg').addEventListener('input',updateTypePrev);
-async function saveKitType(){
-  const name=document.getElementById('tf-name').value.trim();if(!name){toast('Name required','err');return;}
-  const payload={name,color:document.getElementById('tf-color').value,bg_color:document.getElementById('tf-bg').value,is_active:document.getElementById('tf-active').checked};
-  const id=document.getElementById('tf-id').value;let error;
-  if(id){({error}=await sb.from('kit_types').update(payload).eq('id',id));}
-  else{const{data:ex}=await sb.from('kit_types').select('sort_order').order('sort_order',{ascending:false}).limit(1);({error}=await sb.from('kit_types').insert({...payload,sort_order:(ex?.[0]?.sort_order||0)+1}));}
-  if(error){toast('Error: '+error.message,'err');return;}
-  toast('Kit type saved!');closeTypeForm();await loadMaster();loadTypes();
-}
-async function delType(id,name){if(!confirm(`Delete type "${name}"?`))return;await sb.from('kit_types').delete().eq('id',id);toast('Deleted');await loadMaster();loadTypes();}
-
-// ══ KIT OF THE WEEK ═══════════════════════════════════════
-async function loadKotw(){
-  const{data}=await sb.from('kit_of_week').select('*,kits(team,season,type)').order('created_at',{ascending:false});
-  document.getElementById('kotw-tb').innerHTML=(data||[]).map(k=>`<tr>
-    <td style="font-weight:600">${k.kits?.team||k.kit_id} <span style="color:var(--w4)">${k.kits?.season||''} ${k.kits?.type||''}</span></td>
-    <td style="font-size:.78rem;color:var(--w3)">${k.week_start} → ${k.week_end}</td>
-    <td style="font-family:var(--fm);font-size:.8rem;color:var(--gold)">★ ${k.votes}</td>
-    <td><span class="badge ${k.is_active?'pub-y':'pub-n'}">${k.is_active?'Active':'Ended'}</span></td>
-    <td><div style="display:flex;gap:.35rem"><button class="btn-del" onclick="delKotw('${k.id}')">Del</button></div></td>
-  </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No kit of the week set yet.</td></tr>';
-}
-function openKotwForm(){const today=new Date().toISOString().split('T')[0];const end=new Date(Date.now()+6*86400000).toISOString().split('T')[0];document.getElementById('kotw-start').value=today;document.getElementById('kotw-end').value=end;document.getElementById('kotw-ov').classList.add('open');}
-async function saveKotw(){
-  const slug=document.getElementById('kotw-kit').value.trim();if(!slug){toast('Enter a kit slug','err');return;}
-  const{data:kit}=await sb.from('kits').select('id').eq('slug',slug).single();
-  if(!kit){toast('Kit not found','err');return;}
-  await sb.from('kit_of_week').update({is_active:false}).eq('is_active',true);
-  const{error}=await sb.from('kit_of_week').insert({kit_id:kit.id,week_start:document.getElementById('kotw-start').value,week_end:document.getElementById('kotw-end').value,is_active:document.getElementById('kotw-active').checked});
-  if(error){toast('Error: '+error.message,'err');return;}
-  toast('Kit of the Week set!');document.getElementById('kotw-ov').classList.remove('open');loadKotw();
-}
-async function delKotw(id){if(!confirm('Delete this?'))return;await sb.from('kit_of_week').delete().eq('id',id);loadKotw();}
-
-// ══ COMMENTS ══════════════════════════════════════════════
-async function loadComments(){
-  const{data}=await sb.from('comments').select('*,profiles(username),kits(team,season,slug)').order('created_at',{ascending:false}).limit(100);
-  allComments=data||[];renderComments(allComments);
-}
-function filterComments(){const q=document.getElementById('comment-q').value.toLowerCase();renderComments(q?allComments.filter(c=>[c.content,c.profiles?.username,c.kits?.team].join(' ').toLowerCase().includes(q)):allComments);}
-function renderComments(comments){
-  document.getElementById('comments-tb').innerHTML=comments.map(c=>`<tr>
-    <td style="font-weight:500;font-size:.8rem">${c.profiles?.username||'—'}</td>
-    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem;color:var(--w3)">${c.content}</td>
-    <td style="font-size:.78rem;color:var(--w3)">${c.kits?.team||'—'} ${c.kits?.season||''}</td>
-    <td style="font-size:.72rem;color:var(--w4)">${new Date(c.created_at).toLocaleDateString('en-GB')}</td>
-    <td><span class="badge ${c.is_approved?'pub-y':'pub-n'}">${c.is_approved?'Approved':'Hidden'}</span></td>
-    <td><div style="display:flex;gap:.35rem">
-      <button class="btn-ed" onclick="toggleComment('${c.id}',${!c.is_approved})">${c.is_approved?'Hide':'Show'}</button>
-      <button class="btn-del" onclick="delComment('${c.id}')">Del</button>
-    </div></td>
-  </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--w4)">No comments yet.</td></tr>';
-}
-async function toggleComment(id,approved){await sb.from('comments').update({is_approved:approved}).eq('id',id);toast(approved?'Approved':'Hidden');loadComments();}
-async function delComment(id){if(!confirm('Delete this comment?'))return;await sb.from('comments').delete().eq('id',id);toast('Deleted');loadComments();}
-
-// ══ BADGES ════════════════════════════════════════════════
-async function loadBadges(){
-  const{data:badges}=await sb.from('badges').select('*').order('condition_value');
-  const{data:ub}=await sb.from('user_badges').select('badge_id');
-  const earnCounts={};(ub||[]).forEach(u=>earnCounts[u.badge_id]=(earnCounts[u.badge_id]||0)+1);
-  document.getElementById('badges-tb').innerHTML=(badges||[]).map(b=>`<tr>
-    <td><span style="font-size:1.2rem">${b.icon}</span> <span style="font-weight:600;font-size:.85rem">${b.name}</span><div style="font-size:.72rem;color:var(--w4)">${b.description||''}</div></td>
-    <td style="font-size:.78rem;color:var(--w3)">${b.condition_type.replace(/_/g,' ')} ≥ ${b.condition_value}</td>
-    <td style="font-family:var(--fm);font-size:.8rem;color:var(--gold)">+${b.reward_points} pts</td>
-    <td style="font-family:var(--fm);font-size:.78rem;color:var(--g)">${earnCounts[b.id]||0} users</td>
-    <td><div style="display:flex;gap:.35rem"><button class="btn-ed" onclick="openBadgeForm(${JSON.stringify(b).replace(/"/g,'&quot;')})">Edit</button><button class="btn-del" onclick="delBadge('${b.id}','${b.name.replace(/'/g,"\\'")}')">Del</button></div></td>
-  </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No badges.</td></tr>';
-  // points summary
-  const{data:pts}=await sb.from('user_points').select('points').order('points',{ascending:false}).limit(1);
-  const{count:uc}=await sb.from('user_points').select('*',{count:'exact',head:true});
-  document.getElementById('points-summary').innerHTML=`
-    <div style="font-size:.85rem;color:var(--w3);line-height:1.8">
-      <div>Users with points: <span style="color:var(--g);font-family:var(--fm)">${uc||0}</span></div>
-      <div>Top user points: <span style="color:var(--g);font-family:var(--fm)">${pts?.[0]?.points||0}</span></div>
-      <div style="margin-top:.75rem;font-size:.78rem;color:var(--w4)">Rewards redemption system coming soon. Points are tracked and ready.</div>
-    </div>`;
-}
-function openBadgeForm(badge){
-  const b=badge||{};
-  const html=`<div class="mbox" style="max-width:500px"><div class="mh"><div class="mt">${b.id?'EDIT':'ADD'} <span>BADGE</span></div><button class="mc" onclick="document.getElementById('badge-ov').classList.remove('open')">✕</button></div><div class="mb"><div style="display:flex;flex-direction:column;gap:.875rem"><div class="field"><label>Icon (emoji)</label><input id="bad-icon" value="${b.icon||'⭐'}"/></div><div class="field"><label>Name</label><input id="bad-name" value="${b.name||''}"/></div><div class="field"><label>Description</label><input id="bad-desc" value="${b.description||''}"/></div><div class="field"><label>Condition Type</label><select id="bad-ctype"><option value="ratings_count" ${b.condition_type==='ratings_count'?'selected':''}>Ratings Count</option><option value="collection_count" ${b.condition_type==='collection_count'?'selected':''}>Collection Count</option><option value="comments_count" ${b.condition_type==='comments_count'?'selected':''}>Comments Count</option><option value="follows_count" ${b.condition_type==='follows_count'?'selected':''}>Follows Count</option><option value="manual" ${b.condition_type==='manual'?'selected':''}>Manual (admin grants)</option></select></div><div class="field"><label>Condition Value</label><input id="bad-cval" type="number" value="${b.condition_value||1}"/></div><div class="field"><label>Reward Points</label><input id="bad-pts" type="number" value="${b.reward_points||0}"/></div></div><input type="hidden" id="bad-id" value="${b.id||''}"/></div><div class="mf"><button class="btn btn-g" onclick="document.getElementById('badge-ov').classList.remove('open')">Cancel</button><button class="btn btn-p" onclick="saveBadge()">Save</button></div></div>`;
-  let ov=document.getElementById('badge-ov');
-  if(!ov){ov=document.createElement('div');ov.id='badge-ov';ov.className='ov';ov.onclick=e=>{if(e.target===ov)ov.classList.remove('open');};document.body.appendChild(ov);}
-  ov.innerHTML=html;ov.classList.add('open');
-}
-async function saveBadge(){
-  const payload={icon:document.getElementById('bad-icon').value,name:document.getElementById('bad-name').value.trim(),description:document.getElementById('bad-desc').value.trim()||null,condition_type:document.getElementById('bad-ctype').value,condition_value:parseInt(document.getElementById('bad-cval').value)||1,reward_points:parseInt(document.getElementById('bad-pts').value)||0};
-  if(!payload.name){toast('Name required','err');return;}
-  const id=document.getElementById('bad-id').value;let error;
-  if(id){({error}=await sb.from('badges').update(payload).eq('id',id));}
-  else{const key=payload.name.toLowerCase().replace(/\s+/g,'_');({error}=await sb.from('badges').insert({...payload,key}));}
-  if(error){toast('Error: '+error.message,'err');return;}
-  toast('Badge saved!');document.getElementById('badge-ov').classList.remove('open');loadBadges();
-}
-async function delBadge(id,name){if(!confirm(`Delete badge "${name}"?`))return;await sb.from('badges').delete().eq('id',id);toast('Deleted');loadBadges();}
 
 // ══ BLOG ══════════════════════════════════════════════════
-async function loadBlog(){
-  const{data}=await sb.from('blog_posts').select('*').order('created_at',{ascending:false});
-  document.getElementById('blog-tb').innerHTML=(data||[]).map(p=>`<tr>
-    <td style="font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</td>
+async function loadBlog() {
+  const { data } = await sb.from('blog_posts').select('*').order('created_at',{ascending:false});
+  document.getElementById('blog-tb').innerHTML = (data||[]).map(p => `<tr>
+    <td style="font-weight:600;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</td>
     <td><span class="badge ${p.is_published?'pub-y':'pub-n'}">${p.is_published?'Live':'Draft'}</span></td>
     <td style="font-size:.75rem;color:var(--w4)">${p.published_at?new Date(p.published_at).toLocaleDateString('en-GB'):'-'}</td>
     <td style="font-size:.72rem;color:var(--w3)">${(p.tags||[]).slice(0,3).join(', ')||'—'}</td>
     <td><div style="display:flex;gap:.35rem"><button class="btn-ed" onclick="openBlogForm(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button><button class="btn-del" onclick="delBlog('${p.id}','${p.title.replace(/'/g,"\\'")}')">Del</button></div></td>
   </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No posts yet.</td></tr>';
 }
-function openBlogForm(post){
-  const p=post||{};
-  editBlogId=p.id||null;
-  document.getElementById('bf-title').innerHTML=p.id?'EDIT <span>POST</span>':'NEW <span>POST</span>';
-  document.getElementById('bf-title-in').value=p.title||'';
-  document.getElementById('bf-slug').value=p.slug||'';
-  document.getElementById('bf-cover').value=p.cover_image||'';
-  document.getElementById('bf-excerpt').value=p.excerpt||'';
-  document.getElementById('bf-seo-t').value=p.seo_title||'';
-  document.getElementById('bf-seo-d').value=p.seo_description||'';
-  document.getElementById('bf-og').value=p.og_image||'';
-  document.getElementById('bf-pub').checked=!!p.is_published;
-  document.getElementById('bf-id').value=p.id||'';
-  document.getElementById('blog-editor').innerHTML=p.content||'';
-  blogTags=p.tags||[];renderTags();
+
+function openBlogForm(post) {
+  const p = post||{};
+  document.getElementById('bf-title').innerHTML = p.id?'EDIT <span>POST</span>':'NEW <span>POST</span>';
+  document.getElementById('bf-title-input').value = p.title||'';
+  document.getElementById('bf-slug').value = p.slug||'';
+  document.getElementById('bf-cover').value = p.cover_image||'';
+  document.getElementById('bf-excerpt').value = p.excerpt||'';
+  document.getElementById('bf-seo-title').value = p.seo_title||'';
+  document.getElementById('bf-seo-desc').value = p.seo_description||'';
+  document.getElementById('bf-og-img').value = p.og_image||'';
+  document.getElementById('bf-pub').checked = !!p.is_published;
+  document.getElementById('bf-id').value = p.id||'';
+  document.getElementById('tiptap-editor').innerHTML = p.content||'';
+  // tags
+  blogTags = p.tags||[];
+  renderTags();
   document.getElementById('blog-ov').classList.add('open');
 }
 function closeBlogForm(){document.getElementById('blog-ov').classList.remove('open');}
-function autoBlogSlug(){if(editBlogId)return;const t=document.getElementById('bf-title-in').value.trim();if(t)document.getElementById('bf-slug').value=t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
-function handleTag(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const v=e.target.value.trim().replace(',','');if(v&&!blogTags.includes(v)){blogTags.push(v);renderTags();}e.target.value='';}}
+
+function autoBlogSlug(){
+  if(document.getElementById('bf-id').value)return;
+  const title=document.getElementById('bf-title-input').value.trim();
+  if(title)document.getElementById('bf-slug').value=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+function handleTagInput(e){
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const val=e.target.value.trim().replace(',','');
+    if(val&&!blogTags.includes(val)){blogTags.push(val);renderTags();}
+    e.target.value='';
+  }
+}
 function removeTag(tag){blogTags=blogTags.filter(t=>t!==tag);renderTags();}
-function renderTags(){const wrap=document.getElementById('tags-wrap'),inp=document.getElementById('tags-in');wrap.innerHTML='';blogTags.forEach(t=>{const span=document.createElement('span');span.className='tag';span.innerHTML=`${t}<button onclick="removeTag('${t}')">✕</button>`;wrap.appendChild(span);});wrap.appendChild(inp);}
-async function saveBlog(){
-  const title=document.getElementById('bf-title-in').value.trim(),slug=document.getElementById('bf-slug').value.trim(),id=editBlogId;
+function renderTags(){
+  const wrap=document.getElementById('tags-wrap');
+  const input=document.getElementById('tags-input');
+  wrap.innerHTML='';
+  blogTags.forEach(t=>{const span=document.createElement('span');span.className='tag-item';span.innerHTML=`${t}<button onclick="removeTag('${t}')">✕</button>`;wrap.appendChild(span);});
+  wrap.appendChild(input);
+}
+
+async function saveBlogPost(){
+  const title=document.getElementById('bf-title-input').value.trim();
+  const slug=document.getElementById('bf-slug').value.trim();
+  const id=document.getElementById('bf-id').value;
   if(!title||!slug){toast('Title and Slug required','err');return;}
-  const pub=document.getElementById('bf-pub').checked;
-  const payload={title,slug,cover_image:document.getElementById('bf-cover').value.trim()||null,excerpt:document.getElementById('bf-excerpt').value.trim()||null,content:document.getElementById('blog-editor').innerHTML,seo_title:document.getElementById('bf-seo-t').value.trim()||null,seo_description:document.getElementById('bf-seo-d').value.trim()||null,og_image:document.getElementById('bf-og').value.trim()||null,is_published:pub,published_at:pub?new Date().toISOString():null,tags:blogTags,updated_at:new Date().toISOString(),author_id:adminProfile.id};
+  const isPublished=document.getElementById('bf-pub').checked;
+  const payload={
+    title,slug,
+    cover_image:document.getElementById('bf-cover').value.trim()||null,
+    excerpt:document.getElementById('bf-excerpt').value.trim()||null,
+    content:document.getElementById('tiptap-editor').innerHTML,
+    seo_title:document.getElementById('bf-seo-title').value.trim()||null,
+    seo_description:document.getElementById('bf-seo-desc').value.trim()||null,
+    og_image:document.getElementById('bf-og-img').value.trim()||null,
+    is_published:isPublished,
+    published_at:isPublished?new Date().toISOString():null,
+    tags:blogTags,
+    updated_at:new Date().toISOString(),
+    author_id:adminProfile.id,
+  };
   let error;
   if(id){({error}=await sb.from('blog_posts').update(payload).eq('id',id));}
   else{({error}=await sb.from('blog_posts').insert(payload));}
   if(error){toast('Error: '+error.message,'err');return;}
-  toast(id?'Post updated!':'Published!');closeBlogForm();loadBlog();
+  toast(id?'Post updated!':'Post published!');closeBlogForm();loadBlog();
 }
 async function delBlog(id,title){if(!confirm(`Delete "${title}"?`))return;await sb.from('blog_posts').delete().eq('id',id);toast('Deleted');loadBlog();}
 
-// editor commands
-function ec(cmd){document.getElementById('blog-editor').focus();const m={bold:()=>document.execCommand('bold'),italic:()=>document.execCommand('italic'),strike:()=>document.execCommand('strikeThrough'),h1:()=>document.execCommand('formatBlock',false,'h1'),h2:()=>document.execCommand('formatBlock',false,'h2'),h3:()=>document.execCommand('formatBlock',false,'h3'),ul:()=>document.execCommand('insertUnorderedList'),ol:()=>document.execCommand('insertOrderedList'),quote:()=>document.execCommand('formatBlock',false,'blockquote'),link:()=>{const u=prompt('URL:');if(u)document.execCommand('createLink',false,u);},undo:()=>document.execCommand('undo'),redo:()=>document.execCommand('redo')};if(m[cmd])m[cmd]();}
-function edImg(){const u=prompt('Image URL:');if(u){document.getElementById('blog-editor').focus();document.execCommand('insertHTML',false,`<img src="${u}" style="max-width:100%;border-radius:8px;margin:1rem 0"/>`)}}
-function edVideo(){const u=prompt('YouTube URL:');if(u){const eu=u.includes('watch?v=')?u.replace('watch?v=','embed/'):u.includes('youtu.be/')?'https://www.youtube.com/embed/'+u.split('youtu.be/')[1]:u;document.getElementById('blog-editor').focus();document.execCommand('insertHTML',false,`<iframe src="${eu}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;margin:1rem 0"></iframe>`);}}
-function pc(cmd){document.getElementById('page-editor').focus();ec(cmd);}
+// Simple rich editor commands (no TipTap dependency needed)
+function edCmd(cmd){
+  const ed=document.getElementById('tiptap-editor');ed.focus();
+  const cmds={bold:()=>document.execCommand('bold'),italic:()=>document.execCommand('italic'),strike:()=>document.execCommand('strikeThrough'),h1:()=>document.execCommand('formatBlock',false,'h1'),h2:()=>document.execCommand('formatBlock',false,'h2'),h3:()=>document.execCommand('formatBlock',false,'h3'),bulletList:()=>document.execCommand('insertUnorderedList'),orderedList:()=>document.execCommand('insertOrderedList'),blockquote:()=>document.execCommand('formatBlock',false,'blockquote'),code:()=>document.execCommand('insertHTML','<code>code</code>'),codeBlock:()=>document.execCommand('formatBlock',false,'pre'),undo:()=>document.execCommand('undo'),redo:()=>document.execCommand('redo'),link:()=>{const url=prompt('URL:');if(url)document.execCommand('createLink',false,url);}};
+  if(cmds[cmd])cmds[cmd]();
+}
+function edInsertImg(){const url=prompt('Image URL:');if(url){document.getElementById('tiptap-editor').focus();document.execCommand('insertHTML',false,`<img src="${url}" style="max-width:100%;border-radius:8px;margin:1rem 0"/>`)}}
+function edInsertVideo(){const url=prompt('YouTube/Vimeo URL:');if(url){const embedUrl=url.includes('youtube.com/watch?v=')?url.replace('watch?v=','embed/'):url.includes('youtu.be/')?'https://www.youtube.com/embed/'+url.split('youtu.be/')[1]:url;document.getElementById('tiptap-editor').focus();document.execCommand('insertHTML',false,`<iframe src="${embedUrl}" width="100%" height="400" frameborder="0" allowfullscreen style="border-radius:8px;margin:1rem 0"></iframe>`);}}
+
+function pgCmd(cmd){document.getElementById('page-editor').focus();edCmd(cmd);}
 
 // ══ PAGES ═════════════════════════════════════════════════
 async function loadPages(){
@@ -1266,15 +1249,16 @@ async function loadPages(){
     <td style="text-align:center">${p.show_in_nav?'✓':'—'}</td>
     <td><span class="badge ${p.is_published?'pub-y':'pub-n'}">${p.is_published?'Live':'Draft'}</span></td>
     <td><div style="display:flex;gap:.35rem"><button class="btn-ed" onclick="openPageForm(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button><button class="btn-del" onclick="delPage('${p.id}','${p.title.replace(/'/g,"\\'")}')">Del</button><a href="/page.html?slug=${p.slug}" target="_blank" class="btn-ed">↗</a></div></td>
-  </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--w4)">No pages.</td></tr>';
+  </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--w4)">No pages yet.</td></tr>';
 }
 function openPageForm(page){
-  const p=page||{};editPageId=p.id||null;
+  const p=page||{};
   document.getElementById('pf-title').innerHTML=p.id?'EDIT <span>PAGE</span>':'NEW <span>PAGE</span>';
-  document.getElementById('pf-title-in').value=p.title||'';
+  document.getElementById('pf-title-input').value=p.title||'';
   document.getElementById('pf-slug').value=p.slug||'';
-  document.getElementById('pf-seo-t').value=p.seo_title||'';
-  document.getElementById('pf-seo-d').value=p.seo_description||'';
+  document.getElementById('pf-seo-title').value=p.seo_title||'';
+  document.getElementById('pf-seo-desc').value=p.seo_description||'';
+  document.getElementById('pf-og-img').value=p.og_image||'';
   document.getElementById('pf-pub').checked=p.is_published!==false;
   document.getElementById('pf-footer').checked=p.show_in_footer!==false;
   document.getElementById('pf-nav').checked=!!p.show_in_nav;
@@ -1283,11 +1267,11 @@ function openPageForm(page){
   document.getElementById('page-ov').classList.add('open');
 }
 function closePageForm(){document.getElementById('page-ov').classList.remove('open');}
-function autoPageSlug(){if(editPageId)return;const t=document.getElementById('pf-title-in').value.trim();if(t)document.getElementById('pf-slug').value=t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+function autoPageSlug(){if(document.getElementById('pf-id').value)return;const t=document.getElementById('pf-title-input').value.trim();if(t)document.getElementById('pf-slug').value=t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
 async function savePage(){
-  const title=document.getElementById('pf-title-in').value.trim(),slug=document.getElementById('pf-slug').value.trim(),id=editPageId;
+  const title=document.getElementById('pf-title-input').value.trim(),slug=document.getElementById('pf-slug').value.trim(),id=document.getElementById('pf-id').value;
   if(!title||!slug){toast('Title and Slug required','err');return;}
-  const payload={title,slug,content:document.getElementById('page-editor').innerHTML,seo_title:document.getElementById('pf-seo-t').value.trim()||null,seo_description:document.getElementById('pf-seo-d').value.trim()||null,is_published:document.getElementById('pf-pub').checked,show_in_footer:document.getElementById('pf-footer').checked,show_in_nav:document.getElementById('pf-nav').checked,updated_at:new Date().toISOString()};
+  const payload={title,slug,content:document.getElementById('page-editor').innerHTML,seo_title:document.getElementById('pf-seo-title').value.trim()||null,seo_description:document.getElementById('pf-seo-desc').value.trim()||null,og_image:document.getElementById('pf-og-img').value.trim()||null,is_published:document.getElementById('pf-pub').checked,show_in_footer:document.getElementById('pf-footer').checked,show_in_nav:document.getElementById('pf-nav').checked,updated_at:new Date().toISOString()};
   let error;
   if(id){({error}=await sb.from('pages').update(payload).eq('id',id));}
   else{({error}=await sb.from('pages').insert(payload));}
@@ -1297,21 +1281,59 @@ async function savePage(){
 async function delPage(id,title){if(!confirm(`Delete "${title}"?`))return;await sb.from('pages').delete().eq('id',id);toast('Deleted');loadPages();}
 
 // ══ SEO ═══════════════════════════════════════════════════
-async function loadSEO(){const{data}=await sb.from('site_settings').select('*');if(!data)return;const s=Object.fromEntries(data.map(r=>[r.key,r.value]));document.getElementById('seo-title').value=s.global_seo_title||'';document.getElementById('seo-desc').value=s.global_seo_desc||'';document.getElementById('seo-og').value=s.global_og_image||'';document.getElementById('seo-ga').value=s.google_analytics_id||'';document.getElementById('seo-head').value=s.custom_head_code||'';document.getElementById('seo-body').value=s.custom_body_code||'';document.getElementById('seo-robots').value=s.robots_txt||'User-agent: *\nAllow: /';if(s.site_url)siteUrl=s.site_url.replace(/https?:\/\//,'');updateSeoPreview();}
-function updateSeoPreview(){document.getElementById('sp-url').textContent=siteUrl;document.getElementById('sp-t').textContent=document.getElementById('seo-title').value||'KitDB';document.getElementById('sp-d').textContent=document.getElementById('seo-desc').value||'Description preview';}
-async function saveSEO(){for(const[key,id]of[['global_seo_title','seo-title'],['global_seo_desc','seo-desc'],['global_og_image','seo-og']])await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});toast('SEO saved!');}
-async function saveAnalytics(){for(const[key,id]of[['google_analytics_id','seo-ga'],['custom_head_code','seo-head'],['custom_body_code','seo-body']])await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});toast('Analytics saved!');}
-async function saveRobots(){await sb.from('site_settings').upsert({key:'robots_txt',value:document.getElementById('seo-robots').value},{onConflict:'key'});toast('Saved!');}
+async function loadSEO(){
+  const{data}=await sb.from('site_settings').select('*');if(!data)return;
+  const s=Object.fromEntries(data.map(r=>[r.key,r.value]));
+  document.getElementById('seo-name').value=s.site_name||'';
+  document.getElementById('seo-title').value=s.global_seo_title||'';
+  document.getElementById('seo-desc').value=s.global_seo_desc||'';
+  document.getElementById('seo-og').value=s.global_og_image||'';
+  document.getElementById('seo-ga').value=s.google_analytics_id||'';
+  document.getElementById('seo-head').value=s.custom_head_code||'';
+  document.getElementById('seo-body').value=s.custom_body_code||'';
+  document.getElementById('seo-robots').value=s.robots_txt||'User-agent: *\nAllow: /';
+  if(s.site_url)siteUrl=s.site_url.replace('https://','').replace('http://','');
+  updateSeoPreview();
+}
+function updateSeoPreview(){
+  document.getElementById('sp-url').textContent=siteUrl;
+  document.getElementById('sp-title').textContent=document.getElementById('seo-title').value||'KitDB — Football Kit Encyclopedia';
+  document.getElementById('sp-desc').textContent=document.getElementById('seo-desc').value||'Browse, rate and collect football kits.';
+}
+async function saveSEO(){
+  const updates=[['global_seo_title','seo-title'],['global_seo_desc','seo-desc'],['global_og_image','seo-og'],['site_name','seo-name']];
+  for(const[key,id]of updates)await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});
+  toast('SEO saved!');
+}
+async function saveAnalytics(){
+  const updates=[['google_analytics_id','seo-ga'],['custom_head_code','seo-head'],['custom_body_code','seo-body']];
+  for(const[key,id]of updates)await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});
+  toast('Analytics saved!');
+}
+async function saveRobots(){await sb.from('site_settings').upsert({key:'robots_txt',value:document.getElementById('seo-robots').value},{onConflict:'key'});toast('Robots.txt saved!');}
 
 // ══ ADS ═══════════════════════════════════════════════════
-async function loadAds(){const{data}=await sb.from('ad_slots').select('*').order('slot_key');document.getElementById('ads-list').innerHTML=(data||[]).map(s=>`<div class="adc"><div class="adc-h"><div><div style="font-weight:600;font-size:.88rem">${s.label}</div><div style="font-family:var(--fm);font-size:.67rem;color:var(--w4)">${s.slot_key}</div></div><div style="display:flex;align-items:center;gap:.75rem"><label class="tgl"><input type="checkbox" ${s.is_active?'checked':''} onchange="toggleAd('${s.id}',this.checked)"/><span class="tgl-s"></span></label><button class="btn btn-p btn-sm" onclick="saveAd('${s.id}')">Save</button></div></div><textarea class="adca" id="acode-${s.id}">${s.ad_code||''}</textarea></div>`).join('');}
-async function saveAd(id){const{error}=await sb.from('ad_slots').update({ad_code:document.getElementById('acode-'+id).value,updated_at:new Date().toISOString()}).eq('id',id);if(error){toast('Error','err');return;}toast('Saved!');}
+async function loadAds(){
+  const{data}=await sb.from('ad_slots').select('*').order('slot_key');
+  document.getElementById('ads-list').innerHTML=(data||[]).map(s=>`
+    <div class="adc">
+      <div class="adc-head">
+        <div><div style="font-weight:600;font-size:.88rem">${s.label}</div><div style="font-family:var(--fm);font-size:.67rem;color:var(--w4)">${s.slot_key}</div></div>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <label class="tgl"><input type="checkbox" ${s.is_active?'checked':''} onchange="toggleAd('${s.id}',this.checked)"/><span class="tgl-s"></span></label>
+          <button class="btn btn-p btn-sm" onclick="saveAd('${s.id}')">Save</button>
+        </div>
+      </div>
+      <textarea class="ad-code-area" id="acode-${s.id}">${s.ad_code||''}</textarea>
+    </div>`).join('');
+}
+async function saveAd(id){const{error}=await sb.from('ad_slots').update({ad_code:document.getElementById('acode-'+id).value,updated_at:new Date().toISOString()}).eq('id',id);if(error){toast('Error','err');return;}toast('Ad slot saved!');}
 async function toggleAd(id,v){await sb.from('ad_slots').update({is_active:v}).eq('id',id);toast(v?'Enabled':'Disabled');}
 
 // ══ USERS ═════════════════════════════════════════════════
 async function loadUsers(){const{data}=await sb.from('profiles').select('*').eq('role','subscriber').order('created_at',{ascending:false});allUsers=data||[];renderUsers(allUsers);}
 function filterUsers(){const q=document.getElementById('user-q').value.toLowerCase();renderUsers(q?allUsers.filter(u=>[u.username,u.full_name,u.country,u.fav_club].join(' ').toLowerCase().includes(q)):allUsers);}
-function renderUsers(users){document.getElementById('users-tb').innerHTML=users.map(u=>`<tr><td style="font-weight:600">${u.username||'—'}</td><td style="color:var(--w3);font-size:.78rem">${u.country||'—'}</td><td style="color:var(--w3);font-size:.78rem">${u.fav_club||'—'}</td><td style="font-family:var(--fm);font-size:.75rem;color:var(--gold)">${u.total_points||0} pts</td><td style="font-family:var(--fm);font-size:.75rem;color:var(--g)">${u.badge_count||0} 🎖️</td><td style="color:var(--w4);font-size:.72rem">${new Date(u.created_at).toLocaleDateString('en-GB')}</td><td><button class="btn-del" onclick="banUser('${u.id}','${(u.username||'').replace(/'/g,"\\'")}')">Remove</button></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--w4)">No users yet.</td></tr>';}
+function renderUsers(users){document.getElementById('users-tb').innerHTML=users.map(u=>`<tr><td style="font-weight:600">${u.username||'—'}</td><td style="color:var(--w3);font-size:.78rem">${u.country||'—'}</td><td style="color:var(--w3);font-size:.78rem">${u.fav_club||'—'}</td><td style="color:var(--w4);font-size:.72rem">${new Date(u.created_at).toLocaleDateString('en-GB')}</td><td><button class="btn-del" onclick="banUser('${u.id}','${(u.username||'').replace(/'/g,"\\'")}')">Remove</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No users yet.</td></tr>';}
 async function banUser(id,name){if(!confirm(`Remove "${name}"?`))return;await sb.from('profiles').delete().eq('id',id);toast('Removed');loadUsers();}
 
 // ══ ADMINS ════════════════════════════════════════════════
@@ -1321,18 +1343,11 @@ async function demoteAdmin(id,name){if(!confirm(`Demote "${name}"?`))return;awai
 
 // ══ SETTINGS ══════════════════════════════════════════════
 async function loadSettings(){const{data}=await sb.from('site_settings').select('*');if(!data)return;const s=Object.fromEntries(data.map(r=>[r.key,r.value]));document.getElementById('ss-name').value=s.site_name||'';document.getElementById('ss-tagline').value=s.site_tagline||'';document.getElementById('ss-url').value=s.site_url||'';document.getElementById('ss-email').value=s.contact_email||'';document.getElementById('ss-footer').value=s.footer_text||'';document.getElementById('ss-twitter').value=s.social_twitter||'';document.getElementById('ss-instagram').value=s.social_instagram||'';document.getElementById('ss-facebook').value=s.social_facebook||'';}
-async function saveSettings(){for(const[key,id]of[['site_name','ss-name'],['site_tagline','ss-tagline'],['site_url','ss-url'],['contact_email','ss-email']])await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});toast('Settings saved!');}
-async function saveFooter(){for(const[key,id]of[['footer_text','ss-footer'],['social_twitter','ss-twitter'],['social_instagram','ss-instagram'],['social_facebook','ss-facebook']])await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});toast('Footer saved!');}
+async function saveSettings(){const updates=[['site_name','ss-name'],['site_tagline','ss-tagline'],['site_url','ss-url'],['contact_email','ss-email']];for(const[key,id]of updates)await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});toast('Settings saved!');}
+async function saveFooter(){const updates=[['footer_text','ss-footer'],['social_twitter','ss-twitter'],['social_instagram','ss-instagram'],['social_facebook','ss-facebook']];for(const[key,id]of updates)await sb.from('site_settings').upsert({key,value:document.getElementById(id).value},{onConflict:'key'});toast('Footer saved!');}
 
 // ══ DASHBOARD ═════════════════════════════════════════════
-async function loadDash(){
-  const[{count:kc},{count:uc},{count:rc},{count:cc}]=await Promise.all([sb.from('kits').select('*',{count:'exact',head:true}),sb.from('profiles').select('*',{count:'exact',head:true}).eq('role','subscriber'),sb.from('ratings').select('*',{count:'exact',head:true}),sb.from('comments').select('*',{count:'exact',head:true})]);
-  document.getElementById('d-kits').textContent=kc||0;document.getElementById('d-users').textContent=uc||0;document.getElementById('d-ratings').textContent=rc||0;document.getElementById('d-comments').textContent=cc||0;
-  const{data:rk}=await sb.from('kits').select('team,season,type,created_at').order('created_at',{ascending:false}).limit(6);
-  document.getElementById('d-rk').innerHTML=(rk||[]).map(k=>`<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem"><span>${k.team} <span style="color:var(--w4)">${k.season} ${k.type}</span></span><span style="font-size:.68rem;color:var(--w4)">${new Date(k.created_at).toLocaleDateString('en-GB')}</span></div>`).join('');
-  const{data:ru}=await sb.from('profiles').select('username,country,created_at').eq('role','subscriber').order('created_at',{ascending:false}).limit(6);
-  document.getElementById('d-ru').innerHTML=(ru||[]).map(u=>`<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem"><span>${u.username||'—'} <span style="color:var(--w4)">${u.country||''}</span></span><span style="font-size:.68rem;color:var(--w4)">${new Date(u.created_at).toLocaleDateString('en-GB')}</span></div>`).join('');
-}
+async function loadDash(){const[{count:kc},{count:uc},{count:rc}]=await Promise.all([sb.from('kits').select('*',{count:'exact',head:true}),sb.from('profiles').select('*',{count:'exact',head:true}).eq('role','subscriber'),sb.from('ratings').select('*',{count:'exact',head:true})]);document.getElementById('d-kits').textContent=kc||0;document.getElementById('d-clubs').textContent=allClubs.length;document.getElementById('d-users').textContent=uc||0;document.getElementById('d-ratings').textContent=rc||0;const{data:rk}=await sb.from('kits').select('team,season,type,created_at').order('created_at',{ascending:false}).limit(6);document.getElementById('d-rk').innerHTML=(rk||[]).map(k=>`<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem"><span>${k.team} <span style="color:var(--w4)">${k.season} ${k.type}</span></span><span style="font-size:.68rem;color:var(--w4)">${new Date(k.created_at).toLocaleDateString('en-GB')}</span></div>`).join('');const{data:ru}=await sb.from('profiles').select('username,country,created_at').eq('role','subscriber').order('created_at',{ascending:false}).limit(6);document.getElementById('d-ru').innerHTML=(ru||[]).map(u=>`<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem"><span>${u.username||'—'} <span style="color:var(--w4)">${u.country||''}</span></span><span style="font-size:.68rem;color:var(--w4)">${new Date(u.created_at).toLocaleDateString('en-GB')}</span></div>`).join('');}
 
 // ══ TOAST ═════════════════════════════════════════════════
 function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=(type==='ok'?'✓ ':'✗ ')+msg;t.className='toast show '+(type==='ok'?'ok':'err');setTimeout(()=>t.className='toast',3000);}
