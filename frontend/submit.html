@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Submit a Kit — KitDB</title>
+<link rel="stylesheet" href="/assets/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.submit-wrap { max-width:680px; margin:0 auto; padding:2rem 0 4rem; }
+.submit-header { margin-bottom:2rem; }
+.submit-header h1 { font-family:var(--fd); font-size:2.5rem; letter-spacing:3px; margin-bottom:.5rem; }
+.submit-header h1 span { color:var(--g); }
+.submit-header p { color:var(--w3); font-size:.9rem; line-height:1.6; }
+.submit-box { background:var(--s1); border:1px solid var(--bd); border-radius:14px; overflow:hidden; }
+.submit-box-head { padding:1.1rem 1.5rem; background:var(--s2); border-bottom:1px solid var(--bd); display:flex; align-items:center; gap:.75rem; }
+.submit-box-title { font-family:var(--fd); font-size:1rem; letter-spacing:2px; }
+.submit-box-body { padding:1.5rem; }
+.form-section { font-size:.6rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--g); padding:.4rem 0; border-bottom:1px solid var(--bdg); margin:1.25rem 0 1rem; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.875rem; }
+.form-full { grid-column:1/-1; }
+.status-box { background:var(--gf); border:1px solid var(--bdg); border-radius:10px; padding:1.25rem; margin-bottom:1.75rem; }
+.status-title { font-size:.65rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--g); margin-bottom:.75rem; }
+.sub-row { display:flex; align-items:center; justify-content:space-between; padding:.55rem 0; border-bottom:1px solid var(--bdg); font-size:.83rem; }
+.sub-row:last-child { border-bottom:none; }
+.sub-status { font-size:.65rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:.2rem .55rem; border-radius:4px; }
+.s-pending  { background:rgba(255,204,0,.1); color:var(--gold); border:1px solid rgba(255,204,0,.3); }
+.s-approved { background:var(--gf); color:var(--g); border:1px solid var(--bdg); }
+.s-rejected { background:rgba(255,68,68,.08); color:var(--red); border:1px solid rgba(255,68,68,.2); }
+.rules-box { background:var(--s2); border:1px solid var(--bd); border-radius:10px; padding:1.1rem 1.25rem; margin-bottom:1.75rem; }
+.rules-title { font-size:.65rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--w4); margin-bottom:.75rem; }
+.rules-list { list-style:none; display:flex; flex-direction:column; gap:.4rem; }
+.rules-list li { font-size:.82rem; color:var(--w3); display:flex; align-items:flex-start; gap:.5rem; line-height:1.5; }
+.rules-list li::before { content:'→'; color:var(--g); flex-shrink:0; margin-top:.05rem; }
+.duplicate-warn { background:rgba(255,204,0,.08); border:1px solid rgba(255,204,0,.3); border-radius:8px; padding:.75rem 1rem; font-size:.82rem; color:var(--gold); display:none; margin-top:.5rem; }
+.success-screen { text-align:center; padding:3rem 2rem; display:none; }
+.success-icon { font-size:3.5rem; margin-bottom:1rem; }
+.success-title { font-family:var(--fd); font-size:2rem; letter-spacing:3px; margin-bottom:.5rem; }
+.success-title span { color:var(--g); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links" id="nav-links-dynamic"></div>
+  <div id="nav-auth"></div>
+</nav>
+
+<div class="container">
+  <div class="submit-wrap">
+
+    <!-- NOT LOGGED IN -->
+    <div id="login-prompt" style="display:none;text-align:center;padding:4rem 2rem">
+      <div style="font-size:3rem;margin-bottom:1rem">🔐</div>
+      <div style="font-family:var(--fd);font-size:1.75rem;letter-spacing:3px;margin-bottom:.5rem">SIGN IN TO SUBMIT</div>
+      <p style="color:var(--w3);margin-bottom:1.5rem">You need a free KitDB account to submit kits.</p>
+      <a href="/login.html?from=/submit.html" class="btn btn-p">Sign In / Join Free</a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="submit-content" style="display:none">
+      <div class="submit-header">
+        <h1>SUBMIT A <span>KIT</span></h1>
+        <p>Help grow the KitDB archive. Submit kits you know are missing. All submissions are reviewed by our team before going live. Earn points and badges for approved kits!</p>
+      </div>
+
+      <!-- RULES -->
+      <div class="rules-box">
+        <div class="rules-title">Submission Guidelines</div>
+        <ul class="rules-list">
+          <li>Only submit real, official football kits</li>
+          <li>Provide clear, high-quality images when possible</li>
+          <li>Do not submit duplicates — check Browse first</li>
+          <li>Each user can only submit one kit per team/season/type combination</li>
+          <li>Earn <strong style="color:var(--g)">+5 points</strong> for submitting, <strong style="color:var(--g)">+50 points</strong> when approved</li>
+          <li>Approved submissions show your username as contributor</li>
+        </ul>
+      </div>
+
+      <!-- MY SUBMISSIONS STATUS -->
+      <div id="my-submissions-wrap" style="display:none">
+        <div class="status-box">
+          <div class="status-title">My Submissions</div>
+          <div id="my-submissions-list"></div>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <div class="submit-box">
+        <div class="submit-box-head">
+          <span style="font-size:1.25rem">👕</span>
+          <span class="submit-box-title">KIT DETAILS</span>
+        </div>
+        <div class="submit-box-body">
+          <div id="success-screen" class="success-screen">
+            <div class="success-icon">🎉</div>
+            <div class="success-title">KIT <span>SUBMITTED!</span></div>
+            <p style="color:var(--w3);margin-bottom:1.5rem">Your submission is under review. You'll earn 50 points when it's approved!</p>
+            <div style="display:flex;gap:.75rem;justify-content:center">
+              <button class="btn btn-p" onclick="resetForm()">Submit Another</button>
+              <a href="/browse.html" class="btn btn-g">Browse Kits</a>
+            </div>
+          </div>
+
+          <div id="submit-form">
+            <div class="form-section">Kit Identity</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Club / Team *</label>
+                <div class="acw">
+                  <input id="s-team" type="text" placeholder="e.g. Arsenal FC" autocomplete="off"
+                    oninput="acSIn('team')" onfocus="acSIn('team')" onblur="setTimeout(()=>acSClose('team'),180)"/>
+                  <div class="acl" id="sacl-team"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Season *</label>
+                <div class="acw">
+                  <input id="s-season" type="text" placeholder="e.g. 2024/25" autocomplete="off"
+                    oninput="acSIn('season')" onfocus="acSIn('season')" onblur="setTimeout(()=>acSClose('season'),180)"/>
+                  <div class="acl" id="sacl-season"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label>League</label>
+                <div class="acw">
+                  <input id="s-league" type="text" placeholder="e.g. Premier League" autocomplete="off"
+                    oninput="acSIn('league')" onfocus="acSIn('league')" onblur="setTimeout(()=>acSClose('league'),180)"/>
+                  <div class="acl" id="sacl-league"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Kit Type *</label>
+                <select id="s-type" onchange="checkDuplicate()">
+                  <option>Home</option><option>Away</option><option>Third</option>
+                  <option>GK Home</option><option>GK Away</option><option>Special Edition</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Manufacturer</label>
+                <div class="acw">
+                  <input id="s-maker" type="text" placeholder="e.g. Adidas" autocomplete="off"
+                    oninput="acSIn('maker')" onfocus="acSIn('maker')" onblur="setTimeout(()=>acSClose('maker'),180)"/>
+                  <div class="acl" id="sacl-maker"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Primary Color</label>
+                <input id="s-color" type="text" placeholder="e.g. Red & White"/>
+              </div>
+            </div>
+
+            <div id="duplicate-warn" class="duplicate-warn">
+              ⚠️ A kit with this team, season and type already exists or has been submitted. Please check Browse first.
+            </div>
+
+            <div class="form-section">Images</div>
+            <div class="form-grid">
+              <div class="field form-full">
+                <label>Main Image URL *</label>
+                <input id="s-img" type="url" placeholder="https://… (direct link to kit image)"/>
+                <div style="font-size:.72rem;color:var(--w4);margin-top:.3rem">Tip: Upload to imgbb.com for a free direct image URL</div>
+              </div>
+              <div class="field">
+                <label>Image 2 URL</label>
+                <input id="s-img2" type="url" placeholder="https://…"/>
+              </div>
+              <div class="field">
+                <label>Image 3 URL</label>
+                <input id="s-img3" type="url" placeholder="https://…"/>
+              </div>
+            </div>
+
+            <div class="form-section">Additional Info</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Price (if known)</label>
+                <input id="s-price" type="text" placeholder="e.g. £89.95"/>
+              </div>
+              <div class="field">
+                <label>Buy Link (affiliate/shop)</label>
+                <input id="s-buy" type="url" placeholder="https://…"/>
+              </div>
+              <div class="field form-full">
+                <label>Description / Notes</label>
+                <textarea id="s-desc" placeholder="Any details about this kit — design, history, special features…"></textarea>
+              </div>
+            </div>
+
+            <div style="margin-top:1.5rem;display:flex;gap:.75rem;justify-content:flex-end">
+              <a href="/browse.html" class="btn btn-g">Cancel</a>
+              <button class="btn btn-p" onclick="submitKit()" id="submit-btn">Submit Kit for Review</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong id="footer-site-name">KitDB</strong> &nbsp;·&nbsp;
+  <a href="/">Home</a> &nbsp;·&nbsp;
+  <a href="/browse.html">Browse</a>
+  <div style="margin-top:.75rem;color:var(--w4)" id="footer-text"></div>
+</footer>
+
+<script src="/assets/js/config.js"></script>
+<script>
+let currentUser = null;
+let allClubs = [], allSeasons = [], allLeagues = [], allMakers = [], allKitTypes = [];
+
+(async () => {
+  await initNav();
+  await loadSiteSettings();
+  currentUser = await getUser();
+
+  if (!currentUser) {
+    document.getElementById('login-prompt').style.display = 'block';
+    return;
+  }
+  document.getElementById('submit-content').style.display = 'block';
+  await loadMasterData();
+  await loadMySubmissions();
+  populateTypeSelect();
+})();
+
+async function loadSiteSettings() {
+  const { data } = await sb.from('site_settings').select('key,value');
+  if (!data) return;
+  const s = Object.fromEntries(data.map(r => [r.key, r.value]));
+  if (s.site_name) document.getElementById('footer-site-name').textContent = s.site_name;
+  if (s.footer_text) document.getElementById('footer-text').textContent = s.footer_text;
+}
+
+async function loadMasterData() {
+  const [clubs, seasons, leagues, types, kits] = await Promise.all([
+    sb.from('clubs').select('name').order('name'),
+    sb.from('seasons').select('name').order('year_start', { ascending: false }),
+    sb.from('leagues').select('name').order('name'),
+    sb.from('kit_types').select('name').eq('is_active', true).order('sort_order'),
+    sb.from('kits').select('maker').not('maker', 'is', null),
+  ]);
+  allClubs   = (clubs.data || []).map(c => c.name);
+  allSeasons = (seasons.data || []).map(s => s.name);
+  allLeagues = (leagues.data || []).map(l => l.name);
+  allKitTypes = (types.data || []).map(t => t.name);
+  const def = ['Adidas','Nike','Puma','Umbro','Kappa','Hummel','New Balance','Under Armour','Joma','Macron'];
+  const db = [...new Set((kits.data || []).map(k => k.maker).filter(Boolean))];
+  allMakers = [...new Set([...db, ...def])].sort();
+}
+
+function populateTypeSelect() {
+  const sel = document.getElementById('s-type');
+  const types = allKitTypes.length ? allKitTypes : ['Home','Away','Third','GK Home','GK Away','Special Edition'];
+  sel.innerHTML = types.map(t => `<option>${t}</option>`).join('');
+}
+
+async function loadMySubmissions() {
+  const { data } = await sb.from('kit_submissions')
+    .select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
+  if (!data || !data.length) return;
+  document.getElementById('my-submissions-wrap').style.display = 'block';
+  document.getElementById('my-submissions-list').innerHTML = data.map(s => `
+    <div class="sub-row">
+      <div>
+        <div style="font-weight:500">${s.team} — ${s.season} ${s.type}</div>
+        ${s.rejection_reason ? `<div style="font-size:.72rem;color:var(--red);margin-top:.15rem">Reason: ${s.rejection_reason}</div>` : ''}
+      </div>
+      <span class="sub-status s-${s.status}">${s.status}</span>
+    </div>`).join('');
+}
+
+// duplicate check
+async function checkDuplicate() {
+  const team   = document.getElementById('s-team').value.trim();
+  const season = document.getElementById('s-season').value.trim();
+  const type   = document.getElementById('s-type').value;
+  const warn   = document.getElementById('duplicate-warn');
+  if (!team || !season) { warn.style.display = 'none'; return; }
+
+  const [{ data: existing }, { data: submitted }] = await Promise.all([
+    sb.from('kits').select('id').eq('team', team).eq('season', season).eq('type', type).limit(1),
+    sb.from('kit_submissions').select('id').eq('team', team).eq('season', season).eq('type', type).eq('status', 'pending').limit(1),
+  ]);
+  warn.style.display = (existing?.length || submitted?.length) ? 'block' : 'none';
+}
+
+// autocomplete
+const acSources = {
+  team: () => allClubs,
+  season: () => allSeasons,
+  league: () => allLeagues,
+  maker: () => allMakers,
+};
+function acSIn(key) {
+  const inp = document.getElementById('s-' + key);
+  const list = document.getElementById('sacl-' + key);
+  const q = inp.value.toLowerCase();
+  const src = acSources[key] ? acSources[key]() : [];
+  const matches = src.filter(v => v.toLowerCase().includes(q)).slice(0, 10);
+  if (!matches.length && !q) { list.classList.remove('open'); return; }
+  const exact = src.find(v => v.toLowerCase() === q);
+  list.innerHTML = matches.map(v =>
+    `<div class="ac-item" onmousedown="acSSet('${key}','${v.replace(/'/g,"\\'")}')">  ${v}</div>`
+  ).join('') + (q && !exact ? `<div class="ac-item" style="color:var(--g);font-style:italic" onmousedown="acSSet('${key}','${inp.value.replace(/'/g,"\\'")}')">+ Use "${inp.value}"</div>` : '');
+  list.classList.add('open');
+  if (key === 'team' || key === 'season') checkDuplicate();
+}
+function acSSet(key, val) {
+  document.getElementById('s-' + key).value = val;
+  acSClose(key);
+  if (key === 'team') autoFillLeague();
+  checkDuplicate();
+}
+function acSClose(key) { document.getElementById('sacl-' + key)?.classList.remove('open'); }
+function autoFillLeague() {
+  // if we know the club's league, prefill
+  const team = document.getElementById('s-team').value.trim();
+  if (!team || document.getElementById('s-league').value) return;
+}
+
+async function submitKit() {
+  if (!currentUser) { window.location.href = '/login.html?from=/submit.html'; return; }
+  const team   = document.getElementById('s-team').value.trim();
+  const season = document.getElementById('s-season').value.trim();
+  const type   = document.getElementById('s-type').value;
+  const img    = document.getElementById('s-img').value.trim();
+
+  if (!team || !season) { toast('Team and Season are required', 'err'); return; }
+  if (!img) { toast('Please provide at least one image URL', 'err'); return; }
+
+  // final duplicate check
+  const [{ data: existing }, { data: myDupe }] = await Promise.all([
+    sb.from('kits').select('id').eq('team', team).eq('season', season).eq('type', type).limit(1),
+    sb.from('kit_submissions').select('id').eq('user_id', currentUser.id).eq('team', team).eq('season', season).eq('type', type).limit(1),
+  ]);
+  if (existing?.length) { toast('This kit already exists in KitDB!', 'err'); return; }
+  if (myDupe?.length) { toast('You already submitted this kit — awaiting review.', 'err'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Submitting…'; btn.disabled = true;
+
+  const { error } = await sb.from('kit_submissions').insert({
+    user_id:     currentUser.id,
+    team,        season,
+    league:      document.getElementById('s-league').value.trim() || null,
+    type,
+    maker:       document.getElementById('s-maker').value.trim() || null,
+    color:       document.getElementById('s-color').value.trim() || null,
+    image_url:   img,
+    image_url_2: document.getElementById('s-img2').value.trim() || null,
+    image_url_3: document.getElementById('s-img3').value.trim() || null,
+    price_label: document.getElementById('s-price').value.trim() || null,
+    buy_url:     document.getElementById('s-buy').value.trim() || null,
+    description: document.getElementById('s-desc').value.trim() || null,
+    status:      'pending',
+  });
+
+  btn.textContent = 'Submit Kit for Review'; btn.disabled = false;
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+
+  // award submission points
+  await sb.rpc('award_points', { p_user_id: currentUser.id, p_points: 5, p_reason: 'Kit submitted' });
+  await sb.rpc('check_badges', { p_user_id: currentUser.id });
+
+  document.getElementById('submit-form').style.display = 'none';
+  document.getElementById('success-screen').style.display = 'block';
+  await loadMySubmissions();
+}
+
+function resetForm() {
+  ['s-team','s-season','s-league','s-maker','s-color','s-img','s-img2','s-img3','s-price','s-buy','s-desc']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('duplicate-warn').style.display = 'none';
+  document.getElementById('submit-form').style.display = 'block';
+  document.getElementById('success-screen').style.display = 'none';
+}
+</script>
+</body>
+</html>
