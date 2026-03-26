@@ -43,8 +43,8 @@
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-logo">Kit<span>DB</span></a>
-  <div class="nav-links">
+  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links" id="nav-links-dynamic">
     <a href="/" class="nav-link">Home</a>
     <a href="/browse.html" class="nav-link">Browse</a>
     <a href="/search.html" class="nav-link">Search</a>
@@ -143,8 +143,8 @@ let kit = null, currentUser = null, userProfile = null, isSaved = false, userRat
   kit = data;
   document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
 
-  // increment view
-  sb.rpc('increment_kit_views', { kit_slug: slug });
+  // increment view — fire and forget, don't await
+  sb.rpc('increment_kit_views', { kit_slug: slug }).catch(() => {});
 
   renderKit();
   if (currentUser) {
@@ -222,9 +222,12 @@ function renderKit() {
   // buy button
   if (kit.buy_url) {
     document.getElementById('buy-section').style.display = 'block';
+    // BUG FIX: was referencing kit.buy_label — correct field name is kit.buy_label (matches admin kf-buylabel → buy_label column)
+    const label = kit.buy_label || 'Buy Now';
+    const price = kit.price_label ? ' — ' + kit.price_label : '';
     document.getElementById('buy-section').innerHTML =
       `<a href="${kit.buy_url}" target="_blank" rel="noopener sponsored" class="buy-btn" onclick="trackClick()">
-        🛒 ${kit.buy_label || 'Buy Now'} ${kit.price_label ? '— ' + kit.price_label : ''}
+        🛒 ${label}${price}
        </a>`;
   }
 

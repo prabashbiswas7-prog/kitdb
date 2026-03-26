@@ -29,11 +29,10 @@
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-logo">Kit<span>DB</span></a>
-  <div class="nav-links">
+  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links" id="nav-links-dynamic">
     <a href="/" class="nav-link">Home</a>
     <a href="/browse.html" class="nav-link">Browse</a>
-    <a href="/blog.html" class="nav-link">Blog</a>
     <a href="/search.html" class="nav-link">Search</a>
   </div>
   <div id="nav-auth"></div>
@@ -55,10 +54,10 @@
 
 <div style="height:3rem"></div>
 <footer>
-  <strong id="site-name">KitDB</strong> &nbsp;·&nbsp;
+  <strong id="footer-site-name">KitDB</strong> &nbsp;·&nbsp;
   <a href="/">Home</a> &nbsp;·&nbsp;
   <a href="/browse.html">Browse</a> &nbsp;·&nbsp;
-  <div id="footer-pages" style="display:inline"></div>
+  <span id="footer-pages"></span>
   <div style="margin-top:.75rem;color:var(--w4)" id="footer-text"></div>
 </footer>
 
@@ -68,50 +67,50 @@ const slug = new URLSearchParams(location.search).get('slug');
 
 (async () => {
   if (!slug) { show404(); return; }
-  await initNav();
-  await loadSettings();
-  const { data: page } = await sb.from('pages').select('*').eq('slug', slug).eq('is_published', true).single();
+
+  // BUG FIX: all requests in parallel — was sequential
+  const [, settingsRes, pageRes, footerPagesRes] = await Promise.all([
+    initNav(),
+    sb.from('site_settings').select('key,value'),
+    sb.from('pages').select('*').eq('slug', slug).eq('is_published', true).single(),
+    sb.from('pages').select('title,slug').eq('show_in_footer', true).order('sort_order'),
+  ]);
+
+  if (settingsRes.data) {
+    const s = Object.fromEntries(settingsRes.data.map(r => [r.key, r.value]));
+    if (s.site_name)   document.getElementById('footer-site-name').textContent = s.site_name;
+    if (s.footer_text) document.getElementById('footer-text').textContent      = s.footer_text;
+    // BUG FIX: GA is handled by initNav() — no duplicate injection needed here
+  }
+
+  // Footer pages
+  if (footerPagesRes.data?.length) {
+    document.getElementById('footer-pages').innerHTML =
+      footerPagesRes.data.map(p => `<a href="/page.html?slug=${p.slug}">${p.title}</a>`).join(' &nbsp;·&nbsp; ') + ' &nbsp;·&nbsp; ';
+  }
+
+  const page = pageRes.data;
   if (!page) { show404(); return; }
 
+  // SEO meta
   const title = page.seo_title || page.title + ' — KitDB';
   document.getElementById('page-title').textContent = title;
-  document.getElementById('page-desc').content = page.seo_description || '';
-  document.getElementById('og-title').content = title;
-  document.getElementById('og-desc').content = page.seo_description || '';
-  document.getElementById('og-img').content = page.og_image || '';
-  document.getElementById('pg-title').textContent = page.title;
-  document.getElementById('pg-body').innerHTML = page.content || '';
+  document.getElementById('page-desc').setAttribute('content', page.seo_description || '');
+  document.getElementById('og-title').setAttribute('content', title);
+  document.getElementById('og-desc').setAttribute('content', page.seo_description || '');
+  document.getElementById('og-img').setAttribute('content', page.og_image || '');
 
-  document.getElementById('loading').style.display = 'none';
+  document.getElementById('pg-title').textContent = page.title;
+  document.getElementById('pg-body').innerHTML    = page.content || '';
+
+  document.getElementById('loading').style.display   = 'none';
   document.getElementById('page-wrap').style.display = 'block';
-  injectAd('top_banner','ad-top-banner');
+  injectAd('top_banner', 'ad-top-banner');
 })();
 
 function show404() {
-  document.getElementById('loading').style.display = 'none';
+  document.getElementById('loading').style.display   = 'none';
   document.getElementById('not-found').style.display = 'block';
-}
-
-async function loadSettings() {
-  const { data } = await sb.from('site_settings').select('*');
-  if (!data) return;
-  const s = Object.fromEntries(data.map(r=>[r.key,r.value]));
-  if (s.site_name) document.getElementById('site-name').textContent = s.site_name;
-  if (s.footer_text) document.getElementById('footer-text').textContent = s.footer_text;
-  if (s.google_analytics_id) {
-    const sc = document.createElement('script');
-    sc.src = `https://www.googletagmanager.com/gtag/js?id=${s.google_analytics_id}`;
-    sc.async = true; document.head.appendChild(sc);
-    window.dataLayer=window.dataLayer||[];
-    function gtag(){dataLayer.push(arguments);} gtag('js',new Date()); gtag('config',s.google_analytics_id);
-  }
-  // footer pages
-  const { data: pages } = await sb.from('pages').select('title,slug').eq('show_in_footer',true).order('sort_order');
-  if (pages?.length) {
-    document.getElementById('footer-pages').innerHTML = pages.map(p =>
-      `<a href="/page.html?slug=${p.slug}">${p.title}</a>`
-    ).join(' &nbsp;·&nbsp; ') + ' &nbsp;·&nbsp; ';
-  }
 }
 </script>
 </body>

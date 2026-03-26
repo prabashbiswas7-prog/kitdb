@@ -1,10 +1,10 @@
 // ============================================================
-// KitDB config.js v5
+// KitDB config.js v6
 // Replace YOUR_SUPABASE_URL and YOUR_SUPABASE_ANON_KEY
 // ============================================================
 
-const SUPABASE_URL      = 'https://dpelurhaljmnogdxqpoj.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZWx1cmhhbGptbm9nZHhxcG9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTE4MzksImV4cCI6MjA4OTc2NzgzOX0.cvWry3iR8MZg7zV6ewKyw8YIOxIUCaV3gUBZlPsykNM';
+const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -41,25 +41,27 @@ async function showInterstitialAd() {
 // ── Ad slot cache & loader ─────────────────────────────────
 const _adCache = {};
 async function getAdSlot(key) {
-  if (_adCache[key]) return _adCache[key];
+  if (_adCache[key] !== undefined) return _adCache[key];
   try {
     const { data } = await sb.from('ad_slots').select('*').eq('slot_key', key).single();
-    if (data) _adCache[key] = data;
-    return data;
-  } catch { return null; }
+    _adCache[key] = data || null;
+    return _adCache[key];
+  } catch { _adCache[key] = null; return null; }
 }
 async function injectAd(slotKey, containerId) {
   const slot = await getAdSlot(slotKey);
-  const el = document.getElementById(containerId);
+  const el   = document.getElementById(containerId);
   if (!el || !slot || !slot.is_active || !slot.ad_code) return;
-  el.innerHTML = `<div class="ad-label">Advertisement</div>${slot.ad_code}`;
+  el.innerHTML    = `<div class="ad-label">Advertisement</div>${slot.ad_code}`;
   el.style.display = 'block';
 }
 
 // ── Auth helpers ───────────────────────────────────────────
 async function getUser() {
-  const { data: { user } } = await sb.auth.getUser();
-  return user;
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    return user;
+  } catch { return null; }
 }
 async function getProfile(userId) {
   try {
@@ -80,21 +82,23 @@ async function initNav() {
   try {
     const { data: settings } = await sb.from('site_settings').select('key,value');
     if (settings) {
-      const s = Object.fromEntries(settings.map(r => [r.key, r.value]));
+      const s  = Object.fromEntries(settings.map(r => [r.key, r.value]));
       siteName = s.logo_text || s.site_name || 'KitDB';
-      logoUrl  = s.logo_url || '';
-      // inject GA if set
+      logoUrl  = s.logo_url  || s.site_logo_url || '';
+
+      // Inject GA if set
       if (s.google_analytics_id) {
-        const sc = document.createElement('script');
-        sc.src = `https://www.googletagmanager.com/gtag/js?id=${s.google_analytics_id}`;
-        sc.async = true;
+        const sc  = document.createElement('script');
+        sc.src    = `https://www.googletagmanager.com/gtag/js?id=${s.google_analytics_id}`;
+        sc.async  = true;
         document.head.appendChild(sc);
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
         gtag('config', s.google_analytics_id);
       }
-      // inject custom head code
+
+      // Inject custom head code
       if (s.custom_head_code) {
         const tmp = document.createElement('div');
         tmp.innerHTML = s.custom_head_code;
@@ -109,7 +113,6 @@ async function initNav() {
     if (logoUrl) {
       logoEl.innerHTML = `<img src="${logoUrl}" alt="${siteName}" style="height:32px;object-fit:contain"/>`;
     } else {
-      // split logo text into two parts for color styling
       const half = Math.ceil(siteName.length / 2);
       logoEl.innerHTML = siteName.slice(0, half) + `<span>${siteName.slice(half)}</span>`;
     }
@@ -118,20 +121,25 @@ async function initNav() {
   // Load menu items from DB
   try {
     const { data: menuItems } = await sb.from('menu_items')
-      .select('*').eq('is_active', true).order('sort_order');
+      .select('label,url,target').eq('is_active', true).order('sort_order');
 
-    const navLinks = document.getElementById('nav-links-dynamic') || document.querySelector('.nav-links');
+    // BUG FIX: only replace nav links if DB has items AND the element exists
+    // Previously this always overwrote the element, losing the hardcoded active state
+    const navLinks = document.getElementById('nav-links-dynamic');
     if (navLinks && menuItems?.length) {
-      const currentPath = window.location.pathname + window.location.search;
+      const currentPath = window.location.pathname;
       navLinks.innerHTML = menuItems.map(item => {
-        const isActive = currentPath === item.url || currentPath.startsWith(item.url.split('?')[0]) && item.url !== '/';
-        return `<a href="${item.url}" class="nav-link ${isActive ? 'active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label}</a>`;
+        // BUG FIX: improved active detection — exact match for '/', prefix match for others
+        const isActive = item.url === '/'
+          ? currentPath === '/'
+          : currentPath.startsWith(item.url.split('?')[0]);
+        return `<a href="${item.url}" class="nav-link${isActive ? ' active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label}</a>`;
       }).join('');
     }
   } catch {}
 
   // Auth state in nav
-  const user = await getUser();
+  const user    = await getUser();
   const navAuth = document.getElementById('nav-auth');
   if (!navAuth) return;
 
@@ -151,7 +159,8 @@ async function initNav() {
 
 // ── Star ratings renderer ──────────────────────────────────
 function renderStars(avg, count, interactive, onRate) {
-  avg = parseFloat(avg) || 0;
+  avg  = parseFloat(avg) || 0;
+  count = parseInt(count) || 0;
   const full = Math.floor(avg);
   const half = avg - full >= 0.5;
   let html = '<div class="stars">';
@@ -175,13 +184,14 @@ function toast(msg, type = 'ok') {
     t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:8888;padding:.8rem 1.3rem;border-radius:9px;font-size:.85rem;font-weight:500;transform:translateY(60px);opacity:0;transition:all .28s;pointer-events:none;font-family:DM Sans,sans-serif;border:1px solid';
     document.body.appendChild(t);
   }
-  t.textContent = (type === 'ok' ? '✓ ' : '✗ ') + msg;
-  t.style.background = type === 'ok' ? '#00C853' : '#ff4444';
-  t.style.color       = type === 'ok' ? '#000' : '#fff';
-  t.style.borderColor = type === 'ok' ? '#009c41' : '#cc0000';
-  t.style.transform = 'translateY(0)';
-  t.style.opacity = '1';
-  setTimeout(() => { t.style.transform = 'translateY(60px)'; t.style.opacity = '0'; }, 3000);
+  t.textContent   = (type === 'ok' ? '✓ ' : '✗ ') + msg;
+  t.style.background  = type === 'ok' ? '#00C853' : '#ff4444';
+  t.style.color       = type === 'ok' ? '#000'     : '#fff';
+  t.style.borderColor = type === 'ok' ? '#009c41'  : '#cc0000';
+  t.style.transform   = 'translateY(0)';
+  t.style.opacity     = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.transform = 'translateY(60px)'; t.style.opacity = '0'; }, 3000);
 }
 
 // ── Date formatter ─────────────────────────────────────────

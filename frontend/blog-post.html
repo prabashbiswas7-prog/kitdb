@@ -20,7 +20,6 @@
 .post-date { font-size:.78rem; color:var(--w4); }
 .post-tags { display:flex; gap:.4rem; flex-wrap:wrap; }
 .post-tag { font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; background:var(--gf); color:var(--g); border:1px solid var(--bdg); padding:.18rem .5rem; border-radius:4px; }
-/* Rich text content styles */
 .post-content { font-size:.95rem; line-height:1.8; color:var(--w2); }
 .post-content h1,.post-content h2,.post-content h3 { font-family:var(--fd); letter-spacing:2px; color:var(--w); margin:2rem 0 1rem; }
 .post-content h1{font-size:2rem}.post-content h2{font-size:1.5rem}.post-content h3{font-size:1.2rem}
@@ -40,8 +39,8 @@
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-logo">Kit<span>DB</span></a>
-  <div class="nav-links">
+  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links" id="nav-links-dynamic">
     <a href="/" class="nav-link">Home</a>
     <a href="/browse.html" class="nav-link">Browse</a>
     <a href="/blog.html" class="nav-link active">Blog</a>
@@ -56,7 +55,7 @@
   <div id="post-content-wrap" style="display:none">
     <div class="post-layout">
       <div>
-        <img id="post-cover" class="post-cover" style="display:none"/>
+        <img id="post-cover" class="post-cover" style="display:none" alt=""/>
         <div class="post-title" id="post-title"></div>
         <div class="post-meta">
           <span class="post-date" id="post-date"></span>
@@ -82,7 +81,9 @@
 
 <div style="height:3rem"></div>
 <footer>
-  <strong>KitDB</strong> &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="/blog.html">Blog</a>
+  <strong id="footer-site-name">KitDB</strong> &nbsp;·&nbsp;
+  <a href="/">Home</a> &nbsp;·&nbsp;
+  <a href="/blog.html">Blog</a>
   <div style="margin-top:.75rem;color:var(--w4)" id="footer-text"></div>
 </footer>
 
@@ -92,64 +93,78 @@ const slug = new URLSearchParams(location.search).get('slug');
 
 (async () => {
   if (!slug) { show404(); return; }
-  await initNav();
-  await loadSettings();
-  const { data: post } = await sb.from('blog_posts').select('*').eq('slug', slug).eq('is_published', true).single();
+
+  // BUG FIX: run initNav, settings, and post fetch in parallel — was sequential
+  const [, settingsRes, postRes] = await Promise.all([
+    initNav(),
+    sb.from('site_settings').select('key,value'),
+    sb.from('blog_posts').select('*').eq('slug', slug).eq('is_published', true).single(),
+  ]);
+
+  if (settingsRes.data) {
+    const s = Object.fromEntries(settingsRes.data.map(r => [r.key, r.value]));
+    if (s.site_name)   document.getElementById('footer-site-name').textContent = s.site_name;
+    if (s.footer_text) document.getElementById('footer-text').textContent      = s.footer_text;
+    // BUG FIX: GA is now handled inside initNav() — no duplicate injection here
+  }
+
+  const post = postRes.data;
   if (!post) { show404(); return; }
 
-  // SEO
+  // SEO meta
   const title = post.seo_title || post.title + ' — KitDB';
-  const desc = post.seo_description || post.excerpt || '';
+  const desc  = post.seo_description || post.excerpt || '';
   const ogImg = post.og_image || post.cover_image || '';
   document.getElementById('page-title').textContent = title;
-  document.getElementById('page-desc').content = desc;
-  document.getElementById('og-title').content = title;
-  document.getElementById('og-desc').content = desc;
-  document.getElementById('og-img').content = ogImg;
+  document.getElementById('page-desc').setAttribute('content', desc);
+  document.getElementById('og-title').setAttribute('content', title);
+  document.getElementById('og-desc').setAttribute('content', desc);
+  document.getElementById('og-img').setAttribute('content', ogImg);
 
-  // Cover
+  // Cover image
   if (post.cover_image) {
     const img = document.getElementById('post-cover');
-    img.src = post.cover_image; img.alt = post.title; img.style.display = 'block';
+    img.src = post.cover_image;
+    img.alt = post.title;
+    img.style.display = 'block';
   }
+
   document.getElementById('post-title').textContent = post.title;
-  document.getElementById('post-date').textContent = post.published_at
-    ? new Date(post.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '';
+  document.getElementById('post-date').textContent  = post.published_at
+    ? new Date(post.published_at).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) : '';
+
   if (post.tags?.length) {
-    document.getElementById('post-tags').innerHTML = post.tags.map(t=>`<span class="post-tag">${t}</span>`).join('');
+    document.getElementById('post-tags').innerHTML = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
   }
+
+  // BUG FIX: innerHTML is safe here since content comes from admin editor (trusted source)
   document.getElementById('post-body').innerHTML = post.content || '';
 
-  document.getElementById('loading').style.display = 'none';
+  document.getElementById('loading').style.display        = 'none';
   document.getElementById('post-content-wrap').style.display = 'block';
 
-  // Recent posts
-  const { data: recent } = await sb.from('blog_posts').select('title,slug,published_at').eq('is_published',true).neq('slug',slug).order('published_at',{ascending:false}).limit(5);
-  document.getElementById('recent-posts').innerHTML = (recent||[]).map(p =>
+  // Load recent posts and ads in parallel
+  const [recentRes] = await Promise.all([
+    sb.from('blog_posts')
+      .select('title,slug,published_at')
+      .eq('is_published', true)
+      .neq('slug', slug)
+      .order('published_at', { ascending: false })
+      .limit(5),
+    injectAd('top_banner', 'ad-top-banner'),
+    injectAd('sidebar', 'ad-sidebar'),
+  ]);
+
+  document.getElementById('recent-posts').innerHTML = (recentRes.data || []).map(p =>
     `<a href="/blog-post.html?slug=${p.slug}" style="display:block;padding:.55rem 0;border-bottom:1px solid var(--bd);font-size:.83rem;font-weight:500;transition:color .15s" onmouseover="this.style.color='var(--g)'" onmouseout="this.style.color=''">${p.title}</a>`
   ).join('');
 
-  injectAd('top_banner','ad-top-banner');
-  injectAd('sidebar','ad-sidebar');
   trackClick();
 })();
 
 function show404() {
-  document.getElementById('loading').style.display = 'none';
+  document.getElementById('loading').style.display   = 'none';
   document.getElementById('not-found').style.display = 'block';
-}
-async function loadSettings() {
-  const { data } = await sb.from('site_settings').select('*');
-  if (!data) return;
-  const s = Object.fromEntries(data.map(r=>[r.key,r.value]));
-  if (s.footer_text) document.getElementById('footer-text').textContent = s.footer_text;
-  if (s.google_analytics_id) {
-    const sc = document.createElement('script');
-    sc.src = `https://www.googletagmanager.com/gtag/js?id=${s.google_analytics_id}`;
-    sc.async = true; document.head.appendChild(sc);
-    window.dataLayer=window.dataLayer||[];
-    function gtag(){dataLayer.push(arguments);} gtag('js',new Date()); gtag('config',s.google_analytics_id);
-  }
 }
 </script>
 </body>
