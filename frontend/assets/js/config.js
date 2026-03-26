@@ -111,10 +111,10 @@ async function initNav() {
   const logoEl = document.getElementById('nav-logo');
   if (logoEl) {
     if (logoUrl) {
-      logoEl.innerHTML = `<img src="${logoUrl}" alt="${siteName}" style="height:32px;object-fit:contain"/>`;
+      logoEl.innerHTML = `<img src="${safeURL(logoUrl)}" alt="${escapeHTML(siteName)}" style="height:32px;object-fit:contain"/>`;
     } else {
       const half = Math.ceil(siteName.length / 2);
-      logoEl.innerHTML = siteName.slice(0, half) + `<span>${siteName.slice(half)}</span>`;
+      logoEl.innerHTML = escapeHTML(siteName.slice(0, half)) + `<span>${escapeHTML(siteName.slice(half))}</span>`;
     }
   }
 
@@ -129,11 +129,14 @@ async function initNav() {
     if (navLinks && menuItems?.length) {
       const currentPath = window.location.pathname;
       navLinks.innerHTML = menuItems.map(item => {
+        const itemUrl = safeURL(item.url, '/');
+        const urlPath = new URL(itemUrl, window.location.origin).pathname;
         // BUG FIX: improved active detection — exact match for '/', prefix match for others
-        const isActive = item.url === '/'
+        const isActive = urlPath === '/'
           ? currentPath === '/'
-          : currentPath.startsWith(item.url.split('?')[0]);
-        return `<a href="${item.url}" class="nav-link${isActive ? ' active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label}</a>`;
+          : currentPath.startsWith(urlPath);
+        const isBlank = item.target === '_blank';
+        return `<a href="${itemUrl}" class="nav-link${isActive ? ' active' : ''}" ${isBlank ? 'target="_blank" rel="noopener"' : ''}>${escapeHTML(item.label)}</a>`;
       }).join('');
     }
   } catch {}
@@ -197,4 +200,38 @@ function toast(msg, type = 'ok') {
 // ── Date formatter ─────────────────────────────────────────
 function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// ── Output safety helpers ──────────────────────────────────
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeURL(url, fallback = '#') {
+  const raw = String(url ?? '').trim();
+  if (!raw) return fallback;
+  if (raw.startsWith('/')) return raw;
+  try {
+    const parsed = new URL(raw, window.location.origin);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+  } catch {}
+  return fallback;
+}
+
+function kitURL(slug) {
+  return `/kit.html?slug=${encodeURIComponent(String(slug ?? ''))}`;
+}
+
+function kitTypeBadgeClass(type) {
+  const t = String(type ?? '');
+  if (t === 'Home') return 'b-home';
+  if (t === 'Away') return 'b-away';
+  if (t === 'Special Edition') return 'b-special';
+  if (t.startsWith('GK')) return 'b-gk';
+  return 'b-third';
 }
