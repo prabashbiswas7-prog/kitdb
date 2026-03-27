@@ -254,7 +254,7 @@
 
 <script src="/assets/js/config.js"></script>
 <script>
-const STORAGE_BUCKET = 'kit'; // Supabase storage bucket name
+const STORAGE_BUCKET_CANDIDATES = ['kits', 'kit']; // prefer v3 bucket, fallback legacy
 let currentUser = null;
 let allClubs = [], allSeasons = [], allLeagues = [], allMakers = [], allKitTypes = [];
 // Map club name → league name for autoFillLeague
@@ -343,19 +343,25 @@ async function handleUpload(slot, fileInput) {
   const ext = file.name.split('.').pop().toLowerCase();
   const path = `submissions/${currentUser.id}/${Date.now()}_${slot}.${ext}`;
 
-  const { data, error } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, {
-    cacheControl: '3600', upsert: false, contentType: file.type,
-  });
+  let uploadError = null;
+  let usedBucket = STORAGE_BUCKET_CANDIDATES[0];
+  for (const bucket of STORAGE_BUCKET_CANDIDATES) {
+    const { error } = await sb.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type,
+    });
+    if (!error) { usedBucket = bucket; uploadError = null; break; }
+    uploadError = error;
+  }
 
   prog.style.display = 'none';
 
-  if (error) {
-    toast('Upload failed: ' + error.message, 'err');
+  if (uploadError) {
+    toast('Upload failed: ' + uploadError.message, 'err');
     fileInput.value = '';
     return;
   }
 
-  const { data: { publicUrl } } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  const { data: { publicUrl } } = sb.storage.from(usedBucket).getPublicUrl(path);
   document.getElementById('s-img' + (slot === 1 ? '' : slot)).value = publicUrl;
   document.getElementById('prev-img-' + slot).src = publicUrl;
   prev.style.display = 'flex';

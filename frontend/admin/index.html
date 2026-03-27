@@ -1129,7 +1129,7 @@ function prevImg() {
 }
 
 // BUG FIX: image upload from gallery for admin kit form
-const ADMIN_BUCKET = 'kit';
+const ADMIN_BUCKET_CANDIDATES = ['kits', 'kit'];
 async function adminUploadImg(inputId, fileInput, prevId, progId) {
   const file = fileInput.files[0];
   if (!file) return;
@@ -1140,12 +1140,18 @@ async function adminUploadImg(inputId, fileInput, prevId, progId) {
   if (prev) prev.style.display = 'none';
   const ext  = file.name.split('.').pop().toLowerCase();
   const path = `admin/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await sb.storage.from(ADMIN_BUCKET).upload(path, file, {
-    cacheControl: '3600', upsert: false, contentType: file.type,
-  });
+  let uploadError = null;
+  let usedBucket = ADMIN_BUCKET_CANDIDATES[0];
+  for (const bucket of ADMIN_BUCKET_CANDIDATES) {
+    const { error } = await sb.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type,
+    });
+    if (!error) { usedBucket = bucket; uploadError = null; break; }
+    uploadError = error;
+  }
   if (prog) prog.style.display = 'none';
-  if (error) { toast('Upload failed: ' + error.message, 'err'); fileInput.value = ''; return; }
-  const { data: { publicUrl } } = sb.storage.from(ADMIN_BUCKET).getPublicUrl(path);
+  if (uploadError) { toast('Upload failed: ' + uploadError.message, 'err'); fileInput.value = ''; return; }
+  const { data: { publicUrl } } = sb.storage.from(usedBucket).getPublicUrl(path);
   const urlEl = document.getElementById(inputId);
   if (urlEl) urlEl.value = publicUrl;
   // Update preview
@@ -1264,13 +1270,13 @@ async function acKotw() {
 async function loadSubmissions() {
   const statusFilter = document.getElementById('sub-filter').value;
   let query = sb.from('kit_submissions').select('*,profiles(username)').order('created_at', { ascending: false });
-  if (statusFilter) query = query.eq('status', statusFilter);
+  if (statusFilter) query = query.ilike('status', statusFilter);
   let { data, error } = await query;
 
   // Fallback for projects where FK relation to profiles is missing
   if (error) {
     let fallback = sb.from('kit_submissions').select('*').order('created_at', { ascending: false });
-    if (statusFilter) fallback = fallback.eq('status', statusFilter);
+    if (statusFilter) fallback = fallback.ilike('status', statusFilter);
     const fb = await fallback;
     data = fb.data || [];
   }
@@ -1289,10 +1295,10 @@ async function loadSubmissions() {
     <td><span class="badge ${s.type === 'Home' ? 'bh' : s.type === 'Away' ? 'ba' : 'bt'}">${escapeHTML(s.type)}</span></td>
     <td style="font-size:.78rem;color:var(--w3)">${escapeHTML(s.profiles?.username || userMap[s.user_id] || '—')}</td>
     <td style="font-size:.72rem;color:var(--w4)">${new Date(s.created_at).toLocaleDateString('en-GB')}</td>
-    <td><span class="badge ${statusClass[s.status] || 'pub-n'}">${s.status}</span></td>
+    <td><span class="badge ${statusClass[String(s.status || '').toLowerCase()] || 'pub-n'}">${escapeHTML(s.status || 'unknown')}</span></td>
     <td><div style="display:flex;gap:.35rem">
       <button class="btn-ed" onclick="reviewSubmission('${s.id}')">Review</button>
-      ${s.status === 'pending' ? `<button class="btn-app" onclick="approveSubmission('${s.id}')">✓ Approve</button><button class="btn-rej" onclick="rejectSubmission('${s.id}')">✕ Reject</button>` : ''}
+      ${String(s.status || '').toLowerCase() === 'pending' ? `<button class="btn-app" onclick="approveSubmission('${s.id}')">✓ Approve</button><button class="btn-rej" onclick="rejectSubmission('${s.id}')">✕ Reject</button>` : ''}
     </div></td>
   </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--w4)">No submissions.</td></tr>';
 }
@@ -1317,7 +1323,7 @@ async function reviewSubmission(id) {
       ${s.description ? `<div style="grid-column:1/-1;background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Description</div><div style="font-size:.875rem;color:var(--w3)">${escapeHTML(s.description)}</div></div>` : ''}
     </div>`;
   const actEl = document.getElementById('sub-actions');
-  actEl.innerHTML = s.status === 'pending'
+  actEl.innerHTML = String(s.status || '').toLowerCase() === 'pending'
     ? `<button class="btn btn-g" onclick="document.getElementById('sub-ov').classList.remove('open')">Close</button>
        <button class="btn btn-r" onclick="rejectSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')">✕ Reject</button>
        <button class="btn btn-p" onclick="approveSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')">✓ Approve & Publish</button>`
