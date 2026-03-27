@@ -131,12 +131,12 @@
 <script src="/assets/js/config.js"></script>
 <script>
 const qp = new URLSearchParams(location.search);
-const slug = qp.get('slug');
+const slug = qp.get('slug') || qp.get('sl') || qp.get('s');
 const kitId = qp.get('id');
 let kit = null, currentUser = null, userProfile = null, isSaved = false, userRating = 0;
 
 (async () => {
-  if (!slug && !kitId) { show404(); return; }
+  if (!slug && !kitId) { window.location.href = '/browse.html'; return; }
   try {
     const kitQuery = sb.from('kits_with_stats')
       .select('id,slug,team,season,league,type,maker,color,description,buy_url,buy_label,price_label,image_url,image_url_2,image_url_3,avg_rating,rating_count,views,collection_count,is_published');
