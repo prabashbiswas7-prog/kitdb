@@ -1128,6 +1128,9 @@ function prevImg() {
   if (prev && img) { img.src = safeURL(u) || ''; prev.style.display = u ? 'flex' : 'none'; }
 }
 
+// Merge-resolution note:
+// Keep both bucket names for cross-branch compatibility (`kits` new / `kit` legacy),
+// so uploads work regardless of which schema branch was deployed first.
 // BUG FIX: image upload from gallery for admin kit form
 const ADMIN_BUCKET_CANDIDATES = ['kits', 'kit'];
 async function adminUploadImg(inputId, fileInput, prevId, progId) {
@@ -1267,6 +1270,9 @@ async function acKotw() {
 }
 
 // ── USER SUBMISSIONS ─────────────────────────────────────────
+// Merge-resolution note:
+// Some branches rely on relational select('*,profiles(username)') while others
+// may not have that FK metadata; keep fallback query + user map for both cases.
 async function loadSubmissions() {
   const statusFilter = document.getElementById('sub-filter').value;
   let query = sb.from('kit_submissions').select('*,profiles(username)').order('created_at', { ascending: false });
