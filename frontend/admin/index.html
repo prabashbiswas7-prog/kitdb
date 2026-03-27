@@ -1310,6 +1310,8 @@ async function loadSubmissions() {
   </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--w4)">No submissions.</td></tr>';
 }
 
+ 
+
 async function reviewSubmission(id) {
   let { data: s } = await sb.from('kit_submissions').select('*,profiles(username)').eq('id', id).single();
   if (!s) {
