@@ -1270,27 +1270,23 @@ async function acKotw() {
 }
 
 // ── USER SUBMISSIONS ─────────────────────────────────────────
-// Merge-resolution note:
-// Some branches rely on relational select('*,profiles(username)') while others
-// may not have that FK metadata; keep fallback query + user map for both cases.
 async function loadSubmissions() {
   const statusFilter = document.getElementById('sub-filter').value;
-  let query = sb.from('kit_submissions').select('*,profiles(username)').order('created_at', { ascending: false });
-  let { data, error } = await query;
+  const normalizedFilter = String(statusFilter || '').toLowerCase();
 
-  // Fallback for projects where FK relation to profiles is missing
-  if (error) {
-    let fallback = sb.from('kit_submissions').select('*').order('created_at', { ascending: false });
-    const fb = await fallback;
+  // Try relational path first (works when FK metadata exists).
+  const rel = await sb.from('kit_submissions')
+    .select('*,profiles(username)')
+    .order('created_at', { ascending: false });
+
+  let data = rel.data || [];
+  // Fallback when relation metadata is unavailable in this project.
+  if (rel.error) {
+    const fb = await sb.from('kit_submissions').select('*').order('created_at', { ascending: false });
     data = fb.data || [];
   }
 
-  // Keep status filtering in JS to stay merge-safe across branch variants
-  // (some branches used eq, others ilike in SQL).
-  const normalizedFilter = String(statusFilter || '').toLowerCase();
-  if (normalizedFilter) {
-    data = (data || []).filter(s => String(s.status || '').toLowerCase() === normalizedFilter);
-  }
+  if (normalizedFilter) data = data.filter(s => String(s.status || '').toLowerCase() === normalizedFilter);
 
   const userIds = [...new Set((data || []).map(s => s.user_id).filter(Boolean))];
   const userMap = {};
