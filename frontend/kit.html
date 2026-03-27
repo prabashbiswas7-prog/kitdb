@@ -104,9 +104,13 @@
         <!-- Save to collection -->
         <button class="save-btn" id="save-btn" onclick="toggleSave()" style="display:none">
           <span id="save-icon">🤍</span> <span id="save-label">Save to Collection</span>
-        </button>
-      </div>
-    </div>
+const qp = new URLSearchParams(location.search);
+const slug = qp.get('slug') || qp.get('sl') || qp.get('s');
+const kitId = qp.get('id');
+  if (!slug && !kitId) { show404(); return; }
+  let q = sb.from('kits_with_stats').select('*');
+  q = slug ? q.eq('slug', slug) : q.eq('id', kitId);
+  const { data } = await q.single();
 
     <!-- KIT DETAIL AD -->
     <div id="ad-kit-detail" class="ad-slot" style="margin-bottom:2rem"></div>
@@ -288,7 +292,9 @@ function renderInteractiveStars(current) {
   document.getElementById('user-rating-hint').textContent = current > 0 ? `Your rating: ${current}/5 — click to change` : 'Click a star to rate';
 }
 
-function hoverStars(n) {
+  let rq = sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).limit(4);
+  rq = slug ? rq.neq('slug', slug) : rq.neq('id', kit.id);
+  const { data } = await rq;
   document.querySelectorAll('#user-stars .star').forEach((s, i) => {
     s.className = 'star ' + (i < n ? 'star-full' : 'star-empty');
   });
