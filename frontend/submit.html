@@ -254,7 +254,7 @@
 
 <script src="/assets/js/config.js"></script>
 <script>
-const STORAGE_BUCKET = 'kit'; // Supabase storage bucket name
+const STORAGE_BUCKET_CANDIDATES = ['kits', 'kit']; // prefer v3 bucket, fallback legacy
 let currentUser = null;
 let allClubs = [], allSeasons = [], allLeagues = [], allMakers = [], allKitTypes = [];
 // Map club name → league name for autoFillLeague
@@ -322,10 +322,10 @@ async function loadMySubmissions() {
   document.getElementById('my-submissions-list').innerHTML = data.map(s => `
     <div class="sub-row">
       <div>
-        <div style="font-weight:500">${s.team} — ${s.season} ${s.type}</div>
-        ${s.rejection_reason ? `<div style="font-size:.72rem;color:var(--red);margin-top:.15rem">Reason: ${s.rejection_reason}</div>` : ''}
+        <div style="font-weight:500">${escapeHTML(s.team)} — ${escapeHTML(s.season)} ${escapeHTML(s.type)}</div>
+        ${s.rejection_reason ? `<div style="font-size:.72rem;color:var(--red);margin-top:.15rem">Reason: ${escapeHTML(s.rejection_reason)}</div>` : ''}
       </div>
-      <span class="sub-status s-${s.status}">${s.status}</span>
+      <span class="sub-status s-${String(s.status || '').toLowerCase()}">${escapeHTML(s.status || 'unknown')}</span>
     </div>`).join('');
 }
 
@@ -343,19 +343,25 @@ async function handleUpload(slot, fileInput) {
   const ext = file.name.split('.').pop().toLowerCase();
   const path = `submissions/${currentUser.id}/${Date.now()}_${slot}.${ext}`;
 
-  const { data, error } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, {
-    cacheControl: '3600', upsert: false, contentType: file.type,
-  });
+  let uploadError = null;
+  let usedBucket = STORAGE_BUCKET_CANDIDATES[0];
+  for (const bucket of STORAGE_BUCKET_CANDIDATES) {
+    const { error } = await sb.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type,
+    });
+    if (!error) { usedBucket = bucket; uploadError = null; break; }
+    uploadError = error;
+  }
 
   prog.style.display = 'none';
 
-  if (error) {
-    toast('Upload failed: ' + error.message, 'err');
+  if (uploadError) {
+    toast('Upload failed: ' + uploadError.message, 'err');
     fileInput.value = '';
     return;
   }
 
-  const { data: { publicUrl } } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  const { data: { publicUrl } } = sb.storage.from(usedBucket).getPublicUrl(path);
   document.getElementById('s-img' + (slot === 1 ? '' : slot)).value = publicUrl;
   document.getElementById('prev-img-' + slot).src = publicUrl;
   prev.style.display = 'flex';
@@ -390,10 +396,11 @@ async function checkDuplicate() {
   const type   = document.getElementById('s-type').value;
   const warn   = document.getElementById('duplicate-warn');
   if (!team || !season) { warn.style.display = 'none'; return; }
-  const [{ data: existing }, { data: submitted }] = await Promise.all([
-    sb.from('kits').select('id').eq('team', team).eq('season', season).eq('type', type).limit(1),
-    sb.from('kit_submissions').select('id').eq('team', team).eq('season', season).eq('type', type).eq('status', 'pending').limit(1),
+  const [{ data: existing }, { data: submittedRaw }] = await Promise.all([
+    sb.from('kits').select('id').ilike('team', team).ilike('season', season).eq('type', type).limit(1),
+    sb.from('kit_submissions').select('id,status').ilike('team', team).ilike('season', season).eq('type', type).limit(3),
   ]);
+  const submitted = (submittedRaw || []).filter(s => ['pending', 'approved'].includes(String(s.status || '').toLowerCase()));
   warn.style.display = (existing?.length || submitted?.length) ? 'block' : 'none';
 }
 
@@ -446,12 +453,13 @@ async function submitKit() {
   if (!team || !season) { toast('Team and Season are required', 'err'); return; }
   if (!img)             { toast('Please provide at least one image', 'err'); return; }
 
-  const [{ data: existing }, { data: myDupe }] = await Promise.all([
-    sb.from('kits').select('id').eq('team', team).eq('season', season).eq('type', type).limit(1),
-    sb.from('kit_submissions').select('id').eq('user_id', currentUser.id).eq('team', team).eq('season', season).eq('type', type).limit(1),
+  const [{ data: existing }, { data: myDupeRaw }] = await Promise.all([
+    sb.from('kits').select('id').ilike('team', team).ilike('season', season).eq('type', type).limit(1),
+    sb.from('kit_submissions').select('id,status').eq('user_id', currentUser.id).ilike('team', team).ilike('season', season).eq('type', type).limit(5),
   ]);
+  const myDupe = (myDupeRaw || []).filter(s => ['pending', 'approved'].includes(String(s.status || '').toLowerCase()));
   if (existing?.length) { toast('This kit already exists in KitDB!', 'err'); return; }
-  if (myDupe?.length)   { toast('You already submitted this kit — awaiting review.', 'err'); return; }
+  if (myDupe?.length)   { toast('You already submitted this kit and it is still in moderation/live.', 'err'); return; }
 
   const btn = document.getElementById('submit-btn');
   btn.textContent = 'Submitting…'; btn.disabled = true;

@@ -17,7 +17,7 @@
 .hero-btns { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:2.5rem; }
 .hero-search { max-width:540px; }
 .announcement { background:var(--gf); border:1px solid var(--bdg); border-radius:8px; padding:.7rem 1.25rem; margin-bottom:1.5rem; font-size:.85rem; color:var(--g); display:none; }
-.featured-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.featured-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; min-height:420px; }
 @media(max-width:640px){ .featured-grid{grid-template-columns:1fr;} }
 .featured-main { grid-row:span 2; }
 .featured-card { background:var(--s1); border:1px solid var(--bd); border-radius:14px; overflow:hidden; cursor:pointer; transition:all .2s; display:block; height:100%; }
@@ -32,7 +32,7 @@
 .featured-team { font-weight:700; font-size:1rem; margin-bottom:.2rem; }
 .featured-sub { font-size:.75rem; color:var(--w3); display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; }
 .featured-badge { position:absolute; top:.75rem; left:.75rem; }
-.latest-grid { display:grid; grid-template-columns:1fr 300px; gap:2rem; }
+.latest-grid { display:grid; grid-template-columns:1fr 300px; gap:2rem; min-height:520px; }
 @media(max-width:900px){ .latest-grid{grid-template-columns:1fr;} }
 </style>
 </head>
@@ -154,11 +154,11 @@
   document.getElementById('latest-grid').innerHTML = (latestRes.data || []).map(kitCardHTML).join('');
 
   document.getElementById('top-rated-list').innerHTML = (topRatedRes.data || []).map((k, i) => `
-    <a href="/kit.html?slug=${k.slug}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
+    <a href="${kitURL(k.slug, k.id)}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
       <span style="font-family:var(--fm);font-size:.7rem;color:var(--g);width:16px">${i+1}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:500;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team}</div>
-        <div style="font-size:.7rem;color:var(--w4)">${k.season}</div>
+        <div style="font-weight:500;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHTML(k.team)}</div>
+        <div style="font-size:.7rem;color:var(--w4)">${escapeHTML(k.season)}</div>
       </div>
       <span style="font-family:var(--fm);font-size:.72rem;color:var(--gold)">★ ${parseFloat(k.avg_rating||0).toFixed(1)}</span>
     </a>`).join('');
@@ -179,13 +179,13 @@ function applyHomepageSections(sections) {
   for (const s of sections) {
     const c = s.settings || {};
     if (s.type === 'hero') {
-      if (c.title)    document.getElementById('hero-title').innerHTML = c.title.replace(/\n/g, '<br/>');
+      if (c.title)    document.getElementById('hero-title').innerHTML = escapeHTML(c.title).replace(/\n/g, '<br/>');
       if (c.subtitle) document.getElementById('hero-subtitle').textContent = c.subtitle;
       if (c.cta_text) document.getElementById('hero-cta').textContent = c.cta_text;
-      if (c.cta_url)  document.getElementById('hero-cta').href = c.cta_url;
+      if (c.cta_url)  document.getElementById('hero-cta').href = safeURL(c.cta_url, '/browse.html');
     }
     if (s.type === 'featured_kits' && c.title) {
-      document.getElementById('featured-title').innerHTML = c.title + ' <span>KITS</span>';
+      document.getElementById('featured-title').innerHTML = `${escapeHTML(c.title)} <span>KITS</span>`;
     }
     if (s.type === 'banner' && c.text) {
       const el = document.getElementById('announcement');
@@ -204,16 +204,16 @@ function renderFeatured(data) {
     return;
   }
   grid.innerHTML = data.map((k, i) => `
-    <a href="/kit.html?slug=${k.slug}" class="featured-card ${i === 0 ? 'featured-main' : ''}" onclick="trackClick()">
+    <a href="${kitURL(k.slug, k.id)}" class="featured-card ${i === 0 ? 'featured-main' : ''}" onclick="trackClick()">
       <div class="featured-img">
-        ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="ph">⚽</span>`}
-        <span class="badge ${typeBadge(k.type)} featured-badge">${k.type}</span>
+        ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="ph">⚽</span>`}
+        <span class="badge ${typeBadge(k.type)} featured-badge">${escapeHTML(k.type)}</span>
       </div>
       <div class="featured-body">
-        <div class="featured-team">${k.team}</div>
+        <div class="featured-team">${escapeHTML(k.team)}</div>
         <div class="featured-sub">
-          <span style="font-family:var(--fm);color:var(--g);font-size:.72rem">${k.season}</span>
-          ${k.league ? `<span>${k.league}</span>` : ''}
+          <span style="font-family:var(--fm);color:var(--g);font-size:.72rem">${escapeHTML(k.season)}</span>
+          ${k.league ? `<span>${escapeHTML(k.league)}</span>` : ''}
           <span>${renderStars(parseFloat(k.avg_rating||0), k.rating_count)}</span>
         </div>
       </div>
@@ -221,19 +221,19 @@ function renderFeatured(data) {
 }
 
 function typeBadge(t) {
-  return t === 'Home' ? 'b-home' : t === 'Away' ? 'b-away' : t === 'Special Edition' ? 'b-special' : 'b-third';
+  return kitTypeBadgeClass(t);
 }
 
 function kitCardHTML(k) {
-  return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+  return `<a href="${kitURL(k.slug, k.id)}" class="kit-card" onclick="trackClick()">
     <div class="kit-card-img">
-      ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
-      <span class="badge ${typeBadge(k.type)}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
+      ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
+      <span class="badge ${typeBadge(k.type)}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>
     </div>
     <div class="kit-card-body">
-      <div class="kit-card-team">${k.team}</div>
-      <div class="kit-card-season">${k.season}</div>
-      <div class="kit-card-league">${k.league || ''}</div>
+      <div class="kit-card-team">${escapeHTML(k.team)}</div>
+      <div class="kit-card-season">${escapeHTML(k.season)}</div>
+      <div class="kit-card-league">${escapeHTML(k.league || '')}</div>
       <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating||0), k.rating_count)}</div>
     </div>
   </a>`;
