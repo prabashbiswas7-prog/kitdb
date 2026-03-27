@@ -9,6 +9,7 @@
 <style>
 .kit-layout { display:grid; grid-template-columns:1fr 380px; gap:2.5rem; align-items:start; padding:2rem 0; }
 @media(max-width:900px){ .kit-layout{grid-template-columns:1fr;} }
+.kit-layout-wrap { min-height: 640px; }
 .kit-img-main { background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:420px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; margin-bottom:1rem; }
 .kit-img-main img { height:340px; object-fit:contain; filter:drop-shadow(0 16px 40px rgba(0,0,0,.7)); }
 .kit-img-main .ph { font-size:7rem; opacity:.08; }
@@ -57,7 +58,7 @@
 
 <div class="container">
   <div id="loading" class="spinner"></div>
-  <div id="kit-content" style="display:none">
+  <div id="kit-content" style="display:none" class="kit-layout-wrap">
     <div class="kit-layout">
       <!-- LEFT: Images -->
       <div>
@@ -134,31 +135,55 @@ let kit = null, currentUser = null, userProfile = null, isSaved = false, userRat
 
 (async () => {
   if (!slug) { show404(); return; }
-  await initNav();
-  currentUser = await getUser();
-  if (currentUser) userProfile = await getProfile(currentUser.id);
+  try {
+    const [, userRes, kitRes] = await Promise.all([
+      initNav(),
+      getUser(),
+      withTimeout(
+        sb.from('kits_with_stats')
+          .select('id,slug,team,season,league,type,maker,color,description,buy_url,buy_label,price_label,image_url,image_url_2,image_url_3,avg_rating,rating_count,views,collection_count,is_published')
+          .eq('slug', slug)
+          .single(),
+        10000,
+        'Timed out loading kit details'
+      ),
+    ]);
 
-  const { data } = await sb.from('kits_with_stats').select('*').eq('slug', slug).single();
-  if (!data) { show404(); return; }
-  kit = data;
-  document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
+    currentUser = userRes;
+    if (currentUser) userProfile = await getProfile(currentUser.id);
 
-  // increment view — fire and forget, don't await
-  sb.rpc('increment_kit_views', { kit_slug: slug }).catch(() => {});
+    if (kitRes.error || !kitRes.data) { show404(); return; }
+    kit = kitRes.data;
+    document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
 
-  renderKit();
-  if (currentUser) {
-    await loadUserRating();
-    await checkSaved();
+    // increment view — fire and forget, don't await
+    sb.rpc('increment_kit_views', { kit_slug: slug }).catch(() => {});
+
+    renderKit();
+    if (currentUser) {
+      await Promise.all([loadUserRating(), checkSaved()]);
+    }
+
+    // Non-blocking secondary content
+    loadRelated().catch(() => {});
+    injectAd('top_banner','ad-top-banner');
+    injectAd('kit_detail','ad-kit-detail');
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('kit-content').style.display = 'block';
+    trackClick();
+  } catch (err) {
+    console.error('[kit-page] failed to load', err);
+    show404();
   }
-  loadRelated();
-  injectAd('top_banner','ad-top-banner');
-  injectAd('kit_detail','ad-kit-detail');
-
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('kit-content').style.display = 'block';
-  trackClick();
 })();
+
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
+  ]);
+}
 
 function show404() {
   document.getElementById('loading').style.display = 'none';
@@ -312,7 +337,9 @@ async function toggleSave() {
 
 async function loadRelated() {
   document.getElementById('related-team-name').textContent = kit.team.toUpperCase();
-  const { data } = await sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).neq('slug', slug).limit(4);
+  const { data } = await sb.from('kits_with_stats')
+    .select('id,slug,team,season,type,image_url,avg_rating,rating_count,is_published')
+    .eq('team', kit.team).eq('is_published', true).neq('slug', slug).limit(4);
   if (!data || !data.length) { document.querySelector('.related-section').style.display='none'; return; }
   document.getElementById('related-grid').innerHTML = data.map(k => {
     const bc = kitTypeBadgeClass(k.type);

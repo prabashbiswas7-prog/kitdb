@@ -32,6 +32,7 @@
 .kit-grid.list-view .kit-card-body { flex:1; display:flex; align-items:center; gap:1.5rem; padding:.7rem .9rem .7rem 0; }
 .kit-grid.list-view .kit-card-team { min-width:140px; margin-bottom:0; }
 .load-more-wrap { text-align:center; padding:1.5rem 0; }
+#browse-grid { min-height: 520px; }
 </style>
 </head>
 <body>
@@ -240,7 +241,7 @@ function renderPage() {
   // BUG FIX: ad slot cached outside — no async call inside render loop
   slice.forEach((k, i) => {
     if (i > 0 && i % 6 === 0 && gridAdSlot?.is_active && gridAdSlot?.ad_code) {
-      html += `<div class="grid-ad"><div class="ad-slot ad-inline" style="display:block"><div class="ad-label">Advertisement</div>${gridAdSlot.ad_code}</div></div>`;
+      html += `<div class="grid-ad"><div class="ad-slot ad-inline is-active"><div class="ad-label">Advertisement</div>${gridAdSlot.ad_code}</div></div>`;
     }
     html += kitCardHTML(k);
   });
