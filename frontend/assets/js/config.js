@@ -53,7 +53,7 @@ async function injectAd(slotKey, containerId) {
   const el   = document.getElementById(containerId);
   if (!el || !slot || !slot.is_active || !slot.ad_code) return;
   el.innerHTML    = `<div class="ad-label">Advertisement</div>${slot.ad_code}`;
-  el.style.display = 'block';
+  el.classList.add('is-active');
 }
 
 // ── Auth helpers ───────────────────────────────────────────
@@ -77,10 +77,14 @@ async function requireAuth(redirectTo = '/login.html') {
 
 // ── Dynamic nav from DB ────────────────────────────────────
 async function initNav() {
+  const CACHE_TTL_MS = 5 * 60 * 1000;
   // Load site settings for logo/branding
   let siteName = 'KitDB', logoUrl = '';
   try {
-    const { data: settings } = await sb.from('site_settings').select('key,value');
+    const settings = await getCachedTableRows('site_settings:key,value', async () => {
+      const { data } = await sb.from('site_settings').select('key,value');
+      return data || [];
+    }, CACHE_TTL_MS);
     if (settings) {
       const s  = Object.fromEntries(settings.map(r => [r.key, r.value]));
       siteName = s.logo_text || s.site_name || 'KitDB';
@@ -111,17 +115,20 @@ async function initNav() {
   const logoEl = document.getElementById('nav-logo');
   if (logoEl) {
     if (logoUrl) {
-      logoEl.innerHTML = `<img src="${logoUrl}" alt="${siteName}" style="height:32px;object-fit:contain"/>`;
+      logoEl.innerHTML = `<img src="${safeURL(logoUrl)}" alt="${escapeHTML(siteName)}" style="height:32px;object-fit:contain"/>`;
     } else {
       const half = Math.ceil(siteName.length / 2);
-      logoEl.innerHTML = siteName.slice(0, half) + `<span>${siteName.slice(half)}</span>`;
+      logoEl.innerHTML = escapeHTML(siteName.slice(0, half)) + `<span>${escapeHTML(siteName.slice(half))}</span>`;
     }
   }
 
   // Load menu items from DB
   try {
-    const { data: menuItems } = await sb.from('menu_items')
-      .select('label,url,target').eq('is_active', true).order('sort_order');
+    const menuItems = await getCachedTableRows('menu_items:active', async () => {
+      const { data } = await sb.from('menu_items')
+        .select('label,url,target').eq('is_active', true).order('sort_order');
+      return data || [];
+    }, CACHE_TTL_MS);
 
     // BUG FIX: only replace nav links if DB has items AND the element exists
     // Previously this always overwrote the element, losing the hardcoded active state
@@ -129,11 +136,14 @@ async function initNav() {
     if (navLinks && menuItems?.length) {
       const currentPath = window.location.pathname;
       navLinks.innerHTML = menuItems.map(item => {
+        const itemUrl = safeURL(item.url, '/');
+        const urlPath = new URL(itemUrl, window.location.origin).pathname;
         // BUG FIX: improved active detection — exact match for '/', prefix match for others
-        const isActive = item.url === '/'
+        const isActive = urlPath === '/'
           ? currentPath === '/'
-          : currentPath.startsWith(item.url.split('?')[0]);
-        return `<a href="${item.url}" class="nav-link${isActive ? ' active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label}</a>`;
+          : currentPath.startsWith(urlPath);
+        const isBlank = item.target === '_blank';
+        return `<a href="${itemUrl}" class="nav-link${isActive ? ' active' : ''}" ${isBlank ? 'target="_blank" rel="noopener"' : ''}>${escapeHTML(item.label)}</a>`;
       }).join('');
     }
   } catch {}
@@ -155,6 +165,25 @@ async function initNav() {
       <a href="/login.html" class="btn-nav-login">Sign In</a>
       <a href="/login.html#signup" class="btn-nav-signup">Join Free</a>`;
   }
+}
+
+async function getCachedTableRows(cacheKey, fetcher, ttlMs = 300000) {
+  try {
+    const raw = sessionStorage.getItem(`kitdb_cache_${cacheKey}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.expiresAt > Date.now() && Array.isArray(parsed?.rows)) return parsed.rows;
+    }
+  } catch {}
+
+  const rows = await fetcher();
+  try {
+    sessionStorage.setItem(`kitdb_cache_${cacheKey}`, JSON.stringify({
+      expiresAt: Date.now() + ttlMs,
+      rows,
+    }));
+  } catch {}
+  return rows;
 }
 
 // ── Star ratings renderer ──────────────────────────────────
@@ -197,4 +226,38 @@ function toast(msg, type = 'ok') {
 // ── Date formatter ─────────────────────────────────────────
 function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// ── Output safety helpers ──────────────────────────────────
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeURL(url, fallback = '#') {
+  const raw = String(url ?? '').trim();
+  if (!raw) return fallback;
+  if (raw.startsWith('/')) return raw;
+  try {
+    const parsed = new URL(raw, window.location.origin);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+  } catch {}
+  return fallback;
+}
+
+function kitURL(slug) {
+  return `/kit.html?slug=${encodeURIComponent(String(slug ?? ''))}`;
+}
+
+function kitTypeBadgeClass(type) {
+  const t = String(type ?? '');
+  if (t === 'Home') return 'b-home';
+  if (t === 'Away') return 'b-away';
+  if (t === 'Special Edition') return 'b-special';
+  if (t.startsWith('GK')) return 'b-gk';
+  return 'b-third';
 }
