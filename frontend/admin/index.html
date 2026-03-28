@@ -340,7 +340,10 @@ td{padding:.62rem .9rem;vertical-align:middle}
       <div class="fpi">
         <div class="sh">
           <span class="st">HOMEPAGE <span>BUILDER</span></span>
-          <button class="btn btn-p btn-sm" onclick="openPresetModal()">+ Add Section</button>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <a href="/" target="_blank" rel="noopener" class="btn btn-g btn-sm">Preview Home ↗</a>
+            <button class="btn btn-p btn-sm" onclick="openPresetModal()">+ Add Section</button>
+          </div>
         </div>
         <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Drag sections to reorder. Toggle on/off. Click ▼ to edit settings.</p>
         <div id="hpbuilder" style="display:flex;flex-direction:column;gap:.6rem"></div>
@@ -1339,6 +1342,11 @@ async function deleteSection(id) {
 }
 
 function secDragStart(e, id) { secDragId = id; e.dataTransfer.effectAllowed = 'move'; }
+async function applySortOrderUpdates(table, ids) {
+  const updates = ids.map((id, i) => sb.from(table).update({ sort_order: i + 1 }).eq('id', id));
+  const results = await Promise.all(updates);
+  return results.find(r => r.error)?.error || null;
+}
 async function secDragDrop(e, targetId) {
   e.preventDefault();
   if (!secDragId || secDragId === targetId) return;
@@ -1347,8 +1355,10 @@ async function secDragDrop(e, targetId) {
   const fi    = ids.indexOf(secDragId);
   const ti    = ids.indexOf(targetId);
   ids.splice(fi, 1); ids.splice(ti, 0, secDragId);
-  for (let i = 0; i < ids.length; i++) await sb.from('homepage_sections').update({ sort_order: i + 1 }).eq('id', ids[i]);
-  secDragId = null; loadHp(); toast('Order saved!');
+  const error = await applySortOrderUpdates('homepage_sections', ids);
+  secDragId = null;
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  loadHp(); toast('Order saved!');
 }
 
 function openPresetModal() {
@@ -1410,8 +1420,10 @@ async function menuDragDrop(e, targetId) {
   const fi    = ids.indexOf(menuDragId);
   const ti    = ids.indexOf(targetId);
   ids.splice(fi, 1); ids.splice(ti, 0, menuDragId);
-  for (let i = 0; i < ids.length; i++) await sb.from('menu_items').update({ sort_order: i + 1 }).eq('id', ids[i]);
-  menuDragId = null; loadMenu(); toast('Menu order saved!');
+  const error = await applySortOrderUpdates('menu_items', ids);
+  menuDragId = null;
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  loadMenu(); toast('Menu order saved!');
 }
 
 async function toggleMenuItem(id, active) {
