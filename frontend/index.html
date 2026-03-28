@@ -45,19 +45,6 @@
 @media(max-width:900px){ .latest-grid{grid-template-columns:1fr;} }
 #latest-grid { min-height: 460px; }
 #top-rated-list { min-height: 280px; }
-
-/* ── HOMEPAGE BLOG PREVIEW ── */
-.home-blog-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; }
-.home-blog-card { background:var(--s1); border:1px solid var(--bd); border-radius:12px; overflow:hidden; text-decoration:none; display:block; transition:all .2s; }
-.home-blog-card:hover { border-color:var(--bdg); transform:translateY(-3px); box-shadow:0 12px 35px rgba(0,200,83,.07); }
-.home-blog-cover { height:180px; background:var(--s2); display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:2.2rem; opacity:.2; }
-.home-blog-cover img { width:100%; height:100%; object-fit:cover; opacity:1; }
-.home-blog-body { padding:1rem 1.1rem; }
-.home-blog-tags { display:flex; gap:.35rem; flex-wrap:wrap; margin-bottom:.65rem; }
-.home-blog-tag { font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; background:var(--gf); color:var(--g); border:1px solid var(--bdg); padding:.15rem .45rem; border-radius:4px; }
-.home-blog-title { font-family:var(--fd); font-size:1.05rem; margin-bottom:.45rem; line-height:1.2; color:var(--w); }
-.home-blog-excerpt { font-size:.82rem; color:var(--w3); line-height:1.55; margin-bottom:.75rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-.home-blog-meta { display:flex; align-items:center; justify-content:space-between; font-size:.72rem; color:var(--w4); }
 </style>
 </head>
 <body>
@@ -181,8 +168,7 @@ async function loadHomepageSections() {
   const { data, error } = await sb.from('homepage_sections')
     .select('*')
     .eq('is_active', true)
-    .order('sort_order')
-    .order('id');
+    .order('sort_order');
   if (error || !data?.length) return false;
 
   const byType = new Map();
@@ -247,48 +233,23 @@ function applyBuilderSectionOrder(sections) {
   const latestWrap = document.getElementById('latest-wrap');
   const extraWrap = document.getElementById('extra-sections-wrap');
 
-  const extraNodeBySectionId = new Map(
-    Array.from(extraWrap?.querySelectorAll('[data-builder-section-id]') || [])
-      .map(node => [node.getAttribute('data-builder-section-id'), node])
-  );
-  const mountedStatic = new Set();
-  let statsPlaced = false;
+  const firstByType = [];
+  const seen = new Set();
+  sections.forEach(s => {
+    if (!seen.has(s.type)) { seen.add(s.type); firstByType.push(s.type); }
+  });
 
-  const placeStats = () => {
-    if (!statsWrap || statsPlaced) return;
-    root.appendChild(statsWrap);
-    statsPlaced = true;
-  };
-  const placeStatic = (key, el) => {
-    if (!el || el.style.display === 'none' || mountedStatic.has(key)) return;
-    root.appendChild(el);
-    mountedStatic.add(key);
-    if (key === 'hero') placeStats();
-  };
+  const pushIf = el => { if (el && el.style.display !== 'none') root.appendChild(el); };
+  firstByType.forEach(type => {
+    if (type === 'hero' || type === 'banner') pushIf(heroWrap);
+    if (type === 'featured_kits') pushIf(featuredWrap);
+    if (type === 'latest_kits') pushIf(latestWrap);
+    if (['kit_of_week', 'kit_filter', 'blog_posts', 'newsletter', 'content', 'custom_html'].includes(type)) pushIf(extraWrap);
+  });
 
-  for (const section of sections) {
-    if (section.type === 'hero' || section.type === 'banner') {
-      placeStatic('hero', heroWrap);
-      continue;
-    }
-    if (section.type === 'featured_kits') {
-      placeStatic('featured_kits', featuredWrap);
-      continue;
-    }
-    if (section.type === 'latest_kits') {
-      placeStatic('latest_kits', latestWrap);
-      continue;
-    }
-    const extraNode = extraNodeBySectionId.get(String(section.id));
-    if (extraNode) root.appendChild(extraNode);
-  }
-
-  if (!statsPlaced && statsWrap) {
-    if (heroWrap && heroWrap.style.display !== 'none') {
-      root.insertBefore(statsWrap, featuredWrap.style.display !== 'none' ? featuredWrap : latestWrap);
-    } else {
-      root.prepend(statsWrap);
-    }
+  if (statsWrap) {
+    if (heroWrap.style.display !== 'none') root.insertBefore(statsWrap, featuredWrap.style.display !== 'none' ? featuredWrap : latestWrap);
+    else root.prepend(statsWrap);
   }
 }
 
@@ -306,36 +267,27 @@ async function renderAdditionalSections(sections) {
   for (const s of sections) {
     const c = s.settings || {};
     if (s.type === 'content') {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || s.label || 'Content')}</div><div>${c.body || ''}</div></div></div>`);
+      blocks.push(`<div class="container" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || s.label || 'Content')}</div><div>${c.body || ''}</div></div></div>`);
     } else if (s.type === 'custom_html') {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem">${c.html || ''}</div>`);
+      blocks.push(`<div class="container" style="margin-top:3rem">${c.html || ''}</div>`);
     } else if (s.type === 'newsletter') {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Newsletter')}</div><p style="color:var(--w3);margin:.5rem 0 1rem">${esc(c.subtitle || 'Get updates from KitDB')}</p><a href="/login.html#signup" class="btn btn-p btn-sm">${esc(c.button_text || 'Subscribe')}</a></div></div>`);
+      blocks.push(`<div class="container" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Newsletter')}</div><p style="color:var(--w3);margin:.5rem 0 1rem">${esc(c.subtitle || 'Get updates from KitDB')}</p><a href="/login.html#signup" class="btn btn-p btn-sm">${esc(c.button_text || 'Subscribe')}</a></div></div>`);
     } else if (s.type === 'blog_posts') {
       const limit = Math.max(parseInt(c.limit || 3, 10), 1);
-      const { data: posts } = await sb.from('blog_posts').select('title,slug,excerpt,published_at,cover_image,tags').eq('is_published', true).order('published_at', { ascending: false }).limit(limit);
-      const cards = (posts || []).map(p => `
-        <a href="/blog-post.html?slug=${encodeURIComponent(p.slug)}" class="home-blog-card" onclick="trackClick()">
-          <div class="home-blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${esc(p.title)}"/>` : '📝'}</div>
-          <div class="home-blog-body">
-            ${p.tags?.length ? `<div class="home-blog-tags">${p.tags.map(t => `<span class="home-blog-tag">${esc(t)}</span>`).join('')}</div>` : ''}
-            <div class="home-blog-title">${esc(p.title)}</div>
-            ${p.excerpt ? `<div class="home-blog-excerpt">${esc(p.excerpt)}</div>` : ''}
-            <div class="home-blog-meta"><span>${fmtDate(p.published_at)}</span><span style="color:var(--g)">Read more →</span></div>
-          </div>
-        </a>`).join('');
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="section-head"><span class="section-title">${esc(c.title || 'BLOG')} <span>POSTS</span></span><a href="/blog.html" class="btn btn-g btn-sm">View All →</a></div><div class="home-blog-grid">${cards || '<div class="empty" style="grid-column:1/-1"><p>No posts yet.</p></div>'}</div></div>`);
+      const { data: posts } = await sb.from('blog_posts').select('title,slug,excerpt,published_at').eq('is_published', true).order('published_at', { ascending: false }).limit(limit);
+      const cards = (posts || []).map(p => `<a href="/blog-post.html?slug=${encodeURIComponent(p.slug)}" class="panel" style="text-decoration:none;display:block"><div class="panel-title">${esc(p.title)}</div><div style="color:var(--w4);font-size:.75rem">${fmtDate(p.published_at)}</div><p style="color:var(--w3);margin-top:.5rem">${esc((p.excerpt || '').slice(0, 140))}</p></a>`).join('');
+      blocks.push(`<div class="container" style="margin-top:3rem"><div class="section-head"><span class="section-title">${esc(c.title || 'BLOG')} <span>POSTS</span></span><a href="/blog.html" class="btn btn-g btn-sm">View All →</a></div><div style="display:grid;gap:1rem">${cards || '<div class="empty"><p>No posts yet.</p></div>'}</div></div>`);
     } else if (s.type === 'kit_of_week') {
       const { data: kotw } = await sb.from('kit_of_week').select('*,kits(team,season,type,slug,image_url)').eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle();
       const k = kotw?.kits;
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Kit of the Week')}</div>${k ? `<a href="/kit.html?slug=${encodeURIComponent(k.slug)}" style="display:flex;gap:1rem;align-items:center;text-decoration:none"><div class="kit-card-img grad-1" style="width:160px;flex:0 0 160px">${k.image_url ? `<img src="${k.image_url}" alt="${esc(k.team)}"/>` : '⚽'}</div><div><div style="font-weight:700">${esc(k.team)}</div><div style="color:var(--w3)">${esc(k.season)} · ${esc(k.type)}</div></div></a>` : '<div class="empty"><p>No active kit of the week.</p></div>'}</div></div>`);
+      blocks.push(`<div class="container" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Kit of the Week')}</div>${k ? `<a href="/kit.html?slug=${encodeURIComponent(k.slug)}" style="display:flex;gap:1rem;align-items:center;text-decoration:none"><div class="kit-card-img grad-1" style="width:160px;flex:0 0 160px">${k.image_url ? `<img src="${k.image_url}" alt="${esc(k.team)}"/>` : '⚽'}</div><div><div style="font-weight:700">${esc(k.team)}</div><div style="color:var(--w3)">${esc(k.season)} · ${esc(k.type)}</div></div></a>` : '<div class="empty"><p>No active kit of the week.</p></div>'}</div></div>`);
     } else if (s.type === 'kit_filter') {
       const ft = (c.filter_type || 'league').toLowerCase();
       const col = ['league', 'type', 'season'].includes(ft) ? ft : 'league';
       const { data: kits } = await sb.from('kits').select(col).eq('is_published', true).not(col, 'is', null).limit(100);
       const vals = [...new Set((kits || []).map(k => k[col]).filter(Boolean))].slice(0, 18);
       const chips = vals.map(v => `<a class="btn btn-g btn-sm" style="margin:.25rem" href="/browse.html?${encodeURIComponent(col)}=${encodeURIComponent(v)}">${esc(v)}</a>`).join('');
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Browse by ' + col)}</div><div>${chips || '<span style="color:var(--w4)">No filters available.</span>'}</div></div></div>`);
+      blocks.push(`<div class="container" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Browse by ' + col)}</div><div>${chips || '<span style="color:var(--w4)">No filters available.</span>'}</div></div></div>`);
     }
   }
   wrap.innerHTML = blocks.join('');
