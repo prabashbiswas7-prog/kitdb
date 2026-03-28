@@ -228,6 +228,14 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+// ── Kit URL helper ────────────────────────────────────────
+function buildKitHref(kitLike) {
+  if (!kitLike) return '/browse.html';
+  if (kitLike.slug) return `/kit.html?slug=${encodeURIComponent(kitLike.slug)}`;
+  if (kitLike.id !== undefined && kitLike.id !== null && kitLike.id !== '') {
+    return `/kit.html?id=${encodeURIComponent(kitLike.id)}`;
+  }
+  return '/browse.html';
 // ── Output safety helpers ──────────────────────────────────
 function escapeHTML(value) {
   return String(value ?? '')
@@ -256,7 +264,6 @@ function kitURL(slug, id = null) {
   const kId = String(id ?? '').trim();
   if (kId) return `/kit.html?id=${encodeURIComponent(kId)}`;
   return '/browse.html';
-=======
 function kitURL(slug) {
   return `/kit.html?slug=${encodeURIComponent(String(slug ?? ''))}`;
  main

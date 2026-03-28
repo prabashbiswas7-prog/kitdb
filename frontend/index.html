@@ -154,11 +154,7 @@
   document.getElementById('latest-grid').innerHTML = (latestRes.data || []).map(kitCardHTML).join('');
 
   document.getElementById('top-rated-list').innerHTML = (topRatedRes.data || []).map((k, i) => `
- codex/make-website-production-ready-cexulp
-    <a href="${kitURL(k.slug, k.id)}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
-=======
-    <a href="${kitURL(k.slug)}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
- main
+    <a href="${buildKitHref(k)}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
       <span style="font-family:var(--fm);font-size:.7rem;color:var(--g);width:16px">${i+1}</span>
       <div style="flex:1;min-width:0">
         <div style="font-weight:500;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHTML(k.team)}</div>
@@ -208,11 +204,7 @@ function renderFeatured(data) {
     return;
   }
   grid.innerHTML = data.map((k, i) => `
-codex/make-website-production-ready-cexulp
-    <a href="${kitURL(k.slug, k.id)}" class="featured-card ${i === 0 ? 'featured-main' : ''}" onclick="trackClick()">
-=======
-    <a href="${kitURL(k.slug)}" class="featured-card ${i === 0 ? 'featured-main' : ''}" onclick="trackClick()">
- main
+    <a href="${buildKitHref(k)}" class="featured-card ${i === 0 ? 'featured-main' : ''}" onclick="trackClick()">
       <div class="featured-img">
         ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="ph">⚽</span>`}
         <span class="badge ${typeBadge(k.type)} featured-badge">${escapeHTML(k.type)}</span>
@@ -233,11 +225,7 @@ function typeBadge(t) {
 }
 
 function kitCardHTML(k) {
-codex/make-website-production-ready-cexulp
-  return `<a href="${kitURL(k.slug, k.id)}" class="kit-card" onclick="trackClick()">
-=======
-  return `<a href="${kitURL(k.slug)}" class="kit-card" onclick="trackClick()">
- main
+  return `<a href="${buildKitHref(k)}" class="kit-card" onclick="trackClick()">
     <div class="kit-card-img">
       ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
       <span class="badge ${typeBadge(k.type)}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>
