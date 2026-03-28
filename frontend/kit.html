@@ -178,8 +178,14 @@ function renderKit() {
 
   if (imgs.length > 1) {
     document.getElementById('kit-thumbs').innerHTML = imgs.map((url, i) =>
-      `<div class="kit-thumb ${i===0?'active':''}" onclick="switchImg('${url}',this)"><img src="${url}" alt="view ${i+1}"/></div>`
+      `<div class="kit-thumb ${i===0?'active':''}" data-img-url="${encodeURIComponent(url)}"><img src="${url}" alt="view ${i+1}"/></div>`
     ).join('');
+    document.querySelectorAll('#kit-thumbs .kit-thumb').forEach(el => {
+      el.addEventListener('click', () => {
+        const imgUrl = decodeURIComponent(el.dataset.imgUrl || '');
+        if (imgUrl) switchImg(imgUrl, el);
+      });
+    });
   }
 
   // breadcrumb
