@@ -75,6 +75,18 @@ async function requireAuth(redirectTo = '/login.html') {
 
 // ── Dynamic nav from DB ────────────────────────────────────
 async function initNav() {
+  function normalizePath(input = '') {
+    const [path] = String(input).split('?');
+    const trimmed = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
+    return trimmed || '/';
+  }
+  function isNavItemActive(currentPath, itemUrl) {
+    const current = normalizePath(currentPath);
+    const target = normalizePath(itemUrl);
+    if (target === '/') return current === '/';
+    return current === target || current.startsWith(target + '/');
+  }
+
   // Load site settings for logo/branding
   let siteName = 'KitDB', logoUrl = '';
   try {
@@ -122,9 +134,9 @@ async function initNav() {
 
     const navLinks = document.getElementById('nav-links-dynamic') || document.querySelector('.nav-links');
     if (navLinks && menuItems?.length) {
-      const currentPath = window.location.pathname + window.location.search;
+      const currentPath = window.location.pathname;
       navLinks.innerHTML = menuItems.map(item => {
-        const isActive = currentPath === item.url || currentPath.startsWith(item.url.split('?')[0]) && item.url !== '/';
+        const isActive = isNavItemActive(currentPath, item.url);
         return `<a href="${item.url}" class="nav-link ${isActive ? 'active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label}</a>`;
       }).join('');
     }
