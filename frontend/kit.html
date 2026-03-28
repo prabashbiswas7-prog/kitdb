@@ -115,9 +115,29 @@ const kitId = qp.get('id');
     <!-- KIT DETAIL AD -->
     <div id="ad-kit-detail" class="ad-slot" style="margin-bottom:2rem"></div>
 
-    <!-- Related kits -->
-    <div class="related-section">
-      <div class="section-head"><span class="section-title">MORE FROM <span id="related-team-name">THIS CLUB</span></span></div>
+  const data = await fetchKitRecord();
+async function fetchKitRecord() {
+  // 1) Primary source: public view with rating stats (fast path)
+  let q = sb.from('kits_with_stats').select('*').limit(1);
+  q = slug ? q.eq('slug', slug) : q.eq('id', kitId);
+  const { data: vData } = await q;
+  if (vData?.length) return vData[0];
+
+  // 2) Fallback: base kits table (handles draft/unpublished or schema drift)
+  let kq = sb.from('kits').select('*').limit(1);
+  kq = slug ? kq.eq('slug', slug) : kq.eq('id', kitId);
+  const { data: kData } = await kq;
+  if (!kData?.length) return null;
+
+  // Normalize fields expected by page when coming from base table
+  return {
+    ...kData[0],
+    avg_rating: 0,
+    rating_count: 0,
+    collection_count: 0,
+  };
+}
+
       <div class="kit-grid" id="related-grid"></div>
     </div>
   </div>
