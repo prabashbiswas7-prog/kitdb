@@ -21,6 +21,7 @@
 .result-count { font-family:var(--fm); font-size:.75rem; color:var(--w4); }
 .sort-select { background:var(--s2); border:1px solid var(--bd); border-radius:6px; padding:.35rem .8rem; font-size:.75rem; color:var(--w3); outline:none; font-family:var(--fb); }
 .sort-select:focus { border-color:var(--bdg); }
+/* ad every 6 cards */
 .grid-ad { grid-column:1/-1; }
 .view-toggle { display:flex; gap:.2rem; background:var(--s2); border:1px solid var(--bd); border-radius:7px; padding:.18rem; }
 .vb { background:none; border:none; color:var(--w4); padding:.22rem .48rem; border-radius:5px; font-size:.8rem; transition:all .15s; }
@@ -31,14 +32,12 @@
 .kit-grid.list-view .kit-card-img img { height:54px; }
 .kit-grid.list-view .kit-card-body { flex:1; display:flex; align-items:center; gap:1.5rem; padding:.7rem .9rem .7rem 0; }
 .kit-grid.list-view .kit-card-team { min-width:140px; margin-bottom:0; }
-.load-more-wrap { text-align:center; padding:1.5rem 0; }
-#browse-grid { min-height: 520px; }
 </style>
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
-  <div class="nav-links" id="nav-links-dynamic">
+  <a href="/" class="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links">
     <a href="/" class="nav-link">Home</a>
     <a href="/browse.html" class="nav-link active">Browse</a>
     <a href="/search.html" class="nav-link">Search</a>
@@ -47,18 +46,20 @@
 </nav>
 
 <div class="container" style="padding-top:1.5rem">
+  <!-- TOP BANNER AD -->
   <div id="ad-top-banner" class="ad-slot ad-banner"></div>
 
+  <!-- Mobile search -->
   <div class="search-wrap" style="margin-bottom:1rem">
     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input class="search-input" id="search-q" type="text" placeholder="Search kits…" oninput="renderDebounced()"/>
+    <input class="search-input" id="search-q" type="text" placeholder="Search kits…" oninput="render()"/>
   </div>
 
   <div class="browse-layout">
+    <!-- FILTERS SIDEBAR -->
     <div class="filters-panel panel">
       <div class="fp-section">
         <span class="fp-label">Kit Type</span>
-        <!-- BUG FIX: GK filter was 'GK' but kits use 'GK Home'/'GK Away' — now uses prefix match in filter logic -->
         <div class="fp-group" id="type-filters">
           <label class="fp-opt active" onclick="toggleFilter('type','All',this)"><input type="radio" name="type"/>All Types</label>
           <label class="fp-opt" onclick="toggleFilter('type','Home',this)"><input type="radio" name="type"/>🟢 Home</label>
@@ -80,9 +81,11 @@
         <span class="fp-label">Manufacturer</span>
         <div class="fp-group" id="maker-filters"></div>
       </div>
+      <!-- SIDEBAR AD -->
       <div id="ad-sidebar" class="ad-slot ad-sidebar" style="margin-top:1rem"></div>
     </div>
 
+    <!-- GRID -->
     <div>
       <div class="results-bar">
         <span class="result-count" id="result-count">Loading…</span>
@@ -100,180 +103,106 @@
         </div>
       </div>
       <div class="kit-grid" id="browse-grid"></div>
-      <div class="load-more-wrap" id="load-more-wrap" style="display:none">
-        <button class="btn btn-g" onclick="loadMore()">Load More Kits</button>
-      </div>
     </div>
   </div>
 </div>
 
 <div style="height:3rem"></div>
-<footer>
-  <strong id="footer-site-name">KitDB</strong> &nbsp;·&nbsp;
-  <a href="/">Home</a> &nbsp;·&nbsp;
-  <a href="/browse.html">Browse</a>
-  <div style="margin-top:.75rem;color:var(--w4)" id="footer-text"></div>
-</footer>
+<footer><strong>KitDB</strong> &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a></footer>
 
 <script src="/assets/js/config.js"></script>
 <script>
-// BUG FIX: Don't load all kits at once — use pagination
-const PAGE_SIZE = 48;
 let allKits = [], filters = { type: 'All', league: '', season: '', maker: '' }, viewMode = 'grid';
-let filteredKits = [], displayedCount = 0;
-let gridAdSlot = null; // BUG FIX: cache ad slot — was fetching inside render() which runs on every keystroke
-let renderTimer = null;
 
 (async () => {
   await initNav();
-
-  // BUG FIX: fetch only fields needed for the card — not select('*')
-  const [kitsRes, settingsRes] = await Promise.all([
-    sb.from('kits_with_stats')
-      .select('id,slug,team,season,league,type,maker,color,image_url,avg_rating,rating_count,price_label,created_at')
-      .eq('is_published', true),
-    sb.from('site_settings').select('key,value'),
-  ]);
-
-  allKits = kitsRes.data || [];
-
-  if (settingsRes.data) {
-    const s = Object.fromEntries(settingsRes.data.map(r => [r.key, r.value]));
-    if (s.site_name)   document.getElementById('footer-site-name').textContent = s.site_name;
-    if (s.footer_text) document.getElementById('footer-text').textContent      = s.footer_text;
-  }
-
+  const { data } = await sb.from('kits_with_stats').select('*').eq('is_published', true);
+  allKits = data || [];
   buildFilterOptions();
   render();
-
-  // Cache ad slot once
-  gridAdSlot = await getAdSlot('browse_grid');
-
-  injectAd('top_banner', 'ad-top-banner');
-  injectAd('sidebar', 'ad-sidebar');
-
-  // ?q= param from search page
+  injectAd('top_banner','ad-top-banner');
+  injectAd('sidebar','ad-sidebar');
+  // check for ?q= param
   const q = new URLSearchParams(location.search).get('q');
   if (q) { document.getElementById('search-q').value = q; render(); }
 })();
 
 function buildFilterOptions() {
-  const leagues = [...new Set(allKits.map(k => k.league).filter(Boolean))].sort();
-  const seasons = [...new Set(allKits.map(k => k.season).filter(Boolean))].sort().reverse();
-  const makers  = [...new Set(allKits.map(k => k.maker).filter(Boolean))].sort();
+  const leagues = [...new Set(allKits.map(k=>k.league).filter(Boolean))].sort();
+  const seasons = [...new Set(allKits.map(k=>k.season).filter(Boolean))].sort().reverse();
+  const makers  = [...new Set(allKits.map(k=>k.maker).filter(Boolean))].sort();
   fillFilter('league-filters', leagues, 'league');
   fillFilter('season-filters', seasons, 'season');
   fillFilter('maker-filters',  makers,  'maker');
 }
-
 function fillFilter(id, vals, key) {
-  const el = document.getElementById(id);
-  el.innerHTML = `<label class="fp-opt active" onclick="toggleFilter('${key}','',this)"><input type="radio" name="${key}"/>All</label>` +
-    vals.map(v => `<label class="fp-opt" onclick="toggleFilter('${key}','${v.replace(/'/g,"\\'")}',this)"><input type="radio" name="${key}"/>${v}</label>`).join('');
+  document.getElementById(id).innerHTML = vals.map(v =>
+    `<label class="fp-opt" onclick="toggleFilter('${key}','${v}',this)"><input type="radio" name="${key}"/>${v}</label>`
+  ).join('');
 }
-
 function toggleFilter(key, val, el) {
   filters[key] = val;
-  const group = el.closest('.fp-group');
+  const group = el.closest('.fp-group') || el.closest('#type-filters');
   group?.querySelectorAll('.fp-opt').forEach(o => o.classList.remove('active'));
   el.classList.add('active');
   render();
 }
-
 function setView(v) {
   viewMode = v;
-  document.getElementById('vg').classList.toggle('active', v === 'grid');
-  document.getElementById('vl').classList.toggle('active', v === 'list');
+  document.getElementById('vg').classList.toggle('active', v==='grid');
+  document.getElementById('vl').classList.toggle('active', v==='list');
+  const g = document.getElementById('browse-grid');
+  g.classList.toggle('list-view', v==='list');
   render();
 }
 
-// BUG FIX: debounce search input — was re-rendering on every keypress immediately
-function renderDebounced() {
-  clearTimeout(renderTimer);
-  renderTimer = setTimeout(render, 180);
-}
-
-function render() {
+async function render() {
   const q = document.getElementById('search-q').value.toLowerCase().trim();
   const sort = document.getElementById('sort-sel').value;
-
-  filteredKits = allKits.filter(k => {
-    if (filters.type !== 'All') {
-      // BUG FIX: 'GK' filter matches both 'GK Home' and 'GK Away'
-      if (filters.type === 'GK') {
-        if (!String(k.type || '').startsWith('GK')) return false;
-      } else {
-        if (k.type !== filters.type) return false;
-      }
-    }
+  let kits = allKits.filter(k => {
+    if (filters.type !== 'All' && k.type !== filters.type) return false;
     if (filters.league && k.league !== filters.league) return false;
     if (filters.season && k.season !== filters.season) return false;
     if (filters.maker  && k.maker  !== filters.maker)  return false;
-    if (q) {
-      const hay = [k.team, k.league, k.season, k.maker, k.type, k.color].filter(Boolean).join(' ').toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
+    if (q) { const h = [k.team,k.league,k.season,k.maker,k.type,k.color,k.description].join(' ').toLowerCase(); if (!h.includes(q)) return false; }
     return true;
   });
+  if (sort === 'rating')  kits.sort((a,b) => b.avg_rating - a.avg_rating);
+  else if (sort === 'az') kits.sort((a,b) => a.team.localeCompare(b.team));
+  else if (sort === 'oldest') kits.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  else kits.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
-  if (sort === 'rating')  filteredKits.sort((a, b) => (b.avg_rating||0) - (a.avg_rating||0));
-  else if (sort === 'az') filteredKits.sort((a, b) => a.team.localeCompare(b.team));
-  else if (sort === 'oldest') filteredKits.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  else filteredKits.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-  displayedCount = Math.min(PAGE_SIZE, filteredKits.length);
-  renderPage();
-  document.getElementById('result-count').textContent = `${filteredKits.length} kit${filteredKits.length !== 1 ? 's' : ''}`;
-}
-
-function renderPage() {
+  document.getElementById('result-count').textContent = `${kits.length} kit${kits.length !== 1 ? 's' : ''}`;
   const grid = document.getElementById('browse-grid');
   grid.className = 'kit-grid' + (viewMode === 'list' ? ' list-view' : '');
+  if (!kits.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>NO KITS FOUND</h3><p>Try different filters.</p></div>`; return; }
 
-  if (!filteredKits.length) {
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>NO KITS FOUND</h3><p>Try different filters.</p></div>`;
-    document.getElementById('load-more-wrap').style.display = 'none';
-    return;
-  }
-
-  const slice = filteredKits.slice(0, displayedCount);
+  // insert ad slot every 6 cards
   let html = '';
-  // BUG FIX: ad slot cached outside — no async call inside render loop
-  slice.forEach((k, i) => {
-    if (i > 0 && i % 6 === 0 && gridAdSlot?.is_active && gridAdSlot?.ad_code) {
-      html += `<div class="grid-ad"><div class="ad-slot ad-inline is-active"><div class="ad-label">Advertisement</div>${gridAdSlot.ad_code}</div></div>`;
+  const adSlot = await getAdSlot('browse_grid');
+  kits.forEach((k, i) => {
+    if (i > 0 && i % 6 === 0 && adSlot?.is_active && adSlot?.ad_code) {
+      html += `<div class="grid-ad"><div class="ad-slot ad-inline" style="display:block"><div class="ad-label">Advertisement</div>${adSlot.ad_code}</div></div>`;
     }
     html += kitCardHTML(k);
   });
   grid.innerHTML = html;
-
-  const canLoadMore = displayedCount < filteredKits.length;
-  document.getElementById('load-more-wrap').style.display = canLoadMore ? 'block' : 'none';
-}
-
-function loadMore() {
-  displayedCount = Math.min(displayedCount + PAGE_SIZE, filteredKits.length);
-  renderPage();
-}
-
-function typeBadge(t) {
-  const type = String(t || '');
-  return type === 'Home' ? 'b-home' : type === 'Away' ? 'b-away' : type === 'Special Edition' ? 'b-special' : type.startsWith('GK') ? 'b-gk' : 'b-third';
 }
 
 function kitCardHTML(k) {
-  const bc = typeBadge(k.type);
-  return `<a href="${buildKitHref(k)}" class="kit-card" onclick="trackClick()">
-    <div class="kit-card-img">
-      ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
-      <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>
+  const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':k.type==='GK'?'b-gk':'b-third';
+  const idx = k.id.charCodeAt(0) % 6;
+  return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+    <div class="kit-card-img grad-${idx}">
+      ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
+      <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
     </div>
     <div class="kit-card-body">
-      <div class="kit-card-team">${escapeHTML(k.team)}</div>
-      <div class="kit-card-season">${escapeHTML(k.season)}</div>
-      <div class="kit-card-league">${escapeHTML(k.league || '')}</div>
-      <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating||0), k.rating_count)}</div>
-      ${k.price_label ? `<div style="font-size:.72rem;color:var(--g);font-weight:600;margin-top:.25rem">${escapeHTML(k.price_label)}</div>` : ''}
+      <div class="kit-card-team">${k.team}</div>
+      <div class="kit-card-season">${k.season}</div>
+      <div class="kit-card-league">${k.league||''}</div>
+      <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating), k.rating_count)}</div>
+      ${k.price_label ? `<div style="font-size:.72rem;color:var(--g);font-weight:600;margin-top:.25rem">${k.price_label}</div>` : ''}
     </div>
   </a>`;
 }

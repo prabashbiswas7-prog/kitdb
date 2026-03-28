@@ -157,15 +157,6 @@ button,input,select,textarea{font-family:var(--fb)}
 /* ── IMG PREVIEW ── */
 .ip{width:70px;height:70px;background:var(--s3);border-radius:7px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1.3rem;overflow:hidden;flex-shrink:0}
 .ip img{width:100%;height:100%;object-fit:contain}
-/* ── IMG UPLOAD ── */
-.img-up-row{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;margin-bottom:.3rem}
-.img-up-row input[type="url"]{flex:1;min-width:100px}
-.img-up-lbl{cursor:pointer;font-size:.7rem;padding:.28rem .6rem;white-space:nowrap;display:inline-flex;align-items:center;gap:.3rem;background:none;border:1px solid var(--bd);border-radius:6px;color:var(--w3);transition:all .15s}
-.img-up-lbl:hover{border-color:var(--bdg);color:var(--w)}
-.img-up-lbl input{display:none}
-.img-up-prog{font-size:.68rem;color:var(--g);display:none;margin-top:.2rem}
-.img-up-prev{display:none;align-items:center;gap:.5rem;background:var(--s3);border:1px solid var(--bdg);border-radius:6px;padding:.3rem .5rem;margin-top:.3rem}
-.img-up-prev img{height:52px;object-fit:contain;border-radius:4px;background:var(--s2)}
 
 /* ── TABLE ── */
 .tw{border:1px solid var(--bd);border-radius:9px;overflow:hidden}
@@ -565,35 +556,12 @@ td{padding:.62rem .9rem;vertical-align:middle}
         <div class="field"><label>Manufacturer</label><div class="acw"><input id="kf-maker" placeholder="e.g. Adidas…" autocomplete="off" oninput="acIn('maker')" onfocus="acIn('maker')" onblur="setTimeout(()=>acClose('maker'),180)"/><div class="acl" id="acl-maker"></div></div></div>
         <div class="field"><label>Primary Color</label><input id="kf-color"/></div>
         <div class="fsec">Images</div>
-        <!-- BUG FIX: All image fields now support direct upload from gallery via Supabase Storage bucket 'kit' -->
-        <div class="field ff">
-          <label>Main Image</label>
-          <div class="img-up-row">
-            <label class="img-up-lbl">📁 Upload<input type="file" id="kf-img-file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="adminUploadImg('kf-img',this,'kfip-1','kfprog-1')"/></label>
-            <input id="kf-img" placeholder="…or paste URL" oninput="prevImg()"/>
-            <div class="ip" id="ip">📷</div>
-          </div>
-          <div class="img-up-prog" id="kfprog-1">⏳ Uploading…</div>
-          <div class="img-up-prev" id="kfip-1"><img id="kfip-img-1" src=""/><button type="button" onclick="adminClearImg('kf-img','kfip-1')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.75rem">✕</button></div>
+        <div class="field ff" style="display:flex;gap:.875rem;align-items:flex-start">
+          <div style="flex:1"><label>Main Image URL</label><input id="kf-img" placeholder="https://… or /assets/img/kits/name.jpg" oninput="prevImg()"/></div>
+          <div class="ip" id="ip">📷</div>
         </div>
-        <div class="field">
-          <label>Image 2</label>
-          <div class="img-up-row">
-            <label class="img-up-lbl">📁 Upload<input type="file" id="kf-img2-file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="adminUploadImg('kf-img2',this,'kfip-2','kfprog-2')"/></label>
-            <input id="kf-img2" placeholder="…or paste URL"/>
-          </div>
-          <div class="img-up-prog" id="kfprog-2">⏳ Uploading…</div>
-          <div class="img-up-prev" id="kfip-2"><img id="kfip-img-2" src=""/><button type="button" onclick="adminClearImg('kf-img2','kfip-2')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.75rem">✕</button></div>
-        </div>
-        <div class="field">
-          <label>Image 3</label>
-          <div class="img-up-row">
-            <label class="img-up-lbl">📁 Upload<input type="file" id="kf-img3-file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="adminUploadImg('kf-img3',this,'kfip-3','kfprog-3')"/></label>
-            <input id="kf-img3" placeholder="…or paste URL"/>
-          </div>
-          <div class="img-up-prog" id="kfprog-3">⏳ Uploading…</div>
-          <div class="img-up-prev" id="kfip-3"><img id="kfip-img-3" src=""/><button type="button" onclick="adminClearImg('kf-img3','kfip-3')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.75rem">✕</button></div>
-        </div>
+        <div class="field"><label>Image 2 URL</label><input id="kf-img2" placeholder="https://…"/></div>
+        <div class="field"><label>Image 3 URL</label><input id="kf-img3" placeholder="https://…"/></div>
         <div class="fsec">Commerce</div>
         <div class="field"><label>Price Label</label><input id="kf-price" placeholder="From £89.95"/></div>
         <div class="field"><label>Affiliate Buy URL</label><input id="kf-buy" placeholder="https://…"/></div>
@@ -767,29 +735,10 @@ td{padding:.62rem .9rem;vertical-align:middle}
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const SUPABASE_URL      = 'https://dpelurhaljmnogdxqpoj.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZWx1cmhhbGptbm9nZHhxcG9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTE4MzksImV4cCI6MjA4OTc2NzgzOX0.cvWry3iR8MZg7zV6ewKyw8YIOxIUCaV3gUBZlPsykNM';
+const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-function escapeHTML(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-function safeURL(url, fallback = '') {
-  const raw = String(url ?? '').trim();
-  if (!raw) return fallback;
-  if (raw.startsWith('/')) return raw;
-  try {
-    const parsed = new URL(raw, window.location.origin);
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
-  } catch {}
-  return fallback;
-}
 
 // ── STATE ───────────────────────────────────────────────────
 let adminProfile = null;
@@ -993,8 +942,8 @@ async function loadP3() {
   p3.innerHTML = `
     <div class="p3h">
       <div>
-        <div class="p3t">${escapeHTML(selClub.name)} <span>${escapeHTML(selSeason.name)}</span></div>
-        <div class="p3s">${escapeHTML(selLeague?.name || '')} · ${(kits || []).length} kit${(kits || []).length !== 1 ? 's' : ''}</div>
+        <div class="p3t">${selClub.name} <span>${selSeason.name}</span></div>
+        <div class="p3s">${selLeague?.name || ''} · ${(kits || []).length} kit${(kits || []).length !== 1 ? 's' : ''}</div>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
         <button class="btn btn-g btn-sm" onclick="copyToSeason()">⊕ Copy to Season</button>
@@ -1019,9 +968,9 @@ async function loadP3() {
           const bs = typ ? `background:${typ.bg_color};color:${typ.color};border-color:${typ.color}40` : '';
           return `<tr id="kr-${k.id}">
             <td><input type="checkbox" class="cb kit-cb" data-id="${k.id}" onchange="toggleKitSel('${k.id}',this.checked)"/></td>
-            <td><div class="tdi">${k.image_url ? `<img src="${safeURL(k.image_url)}" onerror="this.style.display='none'"/>` : '👕'}</div></td>
-            <td><span class="badge" style="${bs}">${escapeHTML(k.type)}</span></td>
-            <td style="color:var(--w3);font-size:.78rem">${escapeHTML(k.maker || '—')}</td>
+            <td><div class="tdi">${k.image_url ? `<img src="${k.image_url}" onerror="this.style.display='none'"/>` : '👕'}</div></td>
+            <td><span class="badge" style="${bs}">${k.type}</span></td>
+            <td style="color:var(--w3);font-size:.78rem">${k.maker || '—'}</td>
             <td><span class="badge ${k.is_published ? 'pub-y' : 'pub-n'}">${k.is_published ? 'Live' : 'Draft'}</span></td>
             <td style="text-align:center">${k.is_featured ? '⭐' : '—'}</td>
             <td style="font-size:.72rem;color:var(--w3)">${k.submitted_by ? `👤 ${k.is_verified ? '✅' : '⏳'}` : '<span style="color:var(--g)">Admin ✓</span>'}</td>
@@ -1046,15 +995,13 @@ function updateBulkBar() {
 }
 async function bulkPublish(pub) {
   if (!selectedKits.size) return;
-  // BUG FIX: was sequential await per kit — now single batch update with .in()
-  await sb.from('kits').update({ is_published: pub }).in('id', [...selectedKits]);
+  for (const id of selectedKits) await sb.from('kits').update({ is_published: pub }).eq('id', id);
   toast(`${selectedKits.size} kits ${pub ? 'published' : 'unpublished'}!`); loadP3();
 }
 async function bulkDelete() {
   if (!selectedKits.size) return;
   if (!confirm(`Delete ${selectedKits.size} kits?`)) return;
-  // BUG FIX: was sequential await per kit — now single batch delete with .in()
-  await sb.from('kits').delete().in('id', [...selectedKits]);
+  for (const id of selectedKits) await sb.from('kits').delete().eq('id', id);
   toast(`${selectedKits.size} kits deleted`); loadP3();
 }
 async function quickPub(id, pub) {
@@ -1104,78 +1051,13 @@ function openKitForm(kit, preTeam = '', preSeason = '', preLeague = '', preType 
   document.getElementById('kf-feat').checked   = !!f.is_featured;
   document.getElementById('kf-id').value       = f.id || '';
   prevImg(); if (!kit) setTimeout(autoSlug, 50);
-  // BUG FIX: sync upload previews for all 3 image slots when editing
-  ['','2','3'].forEach((s, i) => {
-    const slot = i + 1;
-    const url  = [f.image_url, f.image_url_2, f.image_url_3][i];
-    const prev = document.getElementById('kfip-' + slot);
-    const img  = document.getElementById('kfip-img-' + slot);
-    if (url && prev && img) { img.src = url; prev.style.display = 'flex'; }
-    else if (prev)          { prev.style.display = 'none'; }
-    const fi = document.getElementById('kf-img' + (s||'') + '-file');
-    if (fi) fi.value = '';
-  });
   document.getElementById('kit-ov').classList.add('open');
 }
 function closeKitForm() { document.getElementById('kit-ov').classList.remove('open'); }
 function prevImg() {
   const u = document.getElementById('kf-img').value.trim();
   const b = document.getElementById('ip');
-  b.innerHTML = u ? `<img src="${safeURL(u)}" onerror="this.parentElement.innerHTML='📷'"/>` : '📷';
-  // BUG FIX: also sync the upload preview box when URL is typed/pasted
-  const prev = document.getElementById('kfip-1');
-  const img  = document.getElementById('kfip-img-1');
-  if (prev && img) { img.src = safeURL(u) || ''; prev.style.display = u ? 'flex' : 'none'; }
-}
-
-// Merge-resolution note:
-// Keep both bucket names for cross-branch compatibility (`kits` new / `kit` legacy),
-// so uploads work regardless of which schema branch was deployed first.
-// BUG FIX: image upload from gallery for admin kit form
-const ADMIN_BUCKET_CANDIDATES = ['kits', 'kit'];
-async function adminUploadImg(inputId, fileInput, prevId, progId) {
-  const file = fileInput.files[0];
-  if (!file) return;
-  if (file.size > 8 * 1024 * 1024) { toast('Image must be under 8MB', 'err'); fileInput.value = ''; return; }
-  const prog = document.getElementById(progId);
-  const prev = document.getElementById(prevId);
-  if (prog) prog.style.display = 'block';
-  if (prev) prev.style.display = 'none';
-  const ext  = file.name.split('.').pop().toLowerCase();
-  const path = `admin/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-  let uploadError = null;
-  let usedBucket = ADMIN_BUCKET_CANDIDATES[0];
-  for (const bucket of ADMIN_BUCKET_CANDIDATES) {
-    const { error } = await sb.storage.from(bucket).upload(path, file, {
-      cacheControl: '3600', upsert: false, contentType: file.type,
-    });
-    if (!error) { usedBucket = bucket; uploadError = null; break; }
-    uploadError = error;
-  }
-  if (prog) prog.style.display = 'none';
-  if (uploadError) { toast('Upload failed: ' + uploadError.message, 'err'); fileInput.value = ''; return; }
-  const { data: { publicUrl } } = sb.storage.from(usedBucket).getPublicUrl(path);
-  const urlEl = document.getElementById(inputId);
-  if (urlEl) urlEl.value = publicUrl;
-  // Update preview
-  const slotNum = prevId.split('-')[1];
-  const imgEl   = document.getElementById('kfip-img-' + slotNum);
-  if (imgEl && prev) { imgEl.src = publicUrl; prev.style.display = 'flex'; }
-  // Sync main thumb if slot 1
-  if (inputId === 'kf-img') prevImg();
-  toast('Image uploaded!');
-}
-function adminClearImg(inputId, prevId) {
-  const urlEl = document.getElementById(inputId);
-  if (urlEl) urlEl.value = '';
-  const slotNum  = prevId.split('-')[1];
-  const fileEl   = document.getElementById(inputId + '-file');
-  const prev     = document.getElementById(prevId);
-  const img      = document.getElementById('kfip-img-' + slotNum);
-  if (fileEl) fileEl.value = '';
-  if (prev)   prev.style.display = 'none';
-  if (img)    img.src = '';
-  if (inputId === 'kf-img') prevImg();
+  b.innerHTML = u ? `<img src="${u}" onerror="this.parentElement.innerHTML='📷'"/>` : '📷';
 }
 function autoSlug() {
   if (editKitId) return;
@@ -1264,7 +1146,7 @@ async function acKotw() {
   const { data } = await sb.from('kits').select('slug,team,season,type').ilike('team', '%' + q + '%').limit(8);
   const list = document.getElementById('acl-kotw');
   list.innerHTML = (data || []).map(k =>
-    `<div class="aci" onmousedown="document.getElementById('kotw-kit').value='${String(k.slug).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}';document.getElementById('acl-kotw').classList.remove('open')">${escapeHTML(k.team)} ${escapeHTML(k.season)} ${escapeHTML(k.type)}</div>`
+    `<div class="aci" onmousedown="document.getElementById('kotw-kit').value='${k.slug}';document.getElementById('acl-kotw').classList.remove('open')">${k.team} ${k.season} ${k.type}</div>`
   ).join('');
   list.classList.add('open');
 }
@@ -1272,67 +1154,37 @@ async function acKotw() {
 // ── USER SUBMISSIONS ─────────────────────────────────────────
 async function loadSubmissions() {
   const statusFilter = document.getElementById('sub-filter').value;
-  const normalizedFilter = String(statusFilter || '').toLowerCase();
-
-  // Try relational path first (works when FK metadata exists).
-  const rel = await sb.from('kit_submissions')
-    .select('*,profiles(username)')
-    .order('created_at', { ascending: false });
-
-  let data = rel.data || [];
-  // Fallback when relation metadata is unavailable in this project.
-  if (rel.error) {
-    const fb = await sb.from('kit_submissions').select('*').order('created_at', { ascending: false });
-    data = fb.data || [];
-  }
-
-  if (normalizedFilter) data = data.filter(s => String(s.status || '').toLowerCase() === normalizedFilter);
-
-  const userIds = [...new Set((data || []).map(s => s.user_id).filter(Boolean))];
-  const userMap = {};
-  if (userIds.length) {
-    const { data: profs } = await sb.from('profiles').select('id,username').in('id', userIds);
-    (profs || []).forEach(p => { userMap[p.id] = p.username; });
-  }
-
+  let query = sb.from('kit_submissions').select('*,profiles(username)').order('created_at', { ascending: false });
+  if (statusFilter) query = query.eq('status', statusFilter);
+  const { data } = await query;
   const statusClass = { pending: 'pend', approved: 'pub-y', rejected: 'pub-n' };
   document.getElementById('sub-tbody').innerHTML = (data || []).map(s => `<tr>
-    <td style="font-weight:600">${escapeHTML(s.team)}</td>
-    <td style="font-family:var(--fm);font-size:.75rem;color:var(--g)">${escapeHTML(s.season)}</td>
-    <td><span class="badge ${s.type === 'Home' ? 'bh' : s.type === 'Away' ? 'ba' : 'bt'}">${escapeHTML(s.type)}</span></td>
-    <td style="font-size:.78rem;color:var(--w3)">${escapeHTML(s.profiles?.username || userMap[s.user_id] || '—')}</td>
+    <td style="font-weight:600">${s.team}</td>
+    <td style="font-family:var(--fm);font-size:.75rem;color:var(--g)">${s.season}</td>
+    <td><span class="badge ${s.type === 'Home' ? 'bh' : s.type === 'Away' ? 'ba' : 'bt'}">${s.type}</span></td>
+    <td style="font-size:.78rem;color:var(--w3)">${s.profiles?.username || '—'}</td>
     <td style="font-size:.72rem;color:var(--w4)">${new Date(s.created_at).toLocaleDateString('en-GB')}</td>
-    <td><span class="badge ${statusClass[String(s.status || '').toLowerCase()] || 'pub-n'}">${escapeHTML(s.status || 'unknown')}</span></td>
+    <td><span class="badge ${statusClass[s.status] || 'pub-n'}">${s.status}</span></td>
     <td><div style="display:flex;gap:.35rem">
       <button class="btn-ed" onclick="reviewSubmission('${s.id}')">Review</button>
-      ${String(s.status || '').toLowerCase() === 'pending' ? `<button class="btn-app" onclick="approveSubmission('${s.id}')">✓ Approve</button><button class="btn-rej" onclick="rejectSubmission('${s.id}')">✕ Reject</button>` : ''}
+      ${s.status === 'pending' ? `<button class="btn-app" onclick="approveSubmission('${s.id}')">✓ Approve</button><button class="btn-rej" onclick="rejectSubmission('${s.id}')">✕ Reject</button>` : ''}
     </div></td>
   </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--w4)">No submissions.</td></tr>';
 }
 
- 
-
 async function reviewSubmission(id) {
-  let { data: s } = await sb.from('kit_submissions').select('*,profiles(username)').eq('id', id).single();
-  if (!s) {
-    const fallback = await sb.from('kit_submissions').select('*').eq('id', id).single();
-    s = fallback.data;
-    if (s?.user_id) {
-      const { data: p } = await sb.from('profiles').select('username').eq('id', s.user_id).single();
-      if (p) s.profiles = { username: p.username };
-    }
-  }
+  const { data: s } = await sb.from('kit_submissions').select('*,profiles(username)').eq('id', id).single();
   if (!s) return;
   document.getElementById('sub-detail').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
-      ${s.image_url ? `<div style="grid-column:1/-1"><img src="${safeURL(s.image_url)}" style="max-height:200px;object-fit:contain;border-radius:10px;background:var(--s2);padding:.5rem"/></div>` : ''}
+      ${s.image_url ? `<div style="grid-column:1/-1"><img src="${s.image_url}" style="max-height:200px;object-fit:contain;border-radius:10px;background:var(--s2);padding:.5rem"/></div>` : ''}
       ${[['Team',s.team],['Season',s.season],['League',s.league||'—'],['Type',s.type],['Maker',s.maker||'—'],['Color',s.color||'—'],['Price',s.price_label||'—'],['Submitted by',s.profiles?.username||'—']].map(([k,v])=>
-        `<div style="background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.2rem">${escapeHTML(k)}</div><div style="font-size:.875rem">${escapeHTML(v)}</div></div>`
+        `<div style="background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.2rem">${k}</div><div style="font-size:.875rem">${v}</div></div>`
       ).join('')}
-      ${s.description ? `<div style="grid-column:1/-1;background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Description</div><div style="font-size:.875rem;color:var(--w3)">${escapeHTML(s.description)}</div></div>` : ''}
+      ${s.description ? `<div style="grid-column:1/-1;background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Description</div><div style="font-size:.875rem;color:var(--w3)">${s.description}</div></div>` : ''}
     </div>`;
   const actEl = document.getElementById('sub-actions');
-  actEl.innerHTML = String(s.status || '').toLowerCase() === 'pending'
+  actEl.innerHTML = s.status === 'pending'
     ? `<button class="btn btn-g" onclick="document.getElementById('sub-ov').classList.remove('open')">Close</button>
        <button class="btn btn-r" onclick="rejectSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')">✕ Reject</button>
        <button class="btn btn-p" onclick="approveSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')">✓ Approve & Publish</button>`
@@ -1475,11 +1327,7 @@ async function saveSection(id) {
     const key = el.id.replace(`hbs-${id}-`, '');
     settings[key] = el.tagName === 'TEXTAREA' ? el.value : el.value;
   });
-  // BUG FIX: also persist the section label (title) back to the label column
-  const labelInput = document.getElementById(`hbs-${id}-title`) || document.getElementById(`hbs-${id}-label`);
-  const updates = { settings, updated_at: new Date().toISOString() };
-  if (labelInput?.value) updates.label = labelInput.value;
-  const { error } = await sb.from('homepage_sections').update(updates).eq('id', id);
+  const { error } = await sb.from('homepage_sections').update({ settings, updated_at: new Date().toISOString() }).eq('id', id);
   if (error) { toast('Error: ' + error.message, 'err'); return; }
   toast('Section saved!');
 }
@@ -1499,8 +1347,7 @@ async function secDragDrop(e, targetId) {
   const fi    = ids.indexOf(secDragId);
   const ti    = ids.indexOf(targetId);
   ids.splice(fi, 1); ids.splice(ti, 0, secDragId);
-  // BUG FIX: was sequential await per row — now batches all updates in parallel
-  await Promise.all(ids.map((id, i) => sb.from('homepage_sections').update({ sort_order: i + 1 }).eq('id', id)));
+  for (let i = 0; i < ids.length; i++) await sb.from('homepage_sections').update({ sort_order: i + 1 }).eq('id', ids[i]);
   secDragId = null; loadHp(); toast('Order saved!');
 }
 
@@ -2032,16 +1879,13 @@ function updateSeoPreview() {
   document.getElementById('sp-d').textContent   = document.getElementById('seo-desc').value  || 'Description preview';
 }
 async function saveSEO() {
-  // BUG FIX: was sequential await per key — now single batch upsert
-  const rows = [['global_seo_title','seo-title'],['global_seo_desc','seo-desc'],['global_og_image','seo-og']]
-    .map(([key, id]) => ({ key, value: document.getElementById(id).value }));
-  await sb.from('site_settings').upsert(rows, { onConflict: 'key' });
+  for (const [key, id] of [['global_seo_title','seo-title'],['global_seo_desc','seo-desc'],['global_og_image','seo-og']])
+    await sb.from('site_settings').upsert({ key, value: document.getElementById(id).value }, { onConflict: 'key' });
   toast('SEO saved!');
 }
 async function saveAnalytics() {
-  const rows = [['google_analytics_id','seo-ga'],['custom_head_code','seo-head'],['custom_body_code','seo-body']]
-    .map(([key, id]) => ({ key, value: document.getElementById(id).value }));
-  await sb.from('site_settings').upsert(rows, { onConflict: 'key' });
+  for (const [key, id] of [['google_analytics_id','seo-ga'],['custom_head_code','seo-head'],['custom_body_code','seo-body']])
+    await sb.from('site_settings').upsert({ key, value: document.getElementById(id).value }, { onConflict: 'key' });
   toast('Analytics saved!');
 }
 async function saveRobots() {
@@ -2166,24 +2010,23 @@ async function loadSettings() {
   document.getElementById('ss-keywords').value = s.meta_keywords    || '';
 }
 async function saveSettings() {
-  // BUG FIX: was sequential await per key — now single batch upsert
-  const rows = [
+  const pairs = [
     ['site_name','ss-name'], ['logo_text','ss-logotext'], ['logo_url','ss-logo'],
     ['favicon_url','ss-favicon'], ['site_tagline','ss-tagline'],
     ['site_url','ss-url'], ['contact_email','ss-email'],
-  ].map(([key, id]) => ({ key, value: document.getElementById(id).value }));
-  const { error } = await sb.from('site_settings').upsert(rows, { onConflict: 'key' });
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  ];
+  for (const [key, id] of pairs)
+    await sb.from('site_settings').upsert({ key, value: document.getElementById(id).value }, { onConflict: 'key' });
   toast('Settings saved!');
 }
 async function saveFooter() {
-  const rows = [
+  const pairs = [
     ['footer_text','ss-footer'], ['social_twitter','ss-twitter'],
     ['social_instagram','ss-instagram'], ['social_facebook','ss-facebook'],
     ['meta_keywords','ss-keywords'],
-  ].map(([key, id]) => ({ key, value: document.getElementById(id).value }));
-  const { error } = await sb.from('site_settings').upsert(rows, { onConflict: 'key' });
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  ];
+  for (const [key, id] of pairs)
+    await sb.from('site_settings').upsert({ key, value: document.getElementById(id).value }, { onConflict: 'key' });
   toast('Footer saved!');
 }
 

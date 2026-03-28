@@ -6,14 +6,11 @@
 <title>Search — KitDB</title>
 <link rel="stylesheet" href="/assets/css/style.css"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-#results { min-height: 420px; }
-</style>
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
-  <div class="nav-links" id="nav-links-dynamic">
+  <a href="/" class="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links">
     <a href="/" class="nav-link">Home</a>
     <a href="/browse.html" class="nav-link">Browse</a>
     <a href="/search.html" class="nav-link active">Search</a>
@@ -26,8 +23,7 @@
   <div style="font-family:var(--fd);font-size:1.75rem;letter-spacing:3px;margin-bottom:1.25rem">SEARCH <span style="color:var(--g)">KITS</span></div>
   <div class="search-wrap" style="margin-bottom:1.25rem">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <!-- BUG FIX: debounced — was calling search() synchronously on every keypress -->
-    <input class="search-input" id="q" type="text" placeholder="Team, league, maker, color, season…" autofocus oninput="searchDebounced()"/>
+    <input class="search-input" id="q" type="text" placeholder="Team, league, maker, color, season…" autofocus oninput="search()"/>
   </div>
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem" id="quick-chips"></div>
   <div style="font-family:var(--fm);font-size:.72rem;color:var(--w4);margin-bottom:1rem" id="result-info"></div>
@@ -35,77 +31,49 @@
 </div>
 
 <div style="height:3rem"></div>
-<footer>
-  <strong id="footer-site-name">KitDB</strong> &nbsp;·&nbsp;
-  <a href="/">Home</a> &nbsp;·&nbsp;
-  <a href="/browse.html">Browse</a>
-  <div style="margin-top:.75rem;color:var(--w4)" id="footer-text"></div>
-</footer>
+<footer><strong>KitDB</strong> &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a></footer>
 
 <script src="/assets/js/config.js"></script>
 <script>
-let allKits = [], searchTimer = null;
+let allKits = [];
 
 (async () => {
   await initNav();
-  // BUG FIX: was select('*') — only fetch columns needed for search & card rendering
-  const [kitsRes, settingsRes] = await Promise.all([
-    sb.from('kits_with_stats')
-      .select('id,slug,team,season,league,type,maker,color,image_url,avg_rating,rating_count')
-      .eq('is_published', true),
-    sb.from('site_settings').select('key,value'),
-  ]);
-  allKits = kitsRes.data || [];
-
-  if (settingsRes.data) {
-    const s = Object.fromEntries(settingsRes.data.map(r => [r.key, r.value]));
-    if (s.site_name)   document.getElementById('footer-site-name').textContent = s.site_name;
-    if (s.footer_text) document.getElementById('footer-text').textContent      = s.footer_text;
-  }
-
-  // Quick chips — top leagues by kit count
-  const lc = {};
-  allKits.forEach(k => { if (k.league) lc[k.league] = (lc[k.league] || 0) + 1; });
-  const topLeagues = Object.entries(lc).sort((a,b) => b[1]-a[1]).slice(0,8).map(([l]) => l);
-  document.getElementById('quick-chips').innerHTML = topLeagues.map(l =>
-    `<button class="chip" onclick='document.getElementById("q").value=${JSON.stringify(String(l))};search()'>${escapeHTML(l)}</button>`
+  const { data } = await sb.from('kits_with_stats').select('*').eq('is_published', true);
+  allKits = data || [];
+  // league chips
+  const leagues = [...new Set(allKits.map(k=>k.league).filter(Boolean))].sort().slice(0,8);
+  document.getElementById('quick-chips').innerHTML = leagues.map(l =>
+    `<button class="chip" onclick="document.getElementById('q').value='${l}';search()">${l}</button>`
   ).join('');
-
+  // check ?q=
   const q = new URLSearchParams(location.search).get('q');
   if (q) { document.getElementById('q').value = q; search(); }
-  injectAd('top_banner', 'ad-top-banner');
+  injectAd('top_banner','ad-top-banner');
 })();
 
-function searchDebounced() { clearTimeout(searchTimer); searchTimer = setTimeout(search, 180); }
-
 function search() {
-  const q    = document.getElementById('q').value.toLowerCase().trim();
+  const q = document.getElementById('q').value.toLowerCase().trim();
   const info = document.getElementById('result-info');
   const grid = document.getElementById('results');
-  if (!q) { info.textContent = ''; grid.innerHTML = ''; return; }
-
+  if (!q) { info.textContent=''; grid.innerHTML=''; return; }
   const found = allKits.filter(k =>
-    [k.team, k.league, k.season, k.maker, k.type, k.color].filter(Boolean).join(' ').toLowerCase().includes(q)
+    [k.team,k.league,k.season,k.maker,k.type,k.color,k.description].join(' ').toLowerCase().includes(q)
   );
-  info.textContent = `${found.length} result${found.length !== 1 ? 's' : ''} for "${q}"`;
-
-  if (!found.length) {
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>NO RESULTS</h3><p>Try a different search term.</p></div>`;
-    return;
-  }
+  info.textContent = `${found.length} result${found.length!==1?'s':''} for "${q}"`;
+  if (!found.length) { grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>NO RESULTS</h3><p>Try a different search.</p></div>`; return; }
   grid.innerHTML = found.map(k => {
-    const type = String(k.type || '');
-    const bc = type === 'Home' ? 'b-home' : type === 'Away' ? 'b-away' : type === 'Special Edition' ? 'b-special' : type.startsWith('GK') ? 'b-gk' : 'b-third';
-    return `<a href="${buildKitHref(k)}" class="kit-card" onclick="trackClick()">
-      <div class="kit-card-img">
-        ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
-        <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>
+    const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':'b-third';
+    return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+      <div class="kit-card-img grad-${k.id.charCodeAt(0)%6}">
+        ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
+        <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
       </div>
       <div class="kit-card-body">
-        <div class="kit-card-team">${escapeHTML(k.team)}</div>
-        <div class="kit-card-season">${escapeHTML(k.season)}</div>
-        <div class="kit-card-league">${escapeHTML(k.league || '')}</div>
-        <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating || 0), k.rating_count)}</div>
+        <div class="kit-card-team">${k.team}</div>
+        <div class="kit-card-season">${k.season}</div>
+        <div class="kit-card-league">${k.league||''}</div>
+        <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating),k.rating_count)}</div>
       </div>
     </a>`;
   }).join('');

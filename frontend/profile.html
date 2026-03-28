@@ -32,8 +32,8 @@
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
-  <div class="nav-links" id="nav-links-dynamic">
+  <a href="/" class="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links">
     <a href="/" class="nav-link">Home</a>
     <a href="/browse.html" class="nav-link">Browse</a>
     <a href="/search.html" class="nav-link">Search</a>
@@ -158,8 +158,8 @@ async function loadCollection() {
   const { data: kits } = await sb.from('kits_with_stats').select('*').in('id', ids);
   document.getElementById('collection-grid').innerHTML = (kits||[]).map(k => {
     const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':'b-third';
-    return `<a href="${buildKitHref(k)}" class="kit-card">
-      <div class="kit-card-img grad-${String(k.id || k.slug || '0').charCodeAt(0)%6}">
+    return `<a href="/kit.html?slug=${k.slug}" class="kit-card">
+      <div class="kit-card-img grad-${k.id.charCodeAt(0)%6}">
         ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
         <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
       </div>
@@ -187,7 +187,7 @@ async function loadRatings() {
     return `<div class="rating-history-row">
       <div style="width:48px;height:48px;background:var(--s2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">⚽</div>
       <div style="flex:1;min-width:0">
-        <a href="${buildKitHref(k)}" style="font-weight:600;font-size:.875rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team}</a>
+        <a href="/kit.html?slug=${k.slug}" style="font-weight:600;font-size:.875rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team}</a>
         <div style="font-size:.72rem;color:var(--w4)">${k.season} · Rated ${new Date(r.updated_at).toLocaleDateString('en-GB')}</div>
       </div>
       <div style="display:flex;gap:.1rem">${[1,2,3,4,5].map(i=>`<span style="color:${i<=r.rating?'var(--gold)':'var(--s4)'}">★</span>`).join('')}</div>

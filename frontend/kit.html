@@ -9,7 +9,6 @@
 <style>
 .kit-layout { display:grid; grid-template-columns:1fr 380px; gap:2.5rem; align-items:start; padding:2rem 0; }
 @media(max-width:900px){ .kit-layout{grid-template-columns:1fr;} }
-.kit-layout-wrap { min-height: 640px; }
 .kit-img-main { background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:420px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; margin-bottom:1rem; }
 .kit-img-main img { height:340px; object-fit:contain; filter:drop-shadow(0 16px 40px rgba(0,0,0,.7)); }
 .kit-img-main .ph { font-size:7rem; opacity:.08; }
@@ -44,8 +43,8 @@
 </head>
 <body>
 <nav class="nav">
-  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
-  <div class="nav-links" id="nav-links-dynamic">
+  <a href="/" class="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links">
     <a href="/" class="nav-link">Home</a>
     <a href="/browse.html" class="nav-link">Browse</a>
     <a href="/search.html" class="nav-link">Search</a>
@@ -58,7 +57,7 @@
 
 <div class="container">
   <div id="loading" class="spinner"></div>
-  <div id="kit-content" style="display:none" class="kit-layout-wrap">
+  <div id="kit-content" style="display:none">
     <div class="kit-layout">
       <!-- LEFT: Images -->
       <div>
@@ -104,40 +103,16 @@
         <!-- Save to collection -->
         <button class="save-btn" id="save-btn" onclick="toggleSave()" style="display:none">
           <span id="save-icon">🤍</span> <span id="save-label">Save to Collection</span>
-const qp = new URLSearchParams(location.search);
-const slug = qp.get('slug') || qp.get('sl') || qp.get('s');
-const kitId = qp.get('id');
-  if (!slug && !kitId) { show404(); return; }
-  let q = sb.from('kits_with_stats').select('*');
-  q = slug ? q.eq('slug', slug) : q.eq('id', kitId);
-  const { data } = await q.single();
+        </button>
+      </div>
+    </div>
 
     <!-- KIT DETAIL AD -->
     <div id="ad-kit-detail" class="ad-slot" style="margin-bottom:2rem"></div>
 
-  const data = await fetchKitRecord();
-async function fetchKitRecord() {
-  // 1) Primary source: public view with rating stats (fast path)
-  let q = sb.from('kits_with_stats').select('*').limit(1);
-  q = slug ? q.eq('slug', slug) : q.eq('id', kitId);
-  const { data: vData } = await q;
-  if (vData?.length) return vData[0];
-
-  // 2) Fallback: base kits table (handles draft/unpublished or schema drift)
-  let kq = sb.from('kits').select('*').limit(1);
-  kq = slug ? kq.eq('slug', slug) : kq.eq('id', kitId);
-  const { data: kData } = await kq;
-  if (!kData?.length) return null;
-
-  // Normalize fields expected by page when coming from base table
-  return {
-    ...kData[0],
-    avg_rating: 0,
-    rating_count: 0,
-    collection_count: 0,
-  };
-}
-
+    <!-- Related kits -->
+    <div class="related-section">
+      <div class="section-head"><span class="section-title">MORE FROM <span id="related-team-name">THIS CLUB</span></span></div>
       <div class="kit-grid" id="related-grid"></div>
     </div>
   </div>
@@ -154,134 +129,36 @@ async function fetchKitRecord() {
 
 <script src="/assets/js/config.js"></script>
 <script>
-const qp = new URLSearchParams(location.search);
-const slugParam = qp.get('slug') || qp.get('sl') || qp.get('s');
-const kitIdParam = qp.get('id');
-const kitId = Number.isFinite(Number(kitIdParam)) ? Number(kitIdParam) : null;
+const slug = new URLSearchParams(location.search).get('slug');
 let kit = null, currentUser = null, userProfile = null, isSaved = false, userRating = 0;
 
 (async () => {
-  if (!slugParam && !kitId) { show404(); return; }
+  if (!slug) { show404(); return; }
   await initNav();
   currentUser = await getUser();
   if (currentUser) userProfile = await getProfile(currentUser.id);
 
-  const data = await fetchKitRecord();
+  const { data } = await sb.from('kits_with_stats').select('*').eq('slug', slug).single();
   if (!data) { show404(); return; }
   kit = data;
   document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
 
-  // increment view — fire and forget, don't await
-  if (kit.slug) sb.rpc('increment_kit_views', { kit_slug: kit.slug }).catch(() => {});
+  // increment view
+  sb.rpc('increment_kit_views', { kit_slug: slug });
 
   renderKit();
   if (currentUser) {
     await loadUserRating();
     await checkSaved();
-=======
- codex/make-website-production-ready-cexulp
-  if (!slug && !kitId) { window.location.href = '/browse.html'; return; }
-  try {
-    const kitQuery = sb.from('kits_with_stats')
-      .select('id,slug,team,season,league,type,maker,color,description,buy_url,buy_label,price_label,image_url,image_url_2,image_url_3,avg_rating,rating_count,views,collection_count,is_published');
-    if (slug) kitQuery.eq('slug', slug);
-    else kitQuery.eq('id', kitId);
-
-=======
-  if (!slug) { show404(); return; }
-  try {
-main
-    const [, userRes, kitRes] = await Promise.all([
-      initNav(),
-      getUser(),
-      withTimeout(
- codex/make-website-production-ready-cexulp
-        kitQuery.single(),
-=======
-        sb.from('kits_with_stats')
-          .select('id,slug,team,season,league,type,maker,color,description,buy_url,buy_label,price_label,image_url,image_url_2,image_url_3,avg_rating,rating_count,views,collection_count,is_published')
-          .eq('slug', slug)
-          .single(),
-main
-        10000,
-        'Timed out loading kit details'
-      ),
-    ]);
-
-    currentUser = userRes;
-    if (currentUser) userProfile = await getProfile(currentUser.id);
-
-    if (kitRes.error || !kitRes.data) { show404(); return; }
-    kit = kitRes.data;
-    document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
-
-    // increment view — fire and forget, don't await
- codex/make-website-production-ready-cexulp
-    if (kit.slug) sb.rpc('increment_kit_views', { kit_slug: kit.slug }).catch(() => {});
-=======
-    sb.rpc('increment_kit_views', { kit_slug: slug }).catch(() => {});
-main
-
-    renderKit();
-    if (currentUser) {
-      await Promise.all([loadUserRating(), checkSaved()]);
-    }
-
-    // Non-blocking secondary content
-    loadRelated().catch(() => {});
-    injectAd('top_banner','ad-top-banner');
-    injectAd('kit_detail','ad-kit-detail');
-
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('kit-content').style.display = 'block';
-    trackClick();
-  } catch (err) {
-    console.error('[kit-page] failed to load', err);
-    show404();
-main
   }
+  loadRelated();
+  injectAd('top_banner','ad-top-banner');
+  injectAd('kit_detail','ad-kit-detail');
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('kit-content').style.display = 'block';
+  trackClick();
 })();
-
-async function fetchKitRecord() {
-  const slugCandidates = [];
-  if (slugParam) {
-    const s = String(slugParam).trim().toLowerCase();
-    if (s) slugCandidates.push(s);
-    const trimmedTs = s.replace(/-\d{8,}$/, '');
-    if (trimmedTs && trimmedTs !== s) slugCandidates.push(trimmedTs);
-  }
-
-  // 1) Primary source: public view with rating stats (fast path)
-  let q = sb.from('kits_with_stats').select('*').limit(1);
-  if (slugCandidates.length) q = q.in('slug', slugCandidates);
-  else q = q.eq('id', kitId);
-  let { data: vData } = await q;
-  if ((!vData || !vData.length) && slugCandidates.length) {
-    // Fallback for legacy links with slightly different suffixes/casing
-    const { data: vLoose } = await sb.from('kits_with_stats').select('*').ilike('slug', `${slugCandidates[slugCandidates.length - 1]}%`).limit(1);
-    vData = vLoose;
-  }
-  if (vData?.length) return vData[0];
-
-  // 2) Fallback: base kits table (handles draft/unpublished or schema drift)
-  let kq = sb.from('kits').select('*').limit(1);
-  if (slugCandidates.length) kq = kq.in('slug', slugCandidates);
-  else kq = kq.eq('id', kitId);
-  let { data: kData } = await kq;
-  if ((!kData || !kData.length) && slugCandidates.length) {
-    const { data: kLoose } = await sb.from('kits').select('*').ilike('slug', `${slugCandidates[slugCandidates.length - 1]}%`).limit(1);
-    kData = kLoose;
-  }
-  if (!kData?.length) return null;
-
-  // Normalize fields expected by page when coming from base table
-  return {
-    ...kData[0],
-    avg_rating: 0,
-    rating_count: 0,
-    collection_count: 0,
-  };
-}
 
 function show404() {
   document.getElementById('loading').style.display = 'none';
@@ -290,32 +167,32 @@ function show404() {
 
 function renderKit() {
   const bc = kit.type==='Home'?'b-home':kit.type==='Away'?'b-away':kit.type==='Special Edition'?'b-special':kit.type==='GK'?'b-gk':'b-third';
-  const idx = String(kit.id || kit.slug || '0').charCodeAt(0) % 6;
+  const idx = kit.id.charCodeAt(0) % 6;
 
   // images
   const imgs = [kit.image_url, kit.image_url_2, kit.image_url_3].filter(Boolean);
   document.getElementById('kit-img-main').innerHTML = imgs.length
-    ? `<img src="${safeURL(imgs[0])}" id="main-img" alt="${escapeHTML(kit.team)}"/>`
+    ? `<img src="${imgs[0]}" id="main-img" alt="${kit.team}"/>`
     : `<span class="ph">⚽</span>`;
   document.getElementById('kit-img-main').classList.add('grad-' + idx);
 
   if (imgs.length > 1) {
     document.getElementById('kit-thumbs').innerHTML = imgs.map((url, i) =>
-      `<div class="kit-thumb ${i===0?'active':''}" data-url="${escapeHTML(safeURL(url))}" onclick="switchImg(this.dataset.url,this)"><img src="${safeURL(url)}" alt="view ${i+1}"/></div>`
+      `<div class="kit-thumb ${i===0?'active':''}" onclick="switchImg('${url}',this)"><img src="${url}" alt="view ${i+1}"/></div>`
     ).join('');
   }
 
   // breadcrumb
   document.getElementById('kit-breadcrumb').innerHTML =
     `<a href="/">Home</a> <span>›</span> <a href="/browse.html">Browse</a> <span>›</span>
-     <a href="/browse.html?q=${encodeURIComponent(kit.team)}">${escapeHTML(kit.team)}</a> <span>›</span>
-     <span>${escapeHTML(kit.season)} ${escapeHTML(kit.type)}</span>`;
+     <a href="/browse.html?q=${encodeURIComponent(kit.team)}">${kit.team}</a> <span>›</span>
+     <span>${kit.season} ${kit.type}</span>`;
 
   document.getElementById('kit-team').textContent = kit.team;
   document.getElementById('kit-season-tag').innerHTML =
-    `<span style="font-family:var(--fm);color:var(--g)">${escapeHTML(kit.season)}</span>
-     <span class="badge ${bc}">${escapeHTML(kit.type)}</span>
-     ${kit.league ? `<span style="color:var(--w3);font-size:.8rem">${escapeHTML(kit.league)}</span>` : ''}`;
+    `<span style="font-family:var(--fm);color:var(--g)">${kit.season}</span>
+     <span class="badge ${bc}">${kit.type}</span>
+     ${kit.league ? `<span style="color:var(--w3);font-size:.8rem">${kit.league}</span>` : ''}`;
 
   // rating
   const avg = parseFloat(kit.avg_rating) || 0;
@@ -345,11 +222,9 @@ function renderKit() {
   // buy button
   if (kit.buy_url) {
     document.getElementById('buy-section').style.display = 'block';
-    const label = kit.buy_label || 'Buy Now';
-    const price = kit.price_label ? ' — ' + kit.price_label : '';
     document.getElementById('buy-section').innerHTML =
-      `<a href="${safeURL(kit.buy_url)}" target="_blank" rel="noopener sponsored" class="buy-btn" onclick="trackClick()">
-        🛒 ${escapeHTML(label)}${escapeHTML(price)}
+      `<a href="${kit.buy_url}" target="_blank" rel="noopener sponsored" class="buy-btn" onclick="trackClick()">
+        🛒 ${kit.buy_label || 'Buy Now'} ${kit.price_label ? '— ' + kit.price_label : ''}
        </a>`;
   }
 
@@ -364,8 +239,7 @@ function renderKit() {
 }
 
 function switchImg(url, el) {
-  const img = document.getElementById('main-img');
-  if (img) img.src = url;
+  document.getElementById('main-img').src = url;
   document.querySelectorAll('.kit-thumb').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
 }
@@ -382,9 +256,7 @@ function renderInteractiveStars(current) {
   document.getElementById('user-rating-hint').textContent = current > 0 ? `Your rating: ${current}/5 — click to change` : 'Click a star to rate';
 }
 
-  let rq = sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).limit(4);
-  rq = slug ? rq.neq('slug', slug) : rq.neq('id', kit.id);
-  const { data } = await rq;
+function hoverStars(n) {
   document.querySelectorAll('#user-stars .star').forEach((s, i) => {
     s.className = 'star ' + (i < n ? 'star-full' : 'star-empty');
   });
@@ -437,22 +309,19 @@ async function toggleSave() {
 
 async function loadRelated() {
   document.getElementById('related-team-name').textContent = kit.team.toUpperCase();
-  let rq = sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).limit(4);
-  rq = kit.slug ? rq.neq('slug', kit.slug) : rq.neq('id', kit.id);
-  const { data } = await rq;
+  const { data } = await sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).neq('slug', slug).limit(4);
   if (!data || !data.length) { document.querySelector('.related-section').style.display='none'; return; }
   document.getElementById('related-grid').innerHTML = data.map(k => {
     const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':'b-third';
-    const idx = String(k.id || k.slug || '0').charCodeAt(0) % 6;
-    const href = buildKitHref(k);
-    return `<a href="${href}" class="kit-card" onclick="trackClick()">
+    const idx = k.id.charCodeAt(0) % 6;
+    return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
       <div class="kit-card-img grad-${idx}">
-        ${k.image_url?`<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
-        <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>
+        ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
+        <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
       </div>
       <div class="kit-card-body">
-        <div class="kit-card-team">${escapeHTML(k.team)}</div>
-        <div class="kit-card-season">${escapeHTML(k.season)}</div>
+        <div class="kit-card-team">${k.team}</div>
+        <div class="kit-card-season">${k.season}</div>
         <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating),k.rating_count)}</div>
       </div>
     </a>`;

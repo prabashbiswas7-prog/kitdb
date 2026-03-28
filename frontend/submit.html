@@ -24,9 +24,9 @@
 .sub-row { display:flex; align-items:center; justify-content:space-between; padding:.55rem 0; border-bottom:1px solid var(--bdg); font-size:.83rem; }
 .sub-row:last-child { border-bottom:none; }
 .sub-status { font-size:.65rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:.2rem .55rem; border-radius:4px; }
-.s-pending  { background:rgba(255,204,0,.1);   color:var(--gold); border:1px solid rgba(255,204,0,.3); }
-.s-approved { background:var(--gf);             color:var(--g);    border:1px solid var(--bdg); }
-.s-rejected { background:rgba(255,68,68,.08);   color:var(--red);  border:1px solid rgba(255,68,68,.2); }
+.s-pending  { background:rgba(255,204,0,.1); color:var(--gold); border:1px solid rgba(255,204,0,.3); }
+.s-approved { background:var(--gf); color:var(--g); border:1px solid var(--bdg); }
+.s-rejected { background:rgba(255,68,68,.08); color:var(--red); border:1px solid rgba(255,68,68,.2); }
 .rules-box { background:var(--s2); border:1px solid var(--bd); border-radius:10px; padding:1.1rem 1.25rem; margin-bottom:1.75rem; }
 .rules-title { font-size:.65rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--w4); margin-bottom:.75rem; }
 .rules-list { list-style:none; display:flex; flex-direction:column; gap:.4rem; }
@@ -37,32 +37,19 @@
 .success-icon { font-size:3.5rem; margin-bottom:1rem; }
 .success-title { font-family:var(--fd); font-size:2rem; letter-spacing:3px; margin-bottom:.5rem; }
 .success-title span { color:var(--g); }
-
-/* ── Image upload widget ── */
-.img-field { display:flex; flex-direction:column; gap:.45rem; }
-.img-row { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
-.img-row input[type="url"] { flex:1; min-width:120px; }
-.img-upload-btn { cursor:pointer; white-space:nowrap; font-size:.76rem; padding:.38rem .7rem; }
-.img-upload-btn input[type="file"] { display:none; }
-.img-preview { display:none; align-items:center; gap:.6rem; background:var(--s2); border:1px solid var(--bdg); border-radius:7px; padding:.4rem .65rem; }
-.img-preview img { height:64px; object-fit:contain; border-radius:5px; background:var(--s3); }
-.img-progress { font-size:.72rem; color:var(--g); display:none; }
 </style>
 </head>
 <body>
 <nav class="nav">
   <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
-  <div class="nav-links" id="nav-links-dynamic">
-    <a href="/" class="nav-link">Home</a>
-    <a href="/browse.html" class="nav-link">Browse</a>
-    <a href="/submit.html" class="nav-link active" style="color:var(--g)">+ Submit</a>
-  </div>
+  <div class="nav-links" id="nav-links-dynamic"></div>
   <div id="nav-auth"></div>
 </nav>
 
 <div class="container">
   <div class="submit-wrap">
 
+    <!-- NOT LOGGED IN -->
     <div id="login-prompt" style="display:none;text-align:center;padding:4rem 2rem">
       <div style="font-size:3rem;margin-bottom:1rem">🔐</div>
       <div style="font-family:var(--fd);font-size:1.75rem;letter-spacing:3px;margin-bottom:.5rem">SIGN IN TO SUBMIT</div>
@@ -70,12 +57,14 @@
       <a href="/login.html?from=/submit.html" class="btn btn-p">Sign In / Join Free</a>
     </div>
 
+    <!-- MAIN CONTENT -->
     <div id="submit-content" style="display:none">
       <div class="submit-header">
         <h1>SUBMIT A <span>KIT</span></h1>
-        <p>Help grow the KitDB archive. All submissions are reviewed before going live. Earn points and badges for approved kits!</p>
+        <p>Help grow the KitDB archive. Submit kits you know are missing. All submissions are reviewed by our team before going live. Earn points and badges for approved kits!</p>
       </div>
 
+      <!-- RULES -->
       <div class="rules-box">
         <div class="rules-title">Submission Guidelines</div>
         <ul class="rules-list">
@@ -84,9 +73,11 @@
           <li>Do not submit duplicates — check Browse first</li>
           <li>Each user can only submit one kit per team/season/type combination</li>
           <li>Earn <strong style="color:var(--g)">+5 points</strong> for submitting, <strong style="color:var(--g)">+50 points</strong> when approved</li>
+          <li>Approved submissions show your username as contributor</li>
         </ul>
       </div>
 
+      <!-- MY SUBMISSIONS STATUS -->
       <div id="my-submissions-wrap" style="display:none">
         <div class="status-box">
           <div class="status-title">My Submissions</div>
@@ -94,6 +85,7 @@
         </div>
       </div>
 
+      <!-- FORM -->
       <div class="submit-box">
         <div class="submit-box-head">
           <span style="font-size:1.25rem">👕</span>
@@ -164,57 +156,18 @@
 
             <div class="form-section">Images</div>
             <div class="form-grid">
-              <!-- BUG FIX: Image fields now support direct upload from gallery via Supabase Storage bucket 'kit' -->
               <div class="field form-full">
-                <label>Main Image * <span style="font-size:.65rem;color:var(--w4);font-weight:400">(upload or paste URL)</span></label>
-                <div class="img-field">
-                  <div class="img-row">
-                    <label class="btn btn-g img-upload-btn">
-                      📁 Choose from Gallery
-                      <input type="file" id="s-img-file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="handleUpload(1,this)"/>
-                    </label>
-                    <input id="s-img" type="url" placeholder="…or paste image URL" class="field"/>
-                  </div>
-                  <div class="img-progress" id="prog-1">⏳ Uploading…</div>
-                  <div class="img-preview" id="prev-1">
-                    <img id="prev-img-1" src=""/>
-                    <button type="button" onclick="clearImg(1)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.8rem;padding:.2rem .4rem">✕ Remove</button>
-                  </div>
-                </div>
+                <label>Main Image URL *</label>
+                <input id="s-img" type="url" placeholder="https://… (direct link to kit image)"/>
+                <div style="font-size:.72rem;color:var(--w4);margin-top:.3rem">Tip: Upload to imgbb.com for a free direct image URL</div>
               </div>
               <div class="field">
-                <label>Image 2 <span style="font-size:.65rem;color:var(--w4);font-weight:400">(optional)</span></label>
-                <div class="img-field">
-                  <div class="img-row">
-                    <label class="btn btn-g img-upload-btn" style="font-size:.72rem">
-                      📁 Upload
-                      <input type="file" id="s-img2-file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="handleUpload(2,this)"/>
-                    </label>
-                    <input id="s-img2" type="url" placeholder="…or paste URL"/>
-                  </div>
-                  <div class="img-progress" id="prog-2">⏳ Uploading…</div>
-                  <div class="img-preview" id="prev-2">
-                    <img id="prev-img-2" src=""/>
-                    <button type="button" onclick="clearImg(2)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.8rem">✕</button>
-                  </div>
-                </div>
+                <label>Image 2 URL</label>
+                <input id="s-img2" type="url" placeholder="https://…"/>
               </div>
               <div class="field">
-                <label>Image 3 <span style="font-size:.65rem;color:var(--w4);font-weight:400">(optional)</span></label>
-                <div class="img-field">
-                  <div class="img-row">
-                    <label class="btn btn-g img-upload-btn" style="font-size:.72rem">
-                      📁 Upload
-                      <input type="file" id="s-img3-file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="handleUpload(3,this)"/>
-                    </label>
-                    <input id="s-img3" type="url" placeholder="…or paste URL"/>
-                  </div>
-                  <div class="img-progress" id="prog-3">⏳ Uploading…</div>
-                  <div class="img-preview" id="prev-3">
-                    <img id="prev-img-3" src=""/>
-                    <button type="button" onclick="clearImg(3)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.8rem">✕</button>
-                  </div>
-                </div>
+                <label>Image 3 URL</label>
+                <input id="s-img3" type="url" placeholder="https://…"/>
               </div>
             </div>
 
@@ -254,11 +207,8 @@
 
 <script src="/assets/js/config.js"></script>
 <script>
-const STORAGE_BUCKET_CANDIDATES = ['kits', 'kit']; // prefer v3 bucket, fallback legacy
 let currentUser = null;
 let allClubs = [], allSeasons = [], allLeagues = [], allMakers = [], allKitTypes = [];
-// Map club name → league name for autoFillLeague
-let clubLeagueMap = {};
 
 (async () => {
   await initNav();
@@ -279,29 +229,24 @@ async function loadSiteSettings() {
   const { data } = await sb.from('site_settings').select('key,value');
   if (!data) return;
   const s = Object.fromEntries(data.map(r => [r.key, r.value]));
-  if (s.site_name)   document.getElementById('footer-site-name').textContent = s.site_name;
-  if (s.footer_text) document.getElementById('footer-text').textContent      = s.footer_text;
+  if (s.site_name) document.getElementById('footer-site-name').textContent = s.site_name;
+  if (s.footer_text) document.getElementById('footer-text').textContent = s.footer_text;
 }
 
 async function loadMasterData() {
   const [clubs, seasons, leagues, types, kits] = await Promise.all([
-    sb.from('clubs').select('name,league_id').order('name'),
+    sb.from('clubs').select('name').order('name'),
     sb.from('seasons').select('name').order('year_start', { ascending: false }),
-    sb.from('leagues').select('id,name').order('name'),
+    sb.from('leagues').select('name').order('name'),
     sb.from('kit_types').select('name').eq('is_active', true).order('sort_order'),
     sb.from('kits').select('maker').not('maker', 'is', null),
   ]);
-  allClubs    = (clubs.data   || []).map(c => c.name);
-  allSeasons  = (seasons.data || []).map(s => s.name);
-  allLeagues  = (leagues.data || []).map(l => l.name);
-  allKitTypes = (types.data   || []).map(t => t.name);
-
-  // BUG FIX: build club→league map for autoFillLeague
-  const leagueById = Object.fromEntries((leagues.data || []).map(l => [l.id, l.name]));
-  (clubs.data || []).forEach(c => { if (c.league_id && leagueById[c.league_id]) clubLeagueMap[c.name] = leagueById[c.league_id]; });
-
+  allClubs   = (clubs.data || []).map(c => c.name);
+  allSeasons = (seasons.data || []).map(s => s.name);
+  allLeagues = (leagues.data || []).map(l => l.name);
+  allKitTypes = (types.data || []).map(t => t.name);
   const def = ['Adidas','Nike','Puma','Umbro','Kappa','Hummel','New Balance','Under Armour','Joma','Macron'];
-  const db  = [...new Set((kits.data || []).map(k => k.maker).filter(Boolean))];
+  const db = [...new Set((kits.data || []).map(k => k.maker).filter(Boolean))];
   allMakers = [...new Set([...db, ...def])].sort();
 }
 
@@ -313,115 +258,52 @@ function populateTypeSelect() {
 
 async function loadMySubmissions() {
   const { data } = await sb.from('kit_submissions')
-    .select('team,season,type,status,rejection_reason')
-    .eq('user_id', currentUser.id)
-    .order('created_at', { ascending: false })
-    .limit(20);
+    .select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
   if (!data || !data.length) return;
   document.getElementById('my-submissions-wrap').style.display = 'block';
   document.getElementById('my-submissions-list').innerHTML = data.map(s => `
     <div class="sub-row">
       <div>
-        <div style="font-weight:500">${escapeHTML(s.team)} — ${escapeHTML(s.season)} ${escapeHTML(s.type)}</div>
-        ${s.rejection_reason ? `<div style="font-size:.72rem;color:var(--red);margin-top:.15rem">Reason: ${escapeHTML(s.rejection_reason)}</div>` : ''}
+        <div style="font-weight:500">${s.team} — ${s.season} ${s.type}</div>
+        ${s.rejection_reason ? `<div style="font-size:.72rem;color:var(--red);margin-top:.15rem">Reason: ${s.rejection_reason}</div>` : ''}
       </div>
-      <span class="sub-status s-${String(s.status || '').toLowerCase()}">${escapeHTML(s.status || 'unknown')}</span>
+      <span class="sub-status s-${s.status}">${s.status}</span>
     </div>`).join('');
 }
 
-// ── Image upload ──────────────────────────────────────────────
-async function handleUpload(slot, fileInput) {
-  const file = fileInput.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { toast('Image must be under 5MB', 'err'); fileInput.value = ''; return; }
-
-  const prog = document.getElementById('prog-' + slot);
-  const prev = document.getElementById('prev-' + slot);
-  prog.style.display = 'block';
-  prev.style.display = 'none';
-
-  const ext = file.name.split('.').pop().toLowerCase();
-  const path = `submissions/${currentUser.id}/${Date.now()}_${slot}.${ext}`;
-
-  let uploadError = null;
-  let usedBucket = STORAGE_BUCKET_CANDIDATES[0];
-  for (const bucket of STORAGE_BUCKET_CANDIDATES) {
-    const { error } = await sb.storage.from(bucket).upload(path, file, {
-      cacheControl: '3600', upsert: false, contentType: file.type,
-    });
-    if (!error) { usedBucket = bucket; uploadError = null; break; }
-    uploadError = error;
-  }
-
-  prog.style.display = 'none';
-
-  if (uploadError) {
-    toast('Upload failed: ' + uploadError.message, 'err');
-    fileInput.value = '';
-    return;
-  }
-
-  const { data: { publicUrl } } = sb.storage.from(usedBucket).getPublicUrl(path);
-  document.getElementById('s-img' + (slot === 1 ? '' : slot)).value = publicUrl;
-  document.getElementById('prev-img-' + slot).src = publicUrl;
-  prev.style.display = 'flex';
-  toast('Image uploaded!');
-}
-
-function clearImg(slot) {
-  const urlInput = document.getElementById('s-img' + (slot === 1 ? '' : slot));
-  const fileInput = document.getElementById('s-img' + (slot === 1 ? '' : slot) + '-file');
-  urlInput.value = '';
-  if (fileInput) fileInput.value = '';
-  document.getElementById('prev-' + slot).style.display = 'none';
-  document.getElementById('prev-img-' + slot).src = '';
-}
-
-// BUG FIX: watch URL inputs too, show preview when user pastes a URL
-['s-img','s-img2','s-img3'].forEach((id, i) => {
-  const slot = i + 1;
-  document.getElementById(id)?.addEventListener('input', function() {
-    const url = this.value.trim();
-    const prev = document.getElementById('prev-' + slot);
-    const img  = document.getElementById('prev-img-' + slot);
-    if (url) { img.src = url; prev.style.display = 'flex'; }
-    else     { prev.style.display = 'none'; }
-  });
-});
-
-// ── Duplicate check ───────────────────────────────────────────
+// duplicate check
 async function checkDuplicate() {
   const team   = document.getElementById('s-team').value.trim();
   const season = document.getElementById('s-season').value.trim();
   const type   = document.getElementById('s-type').value;
   const warn   = document.getElementById('duplicate-warn');
   if (!team || !season) { warn.style.display = 'none'; return; }
-  const [{ data: existing }, { data: submittedRaw }] = await Promise.all([
-    sb.from('kits').select('id').ilike('team', team).ilike('season', season).eq('type', type).limit(1),
-    sb.from('kit_submissions').select('id,status').ilike('team', team).ilike('season', season).eq('type', type).limit(3),
+
+  const [{ data: existing }, { data: submitted }] = await Promise.all([
+    sb.from('kits').select('id').eq('team', team).eq('season', season).eq('type', type).limit(1),
+    sb.from('kit_submissions').select('id').eq('team', team).eq('season', season).eq('type', type).eq('status', 'pending').limit(1),
   ]);
-  const submitted = (submittedRaw || []).filter(s => ['pending', 'approved'].includes(String(s.status || '').toLowerCase()));
   warn.style.display = (existing?.length || submitted?.length) ? 'block' : 'none';
 }
 
-// ── Autocomplete ──────────────────────────────────────────────
+// autocomplete
 const acSources = {
-  team:   () => allClubs,
+  team: () => allClubs,
   season: () => allSeasons,
   league: () => allLeagues,
-  maker:  () => allMakers,
+  maker: () => allMakers,
 };
 function acSIn(key) {
-  const inp   = document.getElementById('s-' + key);
-  const list  = document.getElementById('sacl-' + key);
-  const q     = inp.value.toLowerCase();
-  const src   = acSources[key] ? acSources[key]() : [];
+  const inp = document.getElementById('s-' + key);
+  const list = document.getElementById('sacl-' + key);
+  const q = inp.value.toLowerCase();
+  const src = acSources[key] ? acSources[key]() : [];
   const matches = src.filter(v => v.toLowerCase().includes(q)).slice(0, 10);
   if (!matches.length && !q) { list.classList.remove('open'); return; }
   const exact = src.find(v => v.toLowerCase() === q);
   list.innerHTML = matches.map(v =>
-    `<div class="ac-item" onmousedown="acSSet('${key}','${v.replace(/'/g,"\\'")}')">${v}</div>`
-  ).join('') + (q && !exact ? `<div class="ac-item" style="color:var(--g);font-style:italic" onmousedown="acSSet('${key}','${inp.value.replace(/'/g,"\\'")}')" >+ Use "${inp.value}"</div>` : '');
+    `<div class="ac-item" onmousedown="acSSet('${key}','${v.replace(/'/g,"\\'")}')">  ${v}</div>`
+  ).join('') + (q && !exact ? `<div class="ac-item" style="color:var(--g);font-style:italic" onmousedown="acSSet('${key}','${inp.value.replace(/'/g,"\\'")}')">+ Use "${inp.value}"</div>` : '');
   list.classList.add('open');
   if (key === 'team' || key === 'season') checkDuplicate();
 }
@@ -432,17 +314,12 @@ function acSSet(key, val) {
   checkDuplicate();
 }
 function acSClose(key) { document.getElementById('sacl-' + key)?.classList.remove('open'); }
-
-// BUG FIX: autoFillLeague was empty stub — now actually fills league from club data
 function autoFillLeague() {
-  const team      = document.getElementById('s-team').value.trim();
-  const leagueEl  = document.getElementById('s-league');
-  if (!team || leagueEl.value) return; // don't overwrite if user already filled it
-  const league = clubLeagueMap[team];
-  if (league) leagueEl.value = league;
+  // if we know the club's league, prefill
+  const team = document.getElementById('s-team').value.trim();
+  if (!team || document.getElementById('s-league').value) return;
 }
 
-// ── Submit ────────────────────────────────────────────────────
 async function submitKit() {
   if (!currentUser) { window.location.href = '/login.html?from=/submit.html'; return; }
   const team   = document.getElementById('s-team').value.trim();
@@ -451,64 +328,53 @@ async function submitKit() {
   const img    = document.getElementById('s-img').value.trim();
 
   if (!team || !season) { toast('Team and Season are required', 'err'); return; }
-  if (!img)             { toast('Please provide at least one image', 'err'); return; }
+  if (!img) { toast('Please provide at least one image URL', 'err'); return; }
 
-  const [{ data: existing }, { data: myDupeRaw }] = await Promise.all([
-    sb.from('kits').select('id').ilike('team', team).ilike('season', season).eq('type', type).limit(1),
-    sb.from('kit_submissions').select('id,status').eq('user_id', currentUser.id).ilike('team', team).ilike('season', season).eq('type', type).limit(5),
+  // final duplicate check
+  const [{ data: existing }, { data: myDupe }] = await Promise.all([
+    sb.from('kits').select('id').eq('team', team).eq('season', season).eq('type', type).limit(1),
+    sb.from('kit_submissions').select('id').eq('user_id', currentUser.id).eq('team', team).eq('season', season).eq('type', type).limit(1),
   ]);
-  const myDupe = (myDupeRaw || []).filter(s => ['pending', 'approved'].includes(String(s.status || '').toLowerCase()));
   if (existing?.length) { toast('This kit already exists in KitDB!', 'err'); return; }
-  if (myDupe?.length)   { toast('You already submitted this kit and it is still in moderation/live.', 'err'); return; }
+  if (myDupe?.length) { toast('You already submitted this kit — awaiting review.', 'err'); return; }
 
   const btn = document.getElementById('submit-btn');
   btn.textContent = 'Submitting…'; btn.disabled = true;
 
   const { error } = await sb.from('kit_submissions').insert({
     user_id:     currentUser.id,
-    team,
-    season,
-    league:      document.getElementById('s-league').value.trim()  || null,
+    team,        season,
+    league:      document.getElementById('s-league').value.trim() || null,
     type,
-    maker:       document.getElementById('s-maker').value.trim()   || null,
-    color:       document.getElementById('s-color').value.trim()   || null,
+    maker:       document.getElementById('s-maker').value.trim() || null,
+    color:       document.getElementById('s-color').value.trim() || null,
     image_url:   img,
-    image_url_2: document.getElementById('s-img2').value.trim()    || null,
-    image_url_3: document.getElementById('s-img3').value.trim()    || null,
-    price_label: document.getElementById('s-price').value.trim()   || null,
-    buy_url:     document.getElementById('s-buy').value.trim()     || null,
-    description: document.getElementById('s-desc').value.trim()    || null,
+    image_url_2: document.getElementById('s-img2').value.trim() || null,
+    image_url_3: document.getElementById('s-img3').value.trim() || null,
+    price_label: document.getElementById('s-price').value.trim() || null,
+    buy_url:     document.getElementById('s-buy').value.trim() || null,
+    description: document.getElementById('s-desc').value.trim() || null,
     status:      'pending',
   });
 
   btn.textContent = 'Submit Kit for Review'; btn.disabled = false;
   if (error) { toast('Error: ' + error.message, 'err'); return; }
 
-  try {
-    await sb.rpc('award_points', { p_user_id: currentUser.id, p_points: 5, p_reason: 'Kit submitted' });
-    await sb.rpc('check_badges', { p_user_id: currentUser.id });
-  } catch {}
+  // award submission points
+  await sb.rpc('award_points', { p_user_id: currentUser.id, p_points: 5, p_reason: 'Kit submitted' });
+  await sb.rpc('check_badges', { p_user_id: currentUser.id });
 
-  document.getElementById('submit-form').style.display   = 'none';
+  document.getElementById('submit-form').style.display = 'none';
   document.getElementById('success-screen').style.display = 'block';
   await loadMySubmissions();
 }
 
-// BUG FIX: resetForm now also clears file inputs and image previews
 function resetForm() {
   ['s-team','s-season','s-league','s-maker','s-color','s-img','s-img2','s-img3','s-price','s-buy','s-desc']
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  // Clear file inputs
-  ['s-img-file','s-img2-file','s-img3-file']
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  // Hide previews
-  [1,2,3].forEach(slot => {
-    const p = document.getElementById('prev-' + slot);
-    if (p) p.style.display = 'none';
-  });
-  document.getElementById('duplicate-warn').style.display  = 'none';
-  document.getElementById('submit-form').style.display      = 'block';
-  document.getElementById('success-screen').style.display   = 'none';
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('duplicate-warn').style.display = 'none';
+  document.getElementById('submit-form').style.display = 'block';
+  document.getElementById('success-screen').style.display = 'none';
 }
 </script>
 </body>
