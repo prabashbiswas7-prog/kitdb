@@ -160,6 +160,7 @@ const kitId = qp.get('id');
 let kit = null, currentUser = null, userProfile = null, isSaved = false, userRating = 0;
 
 (async () => {
+ codex/make-website-production-ready-cexulp
   if (!slug && !kitId) { window.location.href = '/browse.html'; return; }
   try {
     const kitQuery = sb.from('kits_with_stats')
@@ -167,11 +168,22 @@ let kit = null, currentUser = null, userProfile = null, isSaved = false, userRat
     if (slug) kitQuery.eq('slug', slug);
     else kitQuery.eq('id', kitId);
 
+=======
+  if (!slug) { show404(); return; }
+  try {
+main
     const [, userRes, kitRes] = await Promise.all([
       initNav(),
       getUser(),
       withTimeout(
+ codex/make-website-production-ready-cexulp
         kitQuery.single(),
+=======
+        sb.from('kits_with_stats')
+          .select('id,slug,team,season,league,type,maker,color,description,buy_url,buy_label,price_label,image_url,image_url_2,image_url_3,avg_rating,rating_count,views,collection_count,is_published')
+          .eq('slug', slug)
+          .single(),
+main
         10000,
         'Timed out loading kit details'
       ),
@@ -185,7 +197,11 @@ let kit = null, currentUser = null, userProfile = null, isSaved = false, userRat
     document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
 
     // increment view — fire and forget, don't await
+ codex/make-website-production-ready-cexulp
     if (kit.slug) sb.rpc('increment_kit_views', { kit_slug: kit.slug }).catch(() => {});
+=======
+    sb.rpc('increment_kit_views', { kit_slug: slug }).catch(() => {});
+main
 
     renderKit();
     if (currentUser) {
@@ -367,16 +383,26 @@ async function toggleSave() {
 
 async function loadRelated() {
   document.getElementById('related-team-name').textContent = kit.team.toUpperCase();
+codex/make-website-production-ready-cexulp
   let relatedQ = sb.from('kits_with_stats')
     .select('id,slug,team,season,type,image_url,avg_rating,rating_count,is_published')
     .eq('team', kit.team).eq('is_published', true).limit(4);
   relatedQ = slug ? relatedQ.neq('slug', slug) : relatedQ.neq('id', kit.id);
   const { data } = await relatedQ;
+=======
+  const { data } = await sb.from('kits_with_stats')
+    .select('id,slug,team,season,type,image_url,avg_rating,rating_count,is_published')
+    .eq('team', kit.team).eq('is_published', true).neq('slug', slug).limit(4);
+ main
   if (!data || !data.length) { document.querySelector('.related-section').style.display='none'; return; }
   document.getElementById('related-grid').innerHTML = data.map(k => {
     const bc = kitTypeBadgeClass(k.type);
     const idx = String(k.id || k.slug || '0').charCodeAt(0) % 6;
+ codex/make-website-production-ready-cexulp
     return `<a href="${kitURL(k.slug, k.id)}" class="kit-card" onclick="trackClick()">
+=======
+    return `<a href="${kitURL(k.slug)}" class="kit-card" onclick="trackClick()">
+ main
       <div class="kit-card-img grad-${idx}">
         ${k.image_url?`<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
         <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>

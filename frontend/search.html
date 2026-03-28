@@ -95,7 +95,11 @@ function search() {
   }
   grid.innerHTML = found.map(k => {
     const bc = kitTypeBadgeClass(k.type);
+codex/make-website-production-ready-cexulp
     return `<a href="${kitURL(k.slug, k.id)}" class="kit-card" onclick="trackClick()">
+=======
+    return `<a href="${kitURL(k.slug)}" class="kit-card" onclick="trackClick()">
+main
       <div class="kit-card-img">
         ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
         <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>

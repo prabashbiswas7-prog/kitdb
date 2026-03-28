@@ -249,12 +249,17 @@ function safeURL(url, fallback = '#') {
   return fallback;
 }
 
+codex/make-website-production-ready-cexulp
 function kitURL(slug, id = null) {
   const s = String(slug ?? '').trim();
   if (s) return `/kit.html?slug=${encodeURIComponent(s)}`;
   const kId = String(id ?? '').trim();
   if (kId) return `/kit.html?id=${encodeURIComponent(kId)}`;
   return '/browse.html';
+=======
+function kitURL(slug) {
+  return `/kit.html?slug=${encodeURIComponent(String(slug ?? ''))}`;
+ main
 }
 
 function kitTypeBadgeClass(type) {
