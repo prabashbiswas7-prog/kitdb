@@ -66,6 +66,11 @@
 .home-gallery-media { height:190px; display:flex; align-items:center; justify-content:center; background:var(--s2); }
 .home-gallery-media img { width:100%; height:100%; object-fit:contain; }
 .home-gallery-meta { padding:.7rem .8rem; font-size:.74rem; color:var(--w3); }
+.home-row-2col,.home-row-3col{display:grid;gap:1rem}
+.home-row-2col{grid-template-columns:1fr 1fr}
+.home-row-3col{grid-template-columns:repeat(3,1fr)}
+@media(max-width:900px){.home-row-2col,.home-row-3col{grid-template-columns:1fr}}
+.home-row-cell{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:1rem}
 </style>
 </head>
 <body>
@@ -358,6 +363,13 @@ async function renderAdditionalSections(sections) {
           <div class="home-gallery-meta"><strong style="color:var(--w)">${esc(k.team)}</strong><br/>${esc(k.season)} · ${esc(k.type)}</div>
         </a>`).join('');
       blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="section-head"><span class="section-title">${esc(c.title || 'IMAGE')} <span>GALLERY</span></span></div><div class="home-gallery-grid">${cards || '<div class="empty" style="grid-column:1/-1"><p>No gallery items available.</p></div>'}</div></div>`);
+    } else if (s.type === 'row_2col') {
+      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="home-row-2col"><div class="home-row-cell">${c.left_html || ''}</div><div class="home-row-cell">${c.right_html || ''}</div></div></div>`);
+    } else if (s.type === 'row_3col') {
+      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="home-row-3col"><div class="home-row-cell">${c.col1_html || ''}</div><div class="home-row-cell">${c.col2_html || ''}</div><div class="home-row-cell">${c.col3_html || ''}</div></div></div>`);
+    } else if (s.type === 'spacer') {
+      const h = Math.max(parseInt(c.height || 48, 10), 8);
+      blocks.push(`<div data-builder-section-id="${s.id}" style="height:${h}px"></div>`);
     } else {
       blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || s.label || s.type)}</div><p style="color:var(--w4);margin-top:.5rem">Section type <code>${esc(s.type)}</code> is enabled but not configured yet.</p></div></div>`);
     }
