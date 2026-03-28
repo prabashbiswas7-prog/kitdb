@@ -32,6 +32,7 @@
 .kit-grid.list-view .kit-card-body { flex:1; display:flex; align-items:center; gap:1.5rem; padding:.7rem .9rem .7rem 0; }
 .kit-grid.list-view .kit-card-team { min-width:140px; margin-bottom:0; }
 .load-more-wrap { text-align:center; padding:1.5rem 0; }
+#browse-grid { min-height: 520px; }
 </style>
 </head>
 <body>
@@ -200,7 +201,7 @@ function render() {
     if (filters.type !== 'All') {
       // BUG FIX: 'GK' filter matches both 'GK Home' and 'GK Away'
       if (filters.type === 'GK') {
-        if (!k.type.startsWith('GK')) return false;
+        if (!String(k.type || '').startsWith('GK')) return false;
       } else {
         if (k.type !== filters.type) return false;
       }
@@ -240,7 +241,7 @@ function renderPage() {
   // BUG FIX: ad slot cached outside — no async call inside render loop
   slice.forEach((k, i) => {
     if (i > 0 && i % 6 === 0 && gridAdSlot?.is_active && gridAdSlot?.ad_code) {
-      html += `<div class="grid-ad"><div class="ad-slot ad-inline" style="display:block"><div class="ad-label">Advertisement</div>${gridAdSlot.ad_code}</div></div>`;
+      html += `<div class="grid-ad"><div class="ad-slot ad-inline is-active"><div class="ad-label">Advertisement</div>${gridAdSlot.ad_code}</div></div>`;
     }
     html += kitCardHTML(k);
   });
@@ -256,22 +257,22 @@ function loadMore() {
 }
 
 function typeBadge(t) {
-  return t === 'Home' ? 'b-home' : t === 'Away' ? 'b-away' : t === 'Special Edition' ? 'b-special' : t.startsWith('GK') ? 'b-gk' : 'b-third';
+  return kitTypeBadgeClass(t);
 }
 
 function kitCardHTML(k) {
   const bc = typeBadge(k.type);
   return `<a href="${buildKitHref(k)}" class="kit-card" onclick="trackClick()">
     <div class="kit-card-img">
-      ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
-      <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
+      ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
+      <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>
     </div>
     <div class="kit-card-body">
-      <div class="kit-card-team">${k.team}</div>
-      <div class="kit-card-season">${k.season}</div>
-      <div class="kit-card-league">${k.league || ''}</div>
+      <div class="kit-card-team">${escapeHTML(k.team)}</div>
+      <div class="kit-card-season">${escapeHTML(k.season)}</div>
+      <div class="kit-card-league">${escapeHTML(k.league || '')}</div>
       <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating||0), k.rating_count)}</div>
-      ${k.price_label ? `<div style="font-size:.72rem;color:var(--g);font-weight:600;margin-top:.25rem">${k.price_label}</div>` : ''}
+      ${k.price_label ? `<div style="font-size:.72rem;color:var(--g);font-weight:600;margin-top:.25rem">${escapeHTML(k.price_label)}</div>` : ''}
     </div>
   </a>`;
 }
