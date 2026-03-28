@@ -136,14 +136,12 @@ async function initNav() {
     if (navLinks && menuItems?.length) {
       const currentPath = window.location.pathname;
       navLinks.innerHTML = menuItems.map(item => {
-        const itemUrl = safeURL(item.url, '/');
-        const urlPath = new URL(itemUrl, window.location.origin).pathname;
+        const itemUrl = item?.url || '/';
         // BUG FIX: improved active detection — exact match for '/', prefix match for others
-        const isActive = urlPath === '/'
+        const isActive = itemUrl === '/'
           ? currentPath === '/'
-          : currentPath.startsWith(urlPath);
-        const isBlank = item.target === '_blank';
-        return `<a href="${itemUrl}" class="nav-link${isActive ? ' active' : ''}" ${isBlank ? 'target="_blank" rel="noopener"' : ''}>${escapeHTML(item.label)}</a>`;
+          : currentPath.startsWith(itemUrl.split('?')[0]);
+        return `<a href="${itemUrl}" class="nav-link${isActive ? ' active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label || 'Link'}</a>`;
       }).join('');
     }
   } catch {}
@@ -236,44 +234,4 @@ function buildKitHref(kitLike) {
     return `/kit.html?id=${encodeURIComponent(kitLike.id)}`;
   }
   return '/browse.html';
-// ── Output safety helpers ──────────────────────────────────
-function escapeHTML(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function safeURL(url, fallback = '#') {
-  const raw = String(url ?? '').trim();
-  if (!raw) return fallback;
-  if (raw.startsWith('/')) return raw;
-  try {
-    const parsed = new URL(raw, window.location.origin);
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
-  } catch {}
-  return fallback;
-}
-
-codex/make-website-production-ready-cexulp
-function kitURL(slug, id = null) {
-  const s = String(slug ?? '').trim();
-  if (s) return `/kit.html?slug=${encodeURIComponent(s)}`;
-  const kId = String(id ?? '').trim();
-  if (kId) return `/kit.html?id=${encodeURIComponent(kId)}`;
-  return '/browse.html';
-function kitURL(slug) {
-  return `/kit.html?slug=${encodeURIComponent(String(slug ?? ''))}`;
- main
-}
-
-function kitTypeBadgeClass(type) {
-  const t = String(type ?? '');
-  if (t === 'Home') return 'b-home';
-  if (t === 'Away') return 'b-away';
-  if (t === 'Special Edition') return 'b-special';
-  if (t.startsWith('GK')) return 'b-gk';
-  return 'b-third';
 }

@@ -257,7 +257,8 @@ function loadMore() {
 }
 
 function typeBadge(t) {
-  return kitTypeBadgeClass(t);
+  const type = String(t || '');
+  return type === 'Home' ? 'b-home' : type === 'Away' ? 'b-away' : type === 'Special Edition' ? 'b-special' : type.startsWith('GK') ? 'b-gk' : 'b-third';
 }
 
 function kitCardHTML(k) {

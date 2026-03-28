@@ -120,51 +120,59 @@
 <script src="/assets/js/config.js"></script>
 <script>
 (async () => {
-  // BUG FIX: Run everything in parallel — was sequential before (slow)
-  const [, , sectionsRes, statsResults, featuredRes, latestRes, topRatedRes] = await Promise.all([
-    initNav(),
-    loadSiteSettings(),
-    // BUG FIX: was querying 'homepage_config' which doesn't exist — correct table is 'homepage_sections'
-    sb.from('homepage_sections').select('type,is_active,settings').eq('is_active', true).order('sort_order'),
-    // BUG FIX: was fetching full table twice just for counts — now uses exact count, zero row data
-    Promise.all([
-      sb.from('kits').select('*', { count: 'exact', head: true }).eq('is_published', true),
-      sb.from('clubs').select('*', { count: 'exact', head: true }),
-      sb.from('leagues').select('*', { count: 'exact', head: true }),
-      sb.from('seasons').select('*', { count: 'exact', head: true }),
-    ]),
-    // Only select columns we actually render — not select('*')
-    sb.from('kits_with_stats').select('id,slug,team,season,league,type,image_url,avg_rating,rating_count').eq('is_featured', true).eq('is_published', true).limit(5),
-    sb.from('kits_with_stats').select('id,slug,team,season,league,type,image_url,avg_rating,rating_count').eq('is_published', true).order('created_at', { ascending: false }).limit(6),
-    sb.from('kits_with_stats').select('id,slug,team,season,avg_rating,rating_count').eq('is_published', true).order('avg_rating', { ascending: false }).limit(5),
-  ]);
+  try {
+    const [navRes, siteRes, sectionsRes, statsRes, featuredRes, latestRes, topRatedRes] = await Promise.allSettled([
+      initNav(),
+      loadSiteSettings(),
+      sb.from('homepage_sections').select('type,is_active,settings').eq('is_active', true).order('sort_order'),
+      Promise.all([
+        sb.from('kits').select('*', { count: 'exact', head: true }).eq('is_published', true),
+        sb.from('clubs').select('*', { count: 'exact', head: true }),
+        sb.from('leagues').select('*', { count: 'exact', head: true }),
+        sb.from('seasons').select('*', { count: 'exact', head: true }),
+      ]),
+      sb.from('kits_with_stats').select('id,slug,team,season,league,type,image_url,avg_rating,rating_count').eq('is_featured', true).eq('is_published', true).limit(5),
+      sb.from('kits_with_stats').select('id,slug,team,season,league,type,image_url,avg_rating,rating_count').eq('is_published', true).order('created_at', { ascending: false }).limit(6),
+      sb.from('kits_with_stats').select('id,slug,team,season,avg_rating,rating_count').eq('is_published', true).order('avg_rating', { ascending: false }).limit(5),
+    ]);
 
-  // Apply homepage section config
-  if (sectionsRes.data) applyHomepageSections(sectionsRes.data);
+    if (sectionsRes.status === 'fulfilled' && sectionsRes.value?.data) {
+      applyHomepageSections(sectionsRes.value.data);
+    }
 
-  // Stats — exact counts, no row data
-  const [kitsC, clubsC, leaguesC, seasonsC] = statsResults;
-  document.getElementById('s-kits').textContent    = kitsC.count    ?? '—';
-  document.getElementById('s-clubs').textContent   = clubsC.count   ?? '—';
-  document.getElementById('s-leagues').textContent = leaguesC.count ?? '—';
-  document.getElementById('s-seasons').textContent = seasonsC.count ?? '—';
+    const stats = statsRes.status === 'fulfilled' ? statsRes.value : [];
+    const [kitsC, clubsC, leaguesC, seasonsC] = stats;
+    document.getElementById('s-kits').textContent    = kitsC?.count    ?? '—';
+    document.getElementById('s-clubs').textContent   = clubsC?.count   ?? '—';
+    document.getElementById('s-leagues').textContent = leaguesC?.count ?? '—';
+    document.getElementById('s-seasons').textContent = seasonsC?.count ?? '—';
 
-  renderFeatured(featuredRes.data);
+    renderFeatured(featuredRes.status === 'fulfilled' ? featuredRes.value?.data : []);
+    document.getElementById('latest-grid').innerHTML = ((latestRes.status === 'fulfilled' ? latestRes.value?.data : []) || []).map(kitCardHTML).join('');
+    document.getElementById('top-rated-list').innerHTML = ((topRatedRes.status === 'fulfilled' ? topRatedRes.value?.data : []) || []).map((k, i) => `
+      <a href="${buildKitHref(k)}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
+        <span style="font-family:var(--fm);font-size:.7rem;color:var(--g);width:16px">${i+1}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team || 'Unknown Team'}</div>
+          <div style="font-size:.7rem;color:var(--w4)">${k.season || '—'}</div>
+        </div>
+        <span style="font-family:var(--fm);font-size:.72rem;color:var(--gold)">★ ${parseFloat(k.avg_rating||0).toFixed(1)}</span>
+      </a>`).join('');
 
-  document.getElementById('latest-grid').innerHTML = (latestRes.data || []).map(kitCardHTML).join('');
-
-  document.getElementById('top-rated-list').innerHTML = (topRatedRes.data || []).map((k, i) => `
-    <a href="${buildKitHref(k)}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
-      <span style="font-family:var(--fm);font-size:.7rem;color:var(--g);width:16px">${i+1}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:500;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHTML(k.team)}</div>
-        <div style="font-size:.7rem;color:var(--w4)">${escapeHTML(k.season)}</div>
-      </div>
-      <span style="font-family:var(--fm);font-size:.72rem;color:var(--gold)">★ ${parseFloat(k.avg_rating||0).toFixed(1)}</span>
-    </a>`).join('');
-
-  injectAd('top_banner', 'ad-top-banner');
-  injectAd('sidebar', 'ad-sidebar');
+    if (navRes.status === 'fulfilled' && siteRes.status === 'fulfilled') {
+      injectAd('top_banner', 'ad-top-banner');
+      injectAd('sidebar', 'ad-sidebar');
+    }
+  } catch (err) {
+    console.error('Homepage render failed', err);
+    document.getElementById('s-kits').textContent = '—';
+    document.getElementById('s-clubs').textContent = '—';
+    document.getElementById('s-leagues').textContent = '—';
+    document.getElementById('s-seasons').textContent = '—';
+    renderFeatured([]);
+    document.getElementById('latest-grid').innerHTML = '';
+    document.getElementById('top-rated-list').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><h3>DATA UNAVAILABLE</h3><p>Please refresh in a moment.</p></div>';
+  }
 })();
 
 async function loadSiteSettings() {
