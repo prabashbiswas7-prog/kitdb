@@ -91,8 +91,9 @@ function search() {
     return;
   }
   grid.innerHTML = found.map(k => {
-    const bc = k.type === 'Home' ? 'b-home' : k.type === 'Away' ? 'b-away' : k.type === 'Special Edition' ? 'b-special' : k.type.startsWith('GK') ? 'b-gk' : 'b-third';
-    return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+    const type = String(k.type || '');
+    const bc = type === 'Home' ? 'b-home' : type === 'Away' ? 'b-away' : type === 'Special Edition' ? 'b-special' : type.startsWith('GK') ? 'b-gk' : 'b-third';
+    return `<a href="${buildKitHref(k)}" class="kit-card" onclick="trackClick()">
       <div class="kit-card-img">
         ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
         <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>

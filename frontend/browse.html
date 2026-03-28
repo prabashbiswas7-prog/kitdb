@@ -256,12 +256,13 @@ function loadMore() {
 }
 
 function typeBadge(t) {
-  return t === 'Home' ? 'b-home' : t === 'Away' ? 'b-away' : t === 'Special Edition' ? 'b-special' : t.startsWith('GK') ? 'b-gk' : 'b-third';
+  const type = String(t || '');
+  return type === 'Home' ? 'b-home' : type === 'Away' ? 'b-away' : type === 'Special Edition' ? 'b-special' : type.startsWith('GK') ? 'b-gk' : 'b-third';
 }
 
 function kitCardHTML(k) {
   const bc = typeBadge(k.type);
-  return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+  return `<a href="${buildKitHref(k)}" class="kit-card" onclick="trackClick()">
     <div class="kit-card-img">
       ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
       <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>

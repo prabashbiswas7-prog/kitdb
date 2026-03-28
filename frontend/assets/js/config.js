@@ -129,11 +129,12 @@ async function initNav() {
     if (navLinks && menuItems?.length) {
       const currentPath = window.location.pathname;
       navLinks.innerHTML = menuItems.map(item => {
+        const itemUrl = item?.url || '/';
         // BUG FIX: improved active detection — exact match for '/', prefix match for others
-        const isActive = item.url === '/'
+        const isActive = itemUrl === '/'
           ? currentPath === '/'
-          : currentPath.startsWith(item.url.split('?')[0]);
-        return `<a href="${item.url}" class="nav-link${isActive ? ' active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label}</a>`;
+          : currentPath.startsWith(itemUrl.split('?')[0]);
+        return `<a href="${itemUrl}" class="nav-link${isActive ? ' active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label || 'Link'}</a>`;
       }).join('');
     }
   } catch {}
@@ -197,4 +198,14 @@ function toast(msg, type = 'ok') {
 // ── Date formatter ─────────────────────────────────────────
 function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// ── Kit URL helper ────────────────────────────────────────
+function buildKitHref(kitLike) {
+  if (!kitLike) return '/browse.html';
+  if (kitLike.slug) return `/kit.html?slug=${encodeURIComponent(kitLike.slug)}`;
+  if (kitLike.id !== undefined && kitLike.id !== null && kitLike.id !== '') {
+    return `/kit.html?id=${encodeURIComponent(kitLike.id)}`;
+  }
+  return '/browse.html';
 }
