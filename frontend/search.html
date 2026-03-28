@@ -92,7 +92,7 @@ function search() {
   }
   grid.innerHTML = found.map(k => {
     const bc = k.type === 'Home' ? 'b-home' : k.type === 'Away' ? 'b-away' : k.type === 'Special Edition' ? 'b-special' : k.type.startsWith('GK') ? 'b-gk' : 'b-third';
-    return `<a href="${k.slug ? `/kit.html?slug=${encodeURIComponent(k.slug)}` : (k.id ? `/kit.html?id=${encodeURIComponent(k.id)}` : '/browse.html')}" class="kit-card" onclick="trackClick()">
+    return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
       <div class="kit-card-img">
         ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
         <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
