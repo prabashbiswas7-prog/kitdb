@@ -772,6 +772,25 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function safeURL(url, fallback = '') {
+  const raw = String(url ?? '').trim();
+  if (!raw) return fallback;
+  if (raw.startsWith('/')) return raw;
+  try {
+    const parsed = new URL(raw, window.location.origin);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+  } catch {}
+  return fallback;
+}
+
 // ── STATE ───────────────────────────────────────────────────
 let adminProfile = null;
 let allSeasons = [], allLeagues = [], allClubs = [], allMakers = [], allKitTypes = [];
@@ -974,8 +993,8 @@ async function loadP3() {
   p3.innerHTML = `
     <div class="p3h">
       <div>
-        <div class="p3t">${selClub.name} <span>${selSeason.name}</span></div>
-        <div class="p3s">${selLeague?.name || ''} · ${(kits || []).length} kit${(kits || []).length !== 1 ? 's' : ''}</div>
+        <div class="p3t">${escapeHTML(selClub.name)} <span>${escapeHTML(selSeason.name)}</span></div>
+        <div class="p3s">${escapeHTML(selLeague?.name || '')} · ${(kits || []).length} kit${(kits || []).length !== 1 ? 's' : ''}</div>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
         <button class="btn btn-g btn-sm" onclick="copyToSeason()">⊕ Copy to Season</button>
@@ -1000,9 +1019,9 @@ async function loadP3() {
           const bs = typ ? `background:${typ.bg_color};color:${typ.color};border-color:${typ.color}40` : '';
           return `<tr id="kr-${k.id}">
             <td><input type="checkbox" class="cb kit-cb" data-id="${k.id}" onchange="toggleKitSel('${k.id}',this.checked)"/></td>
-            <td><div class="tdi">${k.image_url ? `<img src="${k.image_url}" onerror="this.style.display='none'"/>` : '👕'}</div></td>
-            <td><span class="badge" style="${bs}">${k.type}</span></td>
-            <td style="color:var(--w3);font-size:.78rem">${k.maker || '—'}</td>
+            <td><div class="tdi">${k.image_url ? `<img src="${safeURL(k.image_url)}" onerror="this.style.display='none'"/>` : '👕'}</div></td>
+            <td><span class="badge" style="${bs}">${escapeHTML(k.type)}</span></td>
+            <td style="color:var(--w3);font-size:.78rem">${escapeHTML(k.maker || '—')}</td>
             <td><span class="badge ${k.is_published ? 'pub-y' : 'pub-n'}">${k.is_published ? 'Live' : 'Draft'}</span></td>
             <td style="text-align:center">${k.is_featured ? '⭐' : '—'}</td>
             <td style="font-size:.72rem;color:var(--w3)">${k.submitted_by ? `👤 ${k.is_verified ? '✅' : '⏳'}` : '<span style="color:var(--g)">Admin ✓</span>'}</td>
@@ -1102,15 +1121,18 @@ function closeKitForm() { document.getElementById('kit-ov').classList.remove('op
 function prevImg() {
   const u = document.getElementById('kf-img').value.trim();
   const b = document.getElementById('ip');
-  b.innerHTML = u ? `<img src="${u}" onerror="this.parentElement.innerHTML='📷'"/>` : '📷';
+  b.innerHTML = u ? `<img src="${safeURL(u)}" onerror="this.parentElement.innerHTML='📷'"/>` : '📷';
   // BUG FIX: also sync the upload preview box when URL is typed/pasted
   const prev = document.getElementById('kfip-1');
   const img  = document.getElementById('kfip-img-1');
-  if (prev && img) { img.src = u || ''; prev.style.display = u ? 'flex' : 'none'; }
+  if (prev && img) { img.src = safeURL(u) || ''; prev.style.display = u ? 'flex' : 'none'; }
 }
 
+// Merge-resolution note:
+// Keep both bucket names for cross-branch compatibility (`kits` new / `kit` legacy),
+// so uploads work regardless of which schema branch was deployed first.
 // BUG FIX: image upload from gallery for admin kit form
-const ADMIN_BUCKET = 'kit';
+const ADMIN_BUCKET_CANDIDATES = ['kits', 'kit'];
 async function adminUploadImg(inputId, fileInput, prevId, progId) {
   const file = fileInput.files[0];
   if (!file) return;
@@ -1121,12 +1143,18 @@ async function adminUploadImg(inputId, fileInput, prevId, progId) {
   if (prev) prev.style.display = 'none';
   const ext  = file.name.split('.').pop().toLowerCase();
   const path = `admin/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await sb.storage.from(ADMIN_BUCKET).upload(path, file, {
-    cacheControl: '3600', upsert: false, contentType: file.type,
-  });
+  let uploadError = null;
+  let usedBucket = ADMIN_BUCKET_CANDIDATES[0];
+  for (const bucket of ADMIN_BUCKET_CANDIDATES) {
+    const { error } = await sb.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type,
+    });
+    if (!error) { usedBucket = bucket; uploadError = null; break; }
+    uploadError = error;
+  }
   if (prog) prog.style.display = 'none';
-  if (error) { toast('Upload failed: ' + error.message, 'err'); fileInput.value = ''; return; }
-  const { data: { publicUrl } } = sb.storage.from(ADMIN_BUCKET).getPublicUrl(path);
+  if (uploadError) { toast('Upload failed: ' + uploadError.message, 'err'); fileInput.value = ''; return; }
+  const { data: { publicUrl } } = sb.storage.from(usedBucket).getPublicUrl(path);
   const urlEl = document.getElementById(inputId);
   if (urlEl) urlEl.value = publicUrl;
   // Update preview
@@ -1236,7 +1264,7 @@ async function acKotw() {
   const { data } = await sb.from('kits').select('slug,team,season,type').ilike('team', '%' + q + '%').limit(8);
   const list = document.getElementById('acl-kotw');
   list.innerHTML = (data || []).map(k =>
-    `<div class="aci" onmousedown="document.getElementById('kotw-kit').value='${k.slug}';document.getElementById('acl-kotw').classList.remove('open')">${k.team} ${k.season} ${k.type}</div>`
+    `<div class="aci" onmousedown="document.getElementById('kotw-kit').value='${String(k.slug).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}';document.getElementById('acl-kotw').classList.remove('open')">${escapeHTML(k.team)} ${escapeHTML(k.season)} ${escapeHTML(k.type)}</div>`
   ).join('');
   list.classList.add('open');
 }
@@ -1244,37 +1272,67 @@ async function acKotw() {
 // ── USER SUBMISSIONS ─────────────────────────────────────────
 async function loadSubmissions() {
   const statusFilter = document.getElementById('sub-filter').value;
-  let query = sb.from('kit_submissions').select('*,profiles(username)').order('created_at', { ascending: false });
-  if (statusFilter) query = query.eq('status', statusFilter);
-  const { data } = await query;
+  const normalizedFilter = String(statusFilter || '').toLowerCase();
+
+  // Try relational path first (works when FK metadata exists).
+  const rel = await sb.from('kit_submissions')
+    .select('*,profiles(username)')
+    .order('created_at', { ascending: false });
+
+  let data = rel.data || [];
+  // Fallback when relation metadata is unavailable in this project.
+  if (rel.error) {
+    const fb = await sb.from('kit_submissions').select('*').order('created_at', { ascending: false });
+    data = fb.data || [];
+  }
+
+  if (normalizedFilter) data = data.filter(s => String(s.status || '').toLowerCase() === normalizedFilter);
+
+  const userIds = [...new Set((data || []).map(s => s.user_id).filter(Boolean))];
+  const userMap = {};
+  if (userIds.length) {
+    const { data: profs } = await sb.from('profiles').select('id,username').in('id', userIds);
+    (profs || []).forEach(p => { userMap[p.id] = p.username; });
+  }
+
   const statusClass = { pending: 'pend', approved: 'pub-y', rejected: 'pub-n' };
   document.getElementById('sub-tbody').innerHTML = (data || []).map(s => `<tr>
-    <td style="font-weight:600">${s.team}</td>
-    <td style="font-family:var(--fm);font-size:.75rem;color:var(--g)">${s.season}</td>
-    <td><span class="badge ${s.type === 'Home' ? 'bh' : s.type === 'Away' ? 'ba' : 'bt'}">${s.type}</span></td>
-    <td style="font-size:.78rem;color:var(--w3)">${s.profiles?.username || '—'}</td>
+    <td style="font-weight:600">${escapeHTML(s.team)}</td>
+    <td style="font-family:var(--fm);font-size:.75rem;color:var(--g)">${escapeHTML(s.season)}</td>
+    <td><span class="badge ${s.type === 'Home' ? 'bh' : s.type === 'Away' ? 'ba' : 'bt'}">${escapeHTML(s.type)}</span></td>
+    <td style="font-size:.78rem;color:var(--w3)">${escapeHTML(s.profiles?.username || userMap[s.user_id] || '—')}</td>
     <td style="font-size:.72rem;color:var(--w4)">${new Date(s.created_at).toLocaleDateString('en-GB')}</td>
-    <td><span class="badge ${statusClass[s.status] || 'pub-n'}">${s.status}</span></td>
+    <td><span class="badge ${statusClass[String(s.status || '').toLowerCase()] || 'pub-n'}">${escapeHTML(s.status || 'unknown')}</span></td>
     <td><div style="display:flex;gap:.35rem">
       <button class="btn-ed" onclick="reviewSubmission('${s.id}')">Review</button>
-      ${s.status === 'pending' ? `<button class="btn-app" onclick="approveSubmission('${s.id}')">✓ Approve</button><button class="btn-rej" onclick="rejectSubmission('${s.id}')">✕ Reject</button>` : ''}
+      ${String(s.status || '').toLowerCase() === 'pending' ? `<button class="btn-app" onclick="approveSubmission('${s.id}')">✓ Approve</button><button class="btn-rej" onclick="rejectSubmission('${s.id}')">✕ Reject</button>` : ''}
     </div></td>
   </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--w4)">No submissions.</td></tr>';
 }
 
+ 
+
 async function reviewSubmission(id) {
-  const { data: s } = await sb.from('kit_submissions').select('*,profiles(username)').eq('id', id).single();
+  let { data: s } = await sb.from('kit_submissions').select('*,profiles(username)').eq('id', id).single();
+  if (!s) {
+    const fallback = await sb.from('kit_submissions').select('*').eq('id', id).single();
+    s = fallback.data;
+    if (s?.user_id) {
+      const { data: p } = await sb.from('profiles').select('username').eq('id', s.user_id).single();
+      if (p) s.profiles = { username: p.username };
+    }
+  }
   if (!s) return;
   document.getElementById('sub-detail').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
-      ${s.image_url ? `<div style="grid-column:1/-1"><img src="${s.image_url}" style="max-height:200px;object-fit:contain;border-radius:10px;background:var(--s2);padding:.5rem"/></div>` : ''}
+      ${s.image_url ? `<div style="grid-column:1/-1"><img src="${safeURL(s.image_url)}" style="max-height:200px;object-fit:contain;border-radius:10px;background:var(--s2);padding:.5rem"/></div>` : ''}
       ${[['Team',s.team],['Season',s.season],['League',s.league||'—'],['Type',s.type],['Maker',s.maker||'—'],['Color',s.color||'—'],['Price',s.price_label||'—'],['Submitted by',s.profiles?.username||'—']].map(([k,v])=>
-        `<div style="background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.2rem">${k}</div><div style="font-size:.875rem">${v}</div></div>`
+        `<div style="background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.2rem">${escapeHTML(k)}</div><div style="font-size:.875rem">${escapeHTML(v)}</div></div>`
       ).join('')}
-      ${s.description ? `<div style="grid-column:1/-1;background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Description</div><div style="font-size:.875rem;color:var(--w3)">${s.description}</div></div>` : ''}
+      ${s.description ? `<div style="grid-column:1/-1;background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Description</div><div style="font-size:.875rem;color:var(--w3)">${escapeHTML(s.description)}</div></div>` : ''}
     </div>`;
   const actEl = document.getElementById('sub-actions');
-  actEl.innerHTML = s.status === 'pending'
+  actEl.innerHTML = String(s.status || '').toLowerCase() === 'pending'
     ? `<button class="btn btn-g" onclick="document.getElementById('sub-ov').classList.remove('open')">Close</button>
        <button class="btn btn-r" onclick="rejectSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')">✕ Reject</button>
        <button class="btn btn-p" onclick="approveSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')">✓ Approve & Publish</button>`

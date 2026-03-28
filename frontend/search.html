@@ -6,6 +6,9 @@
 <title>Search — KitDB</title>
 <link rel="stylesheet" href="/assets/css/style.css"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+#results { min-height: 420px; }
+</style>
 </head>
 <body>
 <nav class="nav">
@@ -65,7 +68,7 @@ let allKits = [], searchTimer = null;
   allKits.forEach(k => { if (k.league) lc[k.league] = (lc[k.league] || 0) + 1; });
   const topLeagues = Object.entries(lc).sort((a,b) => b[1]-a[1]).slice(0,8).map(([l]) => l);
   document.getElementById('quick-chips').innerHTML = topLeagues.map(l =>
-    `<button class="chip" onclick="document.getElementById('q').value='${l.replace(/'/g,"\\'")}';search()">${l}</button>`
+    `<button class="chip" onclick='document.getElementById("q").value=${JSON.stringify(String(l))};search()'>${escapeHTML(l)}</button>`
   ).join('');
 
   const q = new URLSearchParams(location.search).get('q');
@@ -91,16 +94,20 @@ function search() {
     return;
   }
   grid.innerHTML = found.map(k => {
-    const bc = k.type === 'Home' ? 'b-home' : k.type === 'Away' ? 'b-away' : k.type === 'Special Edition' ? 'b-special' : k.type.startsWith('GK') ? 'b-gk' : 'b-third';
-    return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+    const bc = kitTypeBadgeClass(k.type);
+codex/make-website-production-ready-cexulp
+    return `<a href="${kitURL(k.slug, k.id)}" class="kit-card" onclick="trackClick()">
+=======
+    return `<a href="${kitURL(k.slug)}" class="kit-card" onclick="trackClick()">
+main
       <div class="kit-card-img">
-        ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
-        <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
+        ${k.image_url ? `<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
+        <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${escapeHTML(k.type)}</span>
       </div>
       <div class="kit-card-body">
-        <div class="kit-card-team">${k.team}</div>
-        <div class="kit-card-season">${k.season}</div>
-        <div class="kit-card-league">${k.league || ''}</div>
+        <div class="kit-card-team">${escapeHTML(k.team)}</div>
+        <div class="kit-card-season">${escapeHTML(k.season)}</div>
+        <div class="kit-card-league">${escapeHTML(k.league || '')}</div>
         <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating || 0), k.rating_count)}</div>
       </div>
     </a>`;
