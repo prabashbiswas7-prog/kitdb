@@ -53,7 +53,7 @@ async function injectAd(slotKey, containerId) {
   const el   = document.getElementById(containerId);
   if (!el || !slot || !slot.is_active || !slot.ad_code) return;
   el.innerHTML    = `<div class="ad-label">Advertisement</div>${slot.ad_code}`;
-  el.style.display = 'block';
+  el.classList.add('is-active');
 }
 
 // ── Auth helpers ───────────────────────────────────────────
@@ -77,10 +77,14 @@ async function requireAuth(redirectTo = '/login.html') {
 
 // ── Dynamic nav from DB ────────────────────────────────────
 async function initNav() {
+  const CACHE_TTL_MS = 5 * 60 * 1000;
   // Load site settings for logo/branding
   let siteName = 'KitDB', logoUrl = '';
   try {
-    const { data: settings } = await sb.from('site_settings').select('key,value');
+    const settings = await getCachedTableRows('site_settings:key,value', async () => {
+      const { data } = await sb.from('site_settings').select('key,value');
+      return data || [];
+    }, CACHE_TTL_MS);
     if (settings) {
       const s  = Object.fromEntries(settings.map(r => [r.key, r.value]));
       siteName = s.logo_text || s.site_name || 'KitDB';
@@ -111,17 +115,20 @@ async function initNav() {
   const logoEl = document.getElementById('nav-logo');
   if (logoEl) {
     if (logoUrl) {
-      logoEl.innerHTML = `<img src="${logoUrl}" alt="${siteName}" style="height:32px;object-fit:contain"/>`;
+      logoEl.innerHTML = `<img src="${safeURL(logoUrl)}" alt="${escapeHTML(siteName)}" style="height:32px;object-fit:contain"/>`;
     } else {
       const half = Math.ceil(siteName.length / 2);
-      logoEl.innerHTML = siteName.slice(0, half) + `<span>${siteName.slice(half)}</span>`;
+      logoEl.innerHTML = escapeHTML(siteName.slice(0, half)) + `<span>${escapeHTML(siteName.slice(half))}</span>`;
     }
   }
 
   // Load menu items from DB
   try {
-    const { data: menuItems } = await sb.from('menu_items')
-      .select('label,url,target').eq('is_active', true).order('sort_order');
+    const menuItems = await getCachedTableRows('menu_items:active', async () => {
+      const { data } = await sb.from('menu_items')
+        .select('label,url,target').eq('is_active', true).order('sort_order');
+      return data || [];
+    }, CACHE_TTL_MS);
 
     // BUG FIX: only replace nav links if DB has items AND the element exists
     // Previously this always overwrote the element, losing the hardcoded active state
@@ -156,6 +163,25 @@ async function initNav() {
       <a href="/login.html" class="btn-nav-login">Sign In</a>
       <a href="/login.html#signup" class="btn-nav-signup">Join Free</a>`;
   }
+}
+
+async function getCachedTableRows(cacheKey, fetcher, ttlMs = 300000) {
+  try {
+    const raw = sessionStorage.getItem(`kitdb_cache_${cacheKey}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.expiresAt > Date.now() && Array.isArray(parsed?.rows)) return parsed.rows;
+    }
+  } catch {}
+
+  const rows = await fetcher();
+  try {
+    sessionStorage.setItem(`kitdb_cache_${cacheKey}`, JSON.stringify({
+      expiresAt: Date.now() + ttlMs,
+      rows,
+    }));
+  } catch {}
+  return rows;
 }
 
 // ── Star ratings renderer ──────────────────────────────────
