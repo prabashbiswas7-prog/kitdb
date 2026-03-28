@@ -129,22 +129,25 @@
 
 <script src="/assets/js/config.js"></script>
 <script>
-const slug = new URLSearchParams(location.search).get('slug');
+const qp = new URLSearchParams(location.search);
+const slugParam = qp.get('slug') || qp.get('sl') || qp.get('s');
+const kitIdParam = qp.get('id');
+const kitId = Number.isFinite(Number(kitIdParam)) ? Number(kitIdParam) : null;
 let kit = null, currentUser = null, userProfile = null, isSaved = false, userRating = 0;
 
 (async () => {
-  if (!slug) { show404(); return; }
+  if (!slugParam && !kitId) { show404(); return; }
   await initNav();
   currentUser = await getUser();
   if (currentUser) userProfile = await getProfile(currentUser.id);
 
-  const { data } = await sb.from('kits_with_stats').select('*').eq('slug', slug).single();
+  const data = await fetchKitRecord();
   if (!data) { show404(); return; }
   kit = data;
   document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
 
   // increment view — fire and forget, don't await
-  sb.rpc('increment_kit_views', { kit_slug: slug }).catch(() => {});
+  if (kit.slug) sb.rpc('increment_kit_views', { kit_slug: kit.slug }).catch(() => {});
 
   renderKit();
   if (currentUser) {
@@ -160,6 +163,47 @@ let kit = null, currentUser = null, userProfile = null, isSaved = false, userRat
   trackClick();
 })();
 
+async function fetchKitRecord() {
+  const slugCandidates = [];
+  if (slugParam) {
+    const s = String(slugParam).trim().toLowerCase();
+    if (s) slugCandidates.push(s);
+    const trimmedTs = s.replace(/-\d{8,}$/, '');
+    if (trimmedTs && trimmedTs !== s) slugCandidates.push(trimmedTs);
+  }
+
+  // 1) Primary source: public view with rating stats (fast path)
+  let q = sb.from('kits_with_stats').select('*').limit(1);
+  if (slugCandidates.length) q = q.in('slug', slugCandidates);
+  else q = q.eq('id', kitId);
+  let { data: vData } = await q;
+  if ((!vData || !vData.length) && slugCandidates.length) {
+    // Fallback for legacy links with slightly different suffixes/casing
+    const { data: vLoose } = await sb.from('kits_with_stats').select('*').ilike('slug', `${slugCandidates[slugCandidates.length - 1]}%`).limit(1);
+    vData = vLoose;
+  }
+  if (vData?.length) return vData[0];
+
+  // 2) Fallback: base kits table (handles draft/unpublished or schema drift)
+  let kq = sb.from('kits').select('*').limit(1);
+  if (slugCandidates.length) kq = kq.in('slug', slugCandidates);
+  else kq = kq.eq('id', kitId);
+  let { data: kData } = await kq;
+  if ((!kData || !kData.length) && slugCandidates.length) {
+    const { data: kLoose } = await sb.from('kits').select('*').ilike('slug', `${slugCandidates[slugCandidates.length - 1]}%`).limit(1);
+    kData = kLoose;
+  }
+  if (!kData?.length) return null;
+
+  // Normalize fields expected by page when coming from base table
+  return {
+    ...kData[0],
+    avg_rating: 0,
+    rating_count: 0,
+    collection_count: 0,
+  };
+}
+
 function show404() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('not-found').style.display = 'block';
@@ -167,7 +211,7 @@ function show404() {
 
 function renderKit() {
   const bc = kit.type==='Home'?'b-home':kit.type==='Away'?'b-away':kit.type==='Special Edition'?'b-special':kit.type==='GK'?'b-gk':'b-third';
-  const idx = kit.id.charCodeAt(0) % 6;
+  const idx = String(kit.id || kit.slug || '0').charCodeAt(0) % 6;
 
   // images
   const imgs = [kit.image_url, kit.image_url_2, kit.image_url_3].filter(Boolean);
@@ -222,7 +266,6 @@ function renderKit() {
   // buy button
   if (kit.buy_url) {
     document.getElementById('buy-section').style.display = 'block';
-    // BUG FIX: was referencing kit.buy_label — correct field name is kit.buy_label (matches admin kf-buylabel → buy_label column)
     const label = kit.buy_label || 'Buy Now';
     const price = kit.price_label ? ' — ' + kit.price_label : '';
     document.getElementById('buy-section').innerHTML =
@@ -242,7 +285,8 @@ function renderKit() {
 }
 
 function switchImg(url, el) {
-  document.getElementById('main-img').src = url;
+  const img = document.getElementById('main-img');
+  if (img) img.src = url;
   document.querySelectorAll('.kit-thumb').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
 }
@@ -312,12 +356,15 @@ async function toggleSave() {
 
 async function loadRelated() {
   document.getElementById('related-team-name').textContent = kit.team.toUpperCase();
-  const { data } = await sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).neq('slug', slug).limit(4);
+  let rq = sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).limit(4);
+  rq = kit.slug ? rq.neq('slug', kit.slug) : rq.neq('id', kit.id);
+  const { data } = await rq;
   if (!data || !data.length) { document.querySelector('.related-section').style.display='none'; return; }
   document.getElementById('related-grid').innerHTML = data.map(k => {
     const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':'b-third';
-    const idx = k.id.charCodeAt(0) % 6;
-    return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+    const idx = String(k.id || k.slug || '0').charCodeAt(0) % 6;
+    const href = buildKitHref(k);
+    return `<a href="${href}" class="kit-card" onclick="trackClick()">
       <div class="kit-card-img grad-${idx}">
         ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
         <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
