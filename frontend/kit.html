@@ -160,7 +160,6 @@ const kitId = qp.get('id');
 let kit = null, currentUser = null, userProfile = null, isSaved = false, userRating = 0;
 
 (async () => {
- main
   if (!slug && !kitId) { show404(); return; }
   await initNav();
   currentUser = await getUser();
@@ -242,7 +241,6 @@ main
   }
 })();
 
- main
 async function fetchKitRecord() {
   const slugCandidates = [];
   if (slug) {
@@ -282,7 +280,6 @@ async function fetchKitRecord() {
     rating_count: 0,
     collection_count: 0,
   };
-main
 }
 
 function show404() {
@@ -439,6 +436,14 @@ async function toggleSave() {
 
 async function loadRelated() {
   document.getElementById('related-team-name').textContent = kit.team.toUpperCase();
+  let rq = sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).limit(4);
+  rq = slug ? rq.neq('slug', slug) : rq.neq('id', kit.id);
+  const { data } = await rq;
+  if (!data || !data.length) { document.querySelector('.related-section').style.display='none'; return; }
+  document.getElementById('related-grid').innerHTML = data.map(k => {
+    const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':'b-third';
+    const idx = k.id.charCodeAt(0) % 6;
+    return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
  main
       <div class="kit-card-img grad-${idx}">
         ${k.image_url?`<img src="${safeURL(k.image_url)}" alt="${escapeHTML(k.team)}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
