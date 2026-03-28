@@ -39,10 +39,12 @@
 
 <div class="container" style="padding-top:2rem">
   <div id="ad-top-banner" class="ad-slot ad-banner"></div>
-  <div class="section-head">
-    <span class="section-title">LATEST <span>NEWS</span></span>
+  <div id="blog-builder-root">
+    <div class="section-head">
+      <span class="section-title">LATEST <span>NEWS</span></span>
+    </div>
+    <div class="blog-grid" id="blog-grid"><div class="spinner" style="grid-column:1/-1"></div></div>
   </div>
-  <div class="blog-grid" id="blog-grid"><div class="spinner" style="grid-column:1/-1"></div></div>
 </div>
 
 <div style="height:3rem"></div>
@@ -56,7 +58,8 @@
 (async () => {
   await initNav();
   await loadSEO();
-  await loadPosts();
+  const renderedByBuilder = await loadBlogSections();
+  if (!renderedByBuilder) await loadPosts();
   injectAd('top_banner','ad-top-banner');
 })();
 
@@ -85,6 +88,112 @@ async function loadPosts() {
         </div>
       </div>
     </a>`).join('');
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+async function loadBlogSections() {
+  const { data: sections, error } = await sb.from('blog_page_sections')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order')
+    .order('id');
+  if (error || !sections?.length) return false;
+  const uniqueSections = dedupeSectionsByType(sections);
+
+  const root = document.getElementById('blog-builder-root');
+  const blocks = [];
+  for (const s of uniqueSections) {
+    const c = s.settings || {};
+
+    if (s.type === 'featured_story') {
+      const { data: post } = await sb.from('blog_posts')
+        .select('*')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      blocks.push(`
+        <div class="section-head"><span class="section-title">${esc(c.title || 'FEATURED')} <span>STORY</span></span></div>
+        ${post ? `
+          <a href="/blog-post.html?slug=${encodeURIComponent(post.slug)}" class="blog-card" onclick="trackClick()" style="margin-bottom:1.5rem;display:block">
+            <div class="blog-cover" style="height:320px">${post.cover_image ? `<img src="${post.cover_image}" alt="${esc(post.title)}"/>` : '📝'}</div>
+            <div class="blog-body">
+              ${post.tags?.length ? `<div class="blog-tags">${post.tags.map(t=>`<span class="blog-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+              <div class="blog-title">${esc(post.title)}</div>
+              ${post.excerpt ? `<div class="blog-excerpt">${esc(post.excerpt)}</div>` : ''}
+              <div class="blog-meta"><span>${post.published_at ? new Date(post.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : ''}</span><span style="color:var(--g)">Read more →</span></div>
+            </div>
+          </a>` : `<div class="empty"><p>No featured story yet.</p></div>`}
+      `);
+    }
+
+    if (s.type === 'latest_grid') {
+      const limit = Math.max(parseInt(c.limit || 9, 10), 1);
+      const { data: posts } = await sb.from('blog_posts')
+        .select('*')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(limit);
+      blocks.push(`
+        <div class="section-head"><span class="section-title">${esc(c.title || 'LATEST')} <span>NEWS</span></span></div>
+        <div class="blog-grid">
+          ${(posts || []).map(p => `
+            <a href="/blog-post.html?slug=${encodeURIComponent(p.slug)}" class="blog-card" onclick="trackClick()">
+              <div class="blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${esc(p.title)}"/>` : '📝'}</div>
+              <div class="blog-body">
+                ${p.tags?.length ? `<div class="blog-tags">${p.tags.map(t=>`<span class="blog-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+                <div class="blog-title">${esc(p.title)}</div>
+                ${p.excerpt ? `<div class="blog-excerpt">${esc(p.excerpt)}</div>` : ''}
+                <div class="blog-meta"><span>${p.published_at ? new Date(p.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : ''}</span><span style="color:var(--g)">Read more →</span></div>
+              </div>
+            </a>
+          `).join('') || `<div class="empty" style="grid-column:1/-1"><p>No posts yet.</p></div>`}
+        </div>
+      `);
+    }
+
+    if (s.type === 'trending_list') {
+      const limit = Math.max(parseInt(c.limit || 5, 10), 1);
+      const { data: posts } = await sb.from('blog_posts')
+        .select('title,slug,published_at')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(limit);
+      blocks.push(`
+        <div class="panel" style="margin-top:1.5rem">
+          <div class="panel-title">${esc(c.title || 'Trending Posts')}</div>
+          ${(posts || []).map(p => `<a href="/blog-post.html?slug=${encodeURIComponent(p.slug)}" style="display:block;padding:.6rem 0;border-bottom:1px solid var(--bd);font-size:.84rem">${esc(p.title)}</a>`).join('') || '<div style="color:var(--w4)">No trending posts yet.</div>'}
+        </div>
+      `);
+    }
+
+    if (s.type === 'newsletter_cta') {
+      blocks.push(`
+        <div class="panel" style="margin-top:1.5rem">
+          <div class="panel-title">${esc(c.title || 'Subscribe to Blog Updates')}</div>
+          <p style="color:var(--w3);margin:.5rem 0 1rem">${esc(c.subtitle || 'Get the latest kit stories and updates in your inbox.')}</p>
+          <a href="/login.html#signup" class="btn btn-p btn-sm">${esc(c.button_text || 'Subscribe')}</a>
+        </div>
+      `);
+    }
+  }
+
+  root.innerHTML = blocks.join('') || root.innerHTML;
+  return true;
+}
+
+function dedupeSectionsByType(sections) {
+  const seen = new Set();
+  const result = [];
+  for (const section of sections) {
+    if (seen.has(section.type)) continue;
+    seen.add(section.type);
+    result.push(section);
+  }
+  return result;
 }
 function loadGA(id) {
   const s = document.createElement('script');
