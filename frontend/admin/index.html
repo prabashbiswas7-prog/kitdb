@@ -1243,6 +1243,7 @@ const SECTION_PRESETS = [
   { type: 'blog_posts',    icon: '📝', name: 'Blog Posts',       desc: 'Latest articles'        },
   { type: 'banner',        icon: '📢', name: 'Banner',           desc: 'Announcement strip'     },
   { type: 'newsletter',    icon: '✉️', name: 'Newsletter',       desc: 'Email signup'           },
+  { type: 'gallery',       icon: '🖼️', name: 'Image Gallery',    desc: 'Kit image gallery grid'  },
   { type: 'content',       icon: '📄', name: 'Content Block',    desc: 'Title + rich text'      },
   { type: 'custom_html',   icon: '⌨️', name: 'Custom HTML',      desc: 'Any HTML or embed code' },
 ];
@@ -1299,7 +1300,7 @@ function renderSectionFields(s) {
       </div>`;
     case 'banner':
       return f('Text', 'text', c.text) + f('Background Color', 'bg_color', c.bg_color || '#00C853', 'color') + f('Text Color', 'text_color', c.text_color || '#000000', 'color');
-    case 'featured_kits': case 'latest_kits': case 'blog_posts':
+    case 'featured_kits': case 'latest_kits': case 'blog_posts': case 'gallery':
       return f('Section Title', 'title', c.title) + f('Max Items to Show', 'limit', c.limit || 6, 'number');
     case 'newsletter':
       return f('Title', 'title', c.title) + f('Subtitle', 'subtitle', c.subtitle) + f('Button Text', 'button_text', c.button_text || 'Subscribe');
