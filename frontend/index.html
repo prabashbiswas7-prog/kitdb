@@ -120,52 +120,64 @@
 <script src="/assets/js/config.js"></script>
 <script>
 (async () => {
-  // BUG FIX: Run everything in parallel — was sequential before (slow)
-  const [, , sectionsRes, statsResults, featuredRes, latestRes, topRatedRes] = await Promise.all([
-    initNav(),
-    loadSiteSettings(),
-    // BUG FIX: was querying 'homepage_config' which doesn't exist — correct table is 'homepage_sections'
-    sb.from('homepage_sections').select('type,is_active,settings').eq('is_active', true).order('sort_order'),
-    // BUG FIX: was fetching full table twice just for counts — now uses exact count, zero row data
-    Promise.all([
-      sb.from('kits').select('*', { count: 'exact', head: true }).eq('is_published', true),
-      sb.from('clubs').select('*', { count: 'exact', head: true }),
-      sb.from('leagues').select('*', { count: 'exact', head: true }),
-      sb.from('seasons').select('*', { count: 'exact', head: true }),
-    ]),
-    // Only select columns we actually render — not select('*')
-    sb.from('kits_with_stats').select('id,slug,team,season,league,type,image_url,avg_rating,rating_count').eq('is_featured', true).eq('is_published', true).limit(5),
-    sb.from('kits_with_stats').select('id,slug,team,season,league,type,image_url,avg_rating,rating_count').eq('is_published', true).order('created_at', { ascending: false }).limit(6),
-    sb.from('kits_with_stats').select('id,slug,team,season,avg_rating,rating_count').eq('is_published', true).order('avg_rating', { ascending: false }).limit(5),
-  ]);
+  try {
+    // Run all requests in parallel but keep each one failure-safe
+    const [, , sectionsRes, statsResults, featuredRes, latestRes, topRatedRes] = await Promise.all([
+      initNav(),
+      loadSiteSettings(),
+      safeQuery(sb.from('homepage_sections').select('type,is_active,settings').eq('is_active', true).order('sort_order')),
+      Promise.all([
+        safeQuery(sb.from('kits').select('*', { count: 'exact', head: true }).eq('is_published', true), { count: 0 }),
+        safeQuery(sb.from('clubs').select('*', { count: 'exact', head: true }), { count: 0 }),
+        safeQuery(sb.from('leagues').select('*', { count: 'exact', head: true }), { count: 0 }),
+        safeQuery(sb.from('seasons').select('*', { count: 'exact', head: true }), { count: 0 }),
+      ]),
+      safeQuery(sb.from('kits_with_stats').select('id,slug,team,season,league,type,image_url,avg_rating,rating_count').eq('is_featured', true).eq('is_published', true).limit(5)),
+      safeQuery(sb.from('kits_with_stats').select('id,slug,team,season,league,type,image_url,avg_rating,rating_count').eq('is_published', true).order('created_at', { ascending: false }).limit(6)),
+      safeQuery(sb.from('kits_with_stats').select('id,slug,team,season,avg_rating,rating_count').eq('is_published', true).order('avg_rating', { ascending: false }).limit(5)),
+    ]);
 
-  // Apply homepage section config
-  if (sectionsRes.data) applyHomepageSections(sectionsRes.data);
+    // Apply homepage section config
+    if (sectionsRes.data) applyHomepageSections(sectionsRes.data);
 
-  // Stats — exact counts, no row data
-  const [kitsC, clubsC, leaguesC, seasonsC] = statsResults;
-  document.getElementById('s-kits').textContent    = kitsC.count    ?? '—';
-  document.getElementById('s-clubs').textContent   = clubsC.count   ?? '—';
-  document.getElementById('s-leagues').textContent = leaguesC.count ?? '—';
-  document.getElementById('s-seasons').textContent = seasonsC.count ?? '—';
+    // Stats — exact counts, no row data
+    const [kitsC, clubsC, leaguesC, seasonsC] = statsResults;
+    document.getElementById('s-kits').textContent    = kitsC.count    ?? '—';
+    document.getElementById('s-clubs').textContent   = clubsC.count   ?? '—';
+    document.getElementById('s-leagues').textContent = leaguesC.count ?? '—';
+    document.getElementById('s-seasons').textContent = seasonsC.count ?? '—';
 
-  renderFeatured(featuredRes.data);
+    renderFeatured(featuredRes.data);
 
-  document.getElementById('latest-grid').innerHTML = (latestRes.data || []).map(kitCardHTML).join('');
+    document.getElementById('latest-grid').innerHTML = (latestRes.data || []).map(kitCardHTML).join('');
 
-  document.getElementById('top-rated-list').innerHTML = (topRatedRes.data || []).map((k, i) => `
-    <a href="/kit.html?slug=${k.slug}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
-      <span style="font-family:var(--fm);font-size:.7rem;color:var(--g);width:16px">${i+1}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:500;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team}</div>
-        <div style="font-size:.7rem;color:var(--w4)">${k.season}</div>
-      </div>
-      <span style="font-family:var(--fm);font-size:.72rem;color:var(--gold)">★ ${parseFloat(k.avg_rating||0).toFixed(1)}</span>
-    </a>`).join('');
+    document.getElementById('top-rated-list').innerHTML = (topRatedRes.data || []).map((k, i) => `
+      <a href="${kitHref(k)}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
+        <span style="font-family:var(--fm);font-size:.7rem;color:var(--g);width:16px">${i+1}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team}</div>
+          <div style="font-size:.7rem;color:var(--w4)">${k.season}</div>
+        </div>
+        <span style="font-family:var(--fm);font-size:.72rem;color:var(--gold)">★ ${parseFloat(k.avg_rating||0).toFixed(1)}</span>
+      </a>`).join('');
 
-  injectAd('top_banner', 'ad-top-banner');
-  injectAd('sidebar', 'ad-sidebar');
+    injectAd('top_banner', 'ad-top-banner');
+    injectAd('sidebar', 'ad-sidebar');
+  } catch (e) {
+    console.error('[home] load failed', e);
+    document.getElementById('featured-grid').innerHTML = '<div class="empty" style="grid-column:1/-1"><h3>Unable to load homepage data</h3><p>Please refresh in a moment.</p></div>';
+  }
 })();
+
+async function safeQuery(promise, fallback = { data: [] }) {
+  try {
+    const res = await promise;
+    if (res?.error) return fallback;
+    return res || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 async function loadSiteSettings() {
   const { data } = await sb.from('site_settings').select('key,value');
@@ -204,7 +216,7 @@ function renderFeatured(data) {
     return;
   }
   grid.innerHTML = data.map((k, i) => `
-    <a href="/kit.html?slug=${k.slug}" class="featured-card ${i === 0 ? 'featured-main' : ''}" onclick="trackClick()">
+    <a href="${kitHref(k)}" class="featured-card ${i === 0 ? 'featured-main' : ''}" onclick="trackClick()">
       <div class="featured-img">
         ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="ph">⚽</span>`}
         <span class="badge ${typeBadge(k.type)} featured-badge">${k.type}</span>
@@ -225,7 +237,7 @@ function typeBadge(t) {
 }
 
 function kitCardHTML(k) {
-  return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
+  return `<a href="${kitHref(k)}" class="kit-card" onclick="trackClick()">
     <div class="kit-card-img">
       ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
       <span class="badge ${typeBadge(k.type)}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
@@ -237,6 +249,12 @@ function kitCardHTML(k) {
       <div class="kit-card-rating">${renderStars(parseFloat(k.avg_rating||0), k.rating_count)}</div>
     </div>
   </a>`;
+}
+
+function kitHref(k) {
+  if (k?.slug) return `/kit.html?slug=${encodeURIComponent(k.slug)}`;
+  if (k?.id)   return `/kit.html?id=${encodeURIComponent(k.id)}`;
+  return '/browse.html';
 }
 </script>
 </body>
