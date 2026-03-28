@@ -160,6 +160,25 @@ const kitId = qp.get('id');
 let kit = null, currentUser = null, userProfile = null, isSaved = false, userRating = 0;
 
 (async () => {
+codex/make-website-production-ready-jm5924
+  if (!slug && !kitId) { show404(); return; }
+  await initNav();
+  currentUser = await getUser();
+  if (currentUser) userProfile = await getProfile(currentUser.id);
+
+  const data = await fetchKitRecord();
+  if (!data) { show404(); return; }
+  kit = data;
+  document.title = `${kit.team} ${kit.season} ${kit.type} — KitDB`;
+
+  // increment view — fire and forget, don't await
+  sb.rpc('increment_kit_views', { kit_slug: slug }).catch(() => {});
+
+  renderKit();
+  if (currentUser) {
+    await loadUserRating();
+    await checkSaved();
+=======
  codex/make-website-production-ready-cexulp
   if (!slug && !kitId) { window.location.href = '/browse.html'; return; }
   try {
@@ -219,14 +238,57 @@ main
   } catch (err) {
     console.error('[kit-page] failed to load', err);
     show404();
+main
   }
 })();
 
+codex/make-website-production-ready-jm5924
+async function fetchKitRecord() {
+  const slugCandidates = [];
+  if (slug) {
+    const s = String(slug).trim().toLowerCase();
+    if (s) slugCandidates.push(s);
+    const trimmedTs = s.replace(/-\d{8,}$/, '');
+    if (trimmedTs && trimmedTs !== s) slugCandidates.push(trimmedTs);
+  }
+
+  // 1) Primary source: public view with rating stats (fast path)
+  let q = sb.from('kits_with_stats').select('*').limit(1);
+  if (slugCandidates.length) q = q.in('slug', slugCandidates);
+  else q = q.eq('id', kitId);
+  let { data: vData } = await q;
+  if ((!vData || !vData.length) && slugCandidates.length) {
+    // Fallback for legacy links with slightly different suffixes/casing
+    const { data: vLoose } = await sb.from('kits_with_stats').select('*').ilike('slug', `${slugCandidates[slugCandidates.length - 1]}%`).limit(1);
+    vData = vLoose;
+  }
+  if (vData?.length) return vData[0];
+
+  // 2) Fallback: base kits table (handles draft/unpublished or schema drift)
+  let kq = sb.from('kits').select('*').limit(1);
+  if (slugCandidates.length) kq = kq.in('slug', slugCandidates);
+  else kq = kq.eq('id', kitId);
+  let { data: kData } = await kq;
+  if ((!kData || !kData.length) && slugCandidates.length) {
+    const { data: kLoose } = await sb.from('kits').select('*').ilike('slug', `${slugCandidates[slugCandidates.length - 1]}%`).limit(1);
+    kData = kLoose;
+  }
+  if (!kData?.length) return null;
+
+  // Normalize fields expected by page when coming from base table
+  return {
+    ...kData[0],
+    avg_rating: 0,
+    rating_count: 0,
+    collection_count: 0,
+  };
+=======
 function withTimeout(promise, ms, message) {
   return Promise.race([
     promise,
     new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
   ]);
+main
 }
 
 function show404() {
@@ -383,6 +445,11 @@ async function toggleSave() {
 
 async function loadRelated() {
   document.getElementById('related-team-name').textContent = kit.team.toUpperCase();
+codex/make-website-production-ready-jm5924
+  let rq = sb.from('kits_with_stats').select('*').eq('team', kit.team).eq('is_published', true).limit(4);
+  rq = slug ? rq.neq('slug', slug) : rq.neq('id', kit.id);
+  const { data } = await rq;
+=======
 codex/make-website-production-ready-cexulp
   let relatedQ = sb.from('kits_with_stats')
     .select('id,slug,team,season,type,image_url,avg_rating,rating_count,is_published')
@@ -394,6 +461,7 @@ codex/make-website-production-ready-cexulp
     .select('id,slug,team,season,type,image_url,avg_rating,rating_count,is_published')
     .eq('team', kit.team).eq('is_published', true).neq('slug', slug).limit(4);
  main
+main
   if (!data || !data.length) { document.querySelector('.related-section').style.display='none'; return; }
   document.getElementById('related-grid').innerHTML = data.map(k => {
     const bc = kitTypeBadgeClass(k.type);
