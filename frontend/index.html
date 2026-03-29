@@ -113,9 +113,9 @@
   </div>
 
 <!-- STATS -->
-  <div id="stats-wrap" style="background:var(--s1);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:0;margin-bottom:3rem">
+  <div id="stats-wrap" style="background:var(--s1);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:0;margin-bottom:3rem;display:none;">
   <div class="container" style="padding-top:0;padding-bottom:0">
-    <div class="stat-strip" style="border:none;border-radius:0">
+    <div class="stat-strip" style="border:none;border-radius:0;background:transparent;">
       <div class="stat-b"><span class="stat-n" id="s-kits">—</span><span class="stat-l">Kits</span></div>
       <div class="stat-b"><span class="stat-n" id="s-clubs">—</span><span class="stat-l">Clubs</span></div>
       <div class="stat-b"><span class="stat-n" id="s-leagues">—</span><span class="stat-l">Leagues</span></div>
@@ -296,9 +296,10 @@ function applyBuilderSectionOrder(sections) {
     if (extraNode) root.appendChild(extraNode);
   }
 
-  if (!statsPlaced && statsWrap) {
+  // Default stats removed from automatic placement. Now depends on builder "stats" widget or legacy behavior if needed.
+  if (!statsPlaced && statsWrap && !sections.some(s => s.type === 'stats') && sections.length === 0) {
     if (heroWrap && heroWrap.style.display !== 'none') {
-      root.insertBefore(statsWrap, featuredWrap.style.display !== 'none' ? featuredWrap : latestWrap);
+      root.insertBefore(statsWrap, featuredWrap?.style.display !== 'none' ? featuredWrap : latestWrap);
     } else {
       root.prepend(statsWrap);
     }
@@ -342,6 +343,9 @@ async function renderAdditionalSections(sections) {
       const { data: kotw } = await sb.from('kit_of_week').select('*,kits(team,season,type,slug,image_url)').eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle();
       const k = kotw?.kits;
       blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Kit of the Week')}</div>${k ? `<a href="/kit.html?slug=${encodeURIComponent(k.slug)}" style="display:flex;gap:1rem;align-items:center;text-decoration:none"><div class="kit-card-img grad-1" style="width:160px;flex:0 0 160px">${k.image_url ? `<img src="${k.image_url}" alt="${esc(k.team)}"/>` : '⚽'}</div><div><div style="font-weight:700">${esc(k.team)}</div><div style="color:var(--w3)">${esc(k.season)} · ${esc(k.type)}</div></div></a>` : '<div class="empty"><p>No active kit of the week.</p></div>'}</div></div>`);
+    } else if (s.type === 'stats') {
+      const bg = c.bg_color || 'var(--s1)';
+      blocks.push(`<div data-builder-section-id="${s.id}" style="background:${esc(bg)};border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:0;margin-top:3rem"><div class="container" style="padding-top:0;padding-bottom:0"><div class="stat-strip" style="border:none;border-radius:0;background:transparent;"><div class="stat-b"><span class="stat-n" id="s-kits-d-${s.id}">—</span><span class="stat-l">Kits</span></div><div class="stat-b"><span class="stat-n" id="s-clubs-d-${s.id}">—</span><span class="stat-l">Clubs</span></div><div class="stat-b"><span class="stat-n" id="s-leagues-d-${s.id}">—</span><span class="stat-l">Leagues</span></div><div class="stat-b"><span class="stat-n" id="s-seasons-d-${s.id}">—</span><span class="stat-l">Seasons</span></div></div></div></div>`);
     } else if (s.type === 'kit_filter') {
       const ft = (c.filter_type || 'league').toLowerCase();
       const col = ['league', 'type', 'season'].includes(ft) ? ft : 'league';
@@ -395,15 +399,29 @@ async function loadHomepageConfig() {
 async function loadStats() {
   const { data } = await sb.from('kits').select('id, league, season').eq('is_published', true);
   if (!data) return;
-  const teams = new Set(), leagues = new Set(), seasons = new Set();
+  const leagues = new Set(), seasons = new Set();
   data.forEach(k => { if (k.league) leagues.add(k.league); if (k.season) seasons.add(k.season); });
-  document.getElementById('s-kits').textContent = data.length;
-  document.getElementById('s-clubs').textContent = '—';
-  document.getElementById('s-leagues').textContent = leagues.size;
-  document.getElementById('s-seasons').textContent = seasons.size;
-  // get unique teams
+
   const { data: teamData } = await sb.from('kits').select('team').eq('is_published', true);
-  if (teamData) document.getElementById('s-clubs').textContent = new Set(teamData.map(k => k.team)).size;
+  const clubsCount = teamData ? new Set(teamData.map(k => k.team)).size : '—';
+  const kitsCount = data.length;
+  const leaguesCount = leagues.size;
+  const seasonsCount = seasons.size;
+
+  // Update original stats fallback
+  const fallbackEl = document.getElementById('s-kits');
+  if (fallbackEl) {
+    document.getElementById('s-kits').textContent = kitsCount;
+    document.getElementById('s-clubs').textContent = clubsCount;
+    document.getElementById('s-leagues').textContent = leaguesCount;
+    document.getElementById('s-seasons').textContent = seasonsCount;
+  }
+
+  // Update any dynamic builder stats widgets
+  document.querySelectorAll('[id^="s-kits-d-"]').forEach(el => el.textContent = kitsCount);
+  document.querySelectorAll('[id^="s-clubs-d-"]').forEach(el => el.textContent = clubsCount);
+  document.querySelectorAll('[id^="s-leagues-d-"]').forEach(el => el.textContent = leaguesCount);
+  document.querySelectorAll('[id^="s-seasons-d-"]').forEach(el => el.textContent = seasonsCount);
 }
 
 async function loadFeatured(limit = 5) {

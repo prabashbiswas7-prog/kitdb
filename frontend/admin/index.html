@@ -185,9 +185,10 @@ td{padding:.62rem .9rem;vertical-align:middle}
 .pend{background:rgba(255,204,0,.1);color:var(--gold);border:1px solid rgba(255,204,0,.3)}
 
 /* ── HOMEPAGE BUILDER ── */
-.hbc{background:var(--s2);border:1px solid var(--bd);border-radius:10px;overflow:hidden;cursor:grab}
-.hbc:hover{border-color:var(--bdg)}
-.hbc-head{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem}
+#hpbuilder{background:var(--s2);border:2px dashed var(--bd);border-radius:12px;padding:1rem;min-height:400px;display:flex;flex-direction:column;gap:.75rem}
+.hbc{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--w3);border-radius:8px;overflow:hidden;cursor:grab;transition:border-color .15s}
+.hbc:hover{border-color:var(--bdg);border-left-color:var(--g)}
+.hbc-head{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem}
 .hbc-body{padding:0 1rem 1rem;display:none;border-top:1px solid var(--bd);padding-top:.875rem;margin-top:.5rem}
 .hbc-body.open{display:block}
 .preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem}
@@ -200,13 +201,14 @@ td{padding:.62rem .9rem;vertical-align:middle}
 .template-btn{border:1px dashed var(--bdg);background:var(--gf);color:var(--g);border-radius:8px;padding:.36rem .65rem;font-size:.72rem;cursor:pointer}
 .template-btn:hover{background:rgba(0,200,83,.12)}
 .hp-shell{display:grid;grid-template-columns:260px 1fr;gap:1rem}
-.hp-sidebar{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:.8rem;align-self:start;position:sticky;top:1rem}
-.hp-side-head{font-size:.72rem;font-family:var(--fm);letter-spacing:1px;color:var(--w4);margin-bottom:.5rem}
-.hp-lib-search{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:7px;padding:.5rem .6rem;color:var(--w);font-size:.78rem;margin-bottom:.65rem}
-.hp-lib-list{display:flex;flex-direction:column;gap:.45rem;max-height:58vh;overflow:auto;padding-right:.2rem}
-.hp-lib-item{display:flex;align-items:center;justify-content:space-between;gap:.45rem;border:1px solid var(--bd);background:var(--s3);border-radius:8px;padding:.45rem .55rem}
-.hp-lib-item b{font-size:.76rem}
-.hp-lib-item button{background:var(--gf);color:var(--g);border:1px solid var(--bdg);border-radius:999px;padding:.15rem .5rem;font-size:.72rem;cursor:pointer}
+.hp-sidebar{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:1rem;align-self:start;position:sticky;top:1rem}
+.hp-side-head{font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.75rem}
+.hp-lib-search{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.5rem .6rem;color:var(--w);font-size:.78rem;margin-bottom:1rem}
+.hp-lib-list{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;max-height:65vh;overflow-y:auto;padding-right:.2rem}
+.hp-lib-item{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.35rem;border:1px solid var(--bd);background:var(--s2);border-radius:8px;padding:.875rem .25rem;cursor:pointer;transition:all .15s}
+.hp-lib-item:hover{background:var(--s3);border-color:var(--g);transform:translateY(-1px)}
+.hp-lib-item i{font-size:1.4rem;font-style:normal}
+.hp-lib-item span{font-size:.65rem;font-weight:600;color:var(--w2)}
 .hp-canvas-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-bottom:.75rem}
 @media(max-width:1080px){.hp-shell{grid-template-columns:1fr}.hp-sidebar{position:static}}
 
@@ -1352,6 +1354,7 @@ const SECTION_PRESETS = [
   { type: 'kit_filter',    icon: '🔍', name: 'Kit Filter Grid',  desc: 'Filterable kit grid'    },
   { type: 'blog_posts',    icon: '📝', name: 'Blog Posts',       desc: 'Latest articles'        },
   { type: 'banner',        icon: '📢', name: 'Banner',           desc: 'Announcement strip'     },
+  { type: 'stats',         icon: '📊', name: 'Platform Stats',   desc: 'Live database stats'    },
   { type: 'newsletter',    icon: '✉️', name: 'Newsletter',       desc: 'Email signup'           },
   { type: 'gallery',       icon: '🖼️', name: 'Image Gallery',    desc: 'Kit image gallery grid'  },
   { type: 'row_2col',      icon: '🧱', name: '2-Column Row',     desc: 'Flexible 50/50 content'   },
@@ -1422,14 +1425,11 @@ function renderHpWidgetLibrary() {
     !q || p.name.toLowerCase().includes(q) || p.type.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
   );
   list.innerHTML = filtered.map(p => `
-    <div class="hp-lib-item">
-      <div>
-        <b>${p.icon} ${p.name}</b>
-        <div style="font-size:.65rem;color:var(--w4)">${p.desc}</div>
-      </div>
-      <button onclick="quickAddSection('${p.type}')">+ Add</button>
+    <div class="hp-lib-item" onclick="quickAddSection('${p.type}')" title="${p.desc}">
+      <i>${p.icon}</i>
+      <span>${p.name}</span>
     </div>
-  `).join('') || '<div style="font-size:.75rem;color:var(--w4)">No widgets found.</div>';
+  `).join('') || '<div style="font-size:.75rem;color:var(--w4);grid-column:1/-1;text-align:center">No widgets found.</div>';
 }
 
 function renderSectionFields(s) {
@@ -1462,6 +1462,8 @@ function renderSectionFields(s) {
       return ta('Custom HTML / Embed Code', 'html', c.html);
     case 'kit_filter':
       return f('Section Title', 'title', c.title) + f('Filter by (league / type / season)', 'filter_type', c.filter_type || 'league');
+    case 'stats':
+      return `<div style="color:var(--w4);font-size:.8rem;margin-bottom:1rem">Displays dynamic counts of Kits, Clubs, Leagues, and Seasons.</div>` + f('Background Color', 'bg_color', c.bg_color || '#171717', 'color');
     case 'kit_of_week':
       return f('Section Title', 'title', c.title || 'Kit of the Week');
     default:
