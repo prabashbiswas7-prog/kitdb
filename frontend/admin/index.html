@@ -184,34 +184,6 @@ td{padding:.62rem .9rem;vertical-align:middle}
 .pub-n{background:rgba(255,68,68,.07);color:var(--red);border:1px solid rgba(255,68,68,.2)}
 .pend{background:rgba(255,204,0,.1);color:var(--gold);border:1px solid rgba(255,204,0,.3)}
 
-/* ── HOMEPAGE BUILDER ── */
-#hpbuilder{background:var(--s2);border:2px dashed var(--bd);border-radius:12px;padding:1rem;min-height:400px;display:flex;flex-direction:column;gap:.75rem}
-.hbc{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--w3);border-radius:8px;overflow:hidden;cursor:grab;transition:border-color .15s}
-.hbc:hover{border-color:var(--bdg);border-left-color:var(--g)}
-.hbc-head{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem}
-.hbc-body{padding:0 1rem 1rem;display:none;border-top:1px solid var(--bd);padding-top:.875rem;margin-top:.5rem}
-.hbc-body.open{display:block}
-.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem}
-.preset-card{background:var(--s3);border:1px solid var(--bd);border-radius:8px;padding:.875rem;text-align:center;cursor:pointer;transition:all .15s}
-.preset-card:hover{border-color:var(--bdg);transform:translateY(-1px)}
-.widget-rail{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem}
-.widget-chip{border:1px solid var(--bd);background:var(--s2);color:var(--w2);border-radius:999px;padding:.35rem .7rem;font-size:.72rem;cursor:pointer}
-.widget-chip:hover{border-color:var(--bdg);color:var(--g)}
-.template-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
-.template-btn{border:1px dashed var(--bdg);background:var(--gf);color:var(--g);border-radius:8px;padding:.36rem .65rem;font-size:.72rem;cursor:pointer}
-.template-btn:hover{background:rgba(0,200,83,.12)}
-.hp-shell{display:grid;grid-template-columns:260px 1fr;gap:1rem}
-.hp-sidebar{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:1rem;align-self:start;position:sticky;top:1rem}
-.hp-side-head{font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.75rem}
-.hp-lib-search{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:.5rem .6rem;color:var(--w);font-size:.78rem;margin-bottom:1rem}
-.hp-lib-list{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;max-height:65vh;overflow-y:auto;padding-right:.2rem}
-.hp-lib-item{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.35rem;border:1px solid var(--bd);background:var(--s2);border-radius:8px;padding:.875rem .25rem;cursor:pointer;transition:all .15s}
-.hp-lib-item:hover{background:var(--s3);border-color:var(--g);transform:translateY(-1px)}
-.hp-lib-item i{font-size:1.4rem;font-style:normal}
-.hp-lib-item span{font-size:.65rem;font-weight:600;color:var(--w2)}
-.hp-canvas-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-bottom:.75rem}
-@media(max-width:1080px){.hp-shell{grid-template-columns:1fr}.hp-sidebar{position:static}}
-
 /* ── MENU ITEMS ── */
 .mic{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:.875rem 1rem;display:flex;align-items:center;gap:.75rem;cursor:grab;transition:border-color .15s}
 .mic:hover{border-color:var(--bdg)}
@@ -293,7 +265,6 @@ td{padding:.62rem .9rem;vertical-align:middle}
       <button class="ln active" id="lnb-kits"        onclick="sv('kits',this)">👕<span class="ln-tip">Kit Manager</span></button>
       <button class="ln"        id="lnb-submissions"  onclick="sv('submissions',this)">📥<span class="ln-tip">Submissions</span></button>
       <div class="ln-sep"></div>
-      <button class="ln"        id="lnb-hp"           onclick="sv('hp',this)">🏠<span class="ln-tip">Homepage Builder</span></button>
       <button class="ln"        id="lnb-menu"         onclick="sv('menu',this)">☰<span class="ln-tip">Menu Manager</span></button>
       <button class="ln"        id="lnb-blog"         onclick="sv('blog',this)">📝<span class="ln-tip">Blog</span></button>
       <button class="ln"        id="lnb-pages"        onclick="sv('pages',this)">📄<span class="ln-tip">Pages</span></button>
@@ -350,50 +321,6 @@ td{padding:.62rem .9rem;vertical-align:middle}
             <tbody id="sub-tbody"></tbody>
           </table>
         </div>
-      </div>
-    </div>
-
-    <!-- HOMEPAGE BUILDER -->
-    <div class="fp" id="view-hp">
-      <div class="fpi">
-        <div class="sh">
-          <span class="st">HOMEPAGE <span>BUILDER</span></span>
-          <div style="display:flex;gap:.5rem;align-items:center">
-            <a href="/" target="_blank" rel="noopener" class="btn btn-g btn-sm">Preview Home ↗</a>
-            <button class="btn btn-p btn-sm" onclick="openPresetModal()">+ Add Section</button>
-          </div>
-        </div>
-        <p style="font-size:.82rem;color:var(--w3);margin-bottom:.65rem">Drag sections to reorder. Toggle on/off. Click ▼ to edit settings.</p>
-        <div class="hp-shell">
-          <aside class="hp-sidebar">
-            <div class="hp-side-head">WIDGET LIBRARY</div>
-            <input id="hp-lib-search" class="hp-lib-search" placeholder="Search widgets…" oninput="renderHpWidgetLibrary()"/>
-            <div class="hp-lib-list" id="hp-lib-list"></div>
-          </aside>
-          <div>
-            <div class="hp-canvas-top">
-              <div class="template-row" style="margin:0">
-                <button class="template-btn" onclick="applyHpTemplate('magazine')">✨ Magazine</button>
-                <button class="template-btn" onclick="applyHpTemplate('minimal')">🧩 Minimal</button>
-                <button class="template-btn" onclick="applyHpTemplate('community')">🏟️ Community</button>
-              </div>
-              <div style="display:flex;gap:.45rem">
-                <button class="btn btn-g btn-sm" onclick="toggleAllHpCards(true)">Expand all</button>
-                <button class="btn btn-g btn-sm" onclick="toggleAllHpCards(false)">Collapse all</button>
-              </div>
-            </div>
-            <div class="widget-rail" id="hp-widget-rail"></div>
-            <div id="hpbuilder" style="display:flex;flex-direction:column;gap:.6rem"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PRESET PICKER -->
-    <div class="ov" id="preset-ov" onclick="if(event.target===this)this.classList.remove('open')">
-      <div class="mbox" style="max-width:640px">
-        <div class="mh"><div class="mt">ADD <span>SECTION</span></div><button class="mc" onclick="document.getElementById('preset-ov').classList.remove('open')">✕</button></div>
-        <div class="mb"><div class="preset-grid" id="preset-grid"></div></div>
       </div>
     </div>
 
@@ -937,7 +864,7 @@ function sv(v, btn) {
   }
   const loaders = {
     submissions: loadSubmissions,
-    hp: loadHp, menu: loadMenu,
+    menu: loadMenu,
     blog: loadBlog, pages: loadPages,
     types: loadTypes, kotw: loadKotw,
     comments: loadComments, badges: loadBadges,
@@ -1343,223 +1270,6 @@ async function rejectSubmission(id) {
     reviewed_at: new Date().toISOString(), rejection_reason: reason,
   }).eq('id', id);
   toast('Submission rejected.'); loadSubmissions();
-}
-
-// ── HOMEPAGE BUILDER ─────────────────────────────────────────
-const SECTION_PRESETS = [
-  { type: 'hero',          icon: '🦸', name: 'Hero Banner',      desc: 'Main hero section'     },
-  { type: 'featured_kits', icon: '⭐', name: 'Featured Kits',    desc: 'Showcase selected kits' },
-  { type: 'latest_kits',   icon: '🆕', name: 'Latest Kits',      desc: 'Newest kits auto-list'  },
-  { type: 'kit_of_week',   icon: '🏆', name: 'Kit of the Week',  desc: 'Weekly featured kit'    },
-  { type: 'kit_filter',    icon: '🔍', name: 'Kit Filter Grid',  desc: 'Filterable kit grid'    },
-  { type: 'blog_posts',    icon: '📝', name: 'Blog Posts',       desc: 'Latest articles'        },
-  { type: 'banner',        icon: '📢', name: 'Banner',           desc: 'Announcement strip'     },
-  { type: 'stats',         icon: '📊', name: 'Platform Stats',   desc: 'Live database stats'    },
-  { type: 'newsletter',    icon: '✉️', name: 'Newsletter',       desc: 'Email signup'           },
-  { type: 'gallery',       icon: '🖼️', name: 'Image Gallery',    desc: 'Kit image gallery grid'  },
-  { type: 'row_2col',      icon: '🧱', name: '2-Column Row',     desc: 'Flexible 50/50 content'   },
-  { type: 'row_3col',      icon: '🧩', name: '3-Column Row',     desc: 'Flexible 3-column block'  },
-  { type: 'spacer',        icon: '↕️', name: 'Spacer',           desc: 'Vertical breathing room'   },
-  { type: 'content',       icon: '📄', name: 'Content Block',    desc: 'Title + rich text'      },
-  { type: 'custom_html',   icon: '⌨️', name: 'Custom HTML',      desc: 'Any HTML or embed code' },
-];
-const HP_TEMPLATES = {
-  magazine: ['hero', 'featured_kits', 'latest_kits', 'blog_posts', 'gallery', 'newsletter'],
-  minimal: ['hero', 'featured_kits', 'latest_kits'],
-  community: ['hero', 'kit_of_week', 'kit_filter', 'latest_kits', 'blog_posts', 'newsletter']
-};
-
-async function loadHp() {
-  renderHpWidgetRail();
-  renderHpWidgetLibrary();
-  const { data } = await sb.from('homepage_sections').select('*').order('sort_order');
-  const builder = document.getElementById('hpbuilder');
-  if (!data || !data.length) {
-    builder.innerHTML = '<div class="empty"><div class="empty-i">📦</div><p>No sections yet. Click + Add Section to start.</p></div>';
-    return;
-  }
-  builder.innerHTML = data.map(s => {
-    const pre = SECTION_PRESETS.find(p => p.type === s.type) || { icon: '📦', name: s.type };
-    return `
-      <div class="hbc" id="hbc-${s.id}" draggable="true"
-        ondragstart="secDragStart(event,'${s.id}')"
-        ondragover="event.preventDefault()"
-        ondrop="secDragDrop(event,'${s.id}')">
-        <div class="hbc-head" onclick="toggleHbcBody('${s.id}')">
-          <span style="color:var(--w4);font-size:1rem;cursor:grab">⠿</span>
-          <span style="font-size:1rem">${pre.icon}</span>
-          <div style="flex:1">
-            <div style="font-weight:600;font-size:.88rem">${s.label || pre.name}</div>
-            <div style="font-family:var(--fm);font-size:.65rem;color:var(--w4)">${s.type}</div>
-          </div>
-          <label class="tgl" onclick="event.stopPropagation()">
-            <input type="checkbox" ${s.is_active ? 'checked' : ''} onchange="toggleSection('${s.id}',this.checked)"/>
-            <span class="tgl-s"></span>
-          </label>
-          <button class="btn-del btn-xs" onclick="event.stopPropagation();deleteSection('${s.id}')">Del</button>
-          <span style="color:var(--w4);font-size:.8rem;margin-left:.4rem">▼</span>
-        </div>
-        <div class="hbc-body" id="hbb-${s.id}">
-          ${renderSectionFields(s)}
-          <div style="margin-top:.875rem">
-            <button class="btn btn-p btn-sm" onclick="saveSection('${s.id}')">Save Section</button>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function renderHpWidgetRail() {
-  const rail = document.getElementById('hp-widget-rail');
-  if (!rail) return;
-  rail.innerHTML = SECTION_PRESETS.map(p =>
-    `<button class="widget-chip" onclick="quickAddSection('${p.type}')">＋ ${p.icon} ${p.name}</button>`
-  ).join('');
-}
-
-function renderHpWidgetLibrary() {
-  const list = document.getElementById('hp-lib-list');
-  if (!list) return;
-  const q = (document.getElementById('hp-lib-search')?.value || '').trim().toLowerCase();
-  const filtered = SECTION_PRESETS.filter(p =>
-    !q || p.name.toLowerCase().includes(q) || p.type.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)
-  );
-  list.innerHTML = filtered.map(p => `
-    <div class="hp-lib-item" onclick="quickAddSection('${p.type}')" title="${p.desc}">
-      <i>${p.icon}</i>
-      <span>${p.name}</span>
-    </div>
-  `).join('') || '<div style="font-size:.75rem;color:var(--w4);grid-column:1/-1;text-align:center">No widgets found.</div>';
-}
-
-function renderSectionFields(s) {
-  const c = s.settings || {};
-  const f = (lbl, key, val, type = 'text') =>
-    `<div class="field" style="margin-bottom:.6rem"><label>${lbl}</label><input id="hbs-${s.id}-${key}" type="${type}" value="${String(val || '').replace(/"/g, '&quot;')}"/></div>`;
-  const ta = (lbl, key, val) =>
-    `<div class="field" style="margin-bottom:.6rem"><label>${lbl}</label><textarea id="hbs-${s.id}-${key}" style="min-height:60px">${val || ''}</textarea></div>`;
-  switch (s.type) {
-    case 'hero':
-      return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
-        ${f('Title', 'title', c.title)} ${f('Subtitle', 'subtitle', c.subtitle)}
-        ${f('CTA Button Text', 'cta_text', c.cta_text)} ${f('CTA URL', 'cta_url', c.cta_url)}
-      </div>`;
-    case 'banner':
-      return f('Text', 'text', c.text) + f('Background Color', 'bg_color', c.bg_color || '#00C853', 'color') + f('Text Color', 'text_color', c.text_color || '#000000', 'color');
-    case 'featured_kits': case 'latest_kits': case 'blog_posts': case 'gallery':
-      return f('Section Title', 'title', c.title) + f('Max Items to Show', 'limit', c.limit || 6, 'number');
-    case 'newsletter':
-      return f('Title', 'title', c.title) + f('Subtitle', 'subtitle', c.subtitle) + f('Button Text', 'button_text', c.button_text || 'Subscribe');
-    case 'content':
-      return f('Section Title', 'title', c.title) + ta('Body HTML', 'body', c.body);
-    case 'row_2col':
-      return ta('Left Column HTML', 'left_html', c.left_html) + ta('Right Column HTML', 'right_html', c.right_html);
-    case 'row_3col':
-      return ta('Column 1 HTML', 'col1_html', c.col1_html) + ta('Column 2 HTML', 'col2_html', c.col2_html) + ta('Column 3 HTML', 'col3_html', c.col3_html);
-    case 'spacer':
-      return f('Height (px)', 'height', c.height || 48, 'number');
-    case 'custom_html':
-      return ta('Custom HTML / Embed Code', 'html', c.html);
-    case 'kit_filter':
-      return f('Section Title', 'title', c.title) + f('Filter by (league / type / season)', 'filter_type', c.filter_type || 'league');
-    case 'stats':
-      return `<div style="color:var(--w4);font-size:.8rem;margin-bottom:1rem">Displays dynamic counts of Kits, Clubs, Leagues, and Seasons.</div>` + f('Background Color', 'bg_color', c.bg_color || '#171717', 'color');
-    case 'kit_of_week':
-      return f('Section Title', 'title', c.title || 'Kit of the Week');
-    default:
-      return f('Section Label', 'label', s.label);
-  }
-}
-
-function toggleHbcBody(id) { document.getElementById('hbb-' + id)?.classList.toggle('open'); }
-
-async function toggleSection(id, active) {
-  await sb.from('homepage_sections').update({ is_active: active }).eq('id', id);
-  toast(active ? 'Section enabled' : 'Section disabled');
-}
-
-async function saveSection(id) {
-  const inputs = document.querySelectorAll(`[id^="hbs-${id}-"]`);
-  const settings = {};
-  inputs.forEach(el => {
-    const key = el.id.replace(`hbs-${id}-`, '');
-    settings[key] = el.tagName === 'TEXTAREA' ? el.value : el.value;
-  });
-  const { error } = await sb.from('homepage_sections').update({ settings, updated_at: new Date().toISOString() }).eq('id', id);
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  toast('Section saved!');
-}
-
-async function deleteSection(id) {
-  if (!confirm('Delete this section?')) return;
-  await sb.from('homepage_sections').delete().eq('id', id);
-  toast('Section deleted'); loadHp();
-}
-
-function secDragStart(e, id) { secDragId = id; e.dataTransfer.effectAllowed = 'move'; }
-async function applySortOrderUpdates(table, ids) {
-  const updates = ids.map((id, i) => sb.from(table).update({ sort_order: i + 1 }).eq('id', id));
-  const results = await Promise.all(updates);
-  return results.find(r => r.error)?.error || null;
-}
-async function secDragDrop(e, targetId) {
-  e.preventDefault();
-  if (!secDragId || secDragId === targetId) return;
-  const cards = [...document.querySelectorAll('.hbc')];
-  const ids   = cards.map(c => c.id.replace('hbc-', ''));
-  const fi    = ids.indexOf(secDragId);
-  const ti    = ids.indexOf(targetId);
-  ids.splice(fi, 1); ids.splice(ti, 0, secDragId);
-  const error = await applySortOrderUpdates('homepage_sections', ids);
-  secDragId = null;
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  loadHp(); toast('Order saved!');
-}
-
-function openPresetModal() {
-  document.getElementById('preset-grid').innerHTML = SECTION_PRESETS.map(p =>
-    `<div class="preset-card" onclick="addSection('${p.type}','${p.name}')">
-      <div style="font-size:1.5rem;margin-bottom:.4rem">${p.icon}</div>
-      <div style="font-weight:600;font-size:.78rem">${p.name}</div>
-      <div style="font-size:.65rem;color:var(--w4);margin-top:.2rem">${p.desc}</div>
-    </div>`
-  ).join('');
-  document.getElementById('preset-ov').classList.add('open');
-}
-
-async function addSection(type, name) {
-  const { data: ex } = await sb.from('homepage_sections').select('sort_order').order('sort_order', { ascending: false }).limit(1);
-  const nextOrder = (ex?.[0]?.sort_order || 0) + 1;
-  const { error } = await sb.from('homepage_sections').insert({ type, label: name, is_active: false, sort_order: nextOrder, settings: {} });
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  document.getElementById('preset-ov').classList.remove('open');
-  toast('Section added!'); loadHp();
-}
-
-function quickAddSection(type) {
-  const preset = SECTION_PRESETS.find(p => p.type === type);
-  if (!preset) return;
-  addSection(preset.type, preset.name);
-}
-
-function toggleAllHpCards(expand) {
-  document.querySelectorAll('.hbc-body').forEach(el => el.classList.toggle('open', expand));
-}
-
-async function applyHpTemplate(templateKey) {
-  const sequence = HP_TEMPLATES[templateKey];
-  if (!sequence?.length) return;
-  if (!confirm('Apply template? This will replace your existing homepage section list.')) return;
-  const { error: delError } = await sb.from('homepage_sections').delete().gt('sort_order', -1);
-  if (delError) { toast('Error: ' + delError.message, 'err'); return; }
-  const rows = sequence.map((type, idx) => {
-    const p = SECTION_PRESETS.find(x => x.type === type) || { name: type };
-    return { type, label: p.name, is_active: true, sort_order: idx + 1, settings: {} };
-  });
-  const { error } = await sb.from('homepage_sections').insert(rows);
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  toast('Template applied!');
-  loadHp();
 }
 
 // ── MENU MANAGER ─────────────────────────────────────────────
