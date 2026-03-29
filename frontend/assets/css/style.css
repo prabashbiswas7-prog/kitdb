@@ -176,8 +176,35 @@ select.chip option { background: var(--s2); }
 .grad-4 { background: linear-gradient(135deg,#0c1a1a,#0f2020); }
 .grad-5 { background: linear-gradient(135deg,#180c1a,#200f22); }
 
+/* ── CLUBS GRID ── */
+.clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+.club-card { background: var(--s1); border: 1px solid var(--bd); border-radius: 12px; padding: 1.5rem 1rem; text-align: center; transition: all .2s; }
+.club-card:hover { border-color: var(--bdg); transform: translateY(-3px); }
+.club-card-icon { font-size: 2.5rem; margin-bottom: .75rem; opacity: .8; }
+.club-card-name { font-weight: 600; font-size: .9rem; color: var(--w); }
+
+/* ── ZIGZAG ── */
+.zigzag-row { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem; }
+.zigzag-row:nth-child(even) .zigzag-txt { order: 2; }
+.zigzag-row:nth-child(even) .zigzag-img { order: 1; }
+@media (max-width: 768px) {
+  .zigzag-row { grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 3rem; }
+  .zigzag-row .zigzag-txt { order: 2; }
+  .zigzag-row .zigzag-img { order: 1; }
+  .zigzag-row:nth-child(even) .zigzag-txt { order: 2; }
+  .zigzag-row:nth-child(even) .zigzag-img { order: 1; }
+}
+.zigzag-img { background: var(--s2); border: 1px solid var(--bd); border-radius: 16px; overflow: hidden; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; font-size: 3rem; opacity: .4; }
+.zigzag-img img { width: 100%; height: 100%; object-fit: cover; opacity: 1; }
+.zigzag-txt h3 { font-family: var(--fd); font-size: 2.2rem; letter-spacing: 2px; margin-bottom: 1rem; color: var(--w); line-height: 1.1; }
+.zigzag-txt p { color: var(--w3); line-height: 1.6; font-size: .95rem; margin-bottom: 1.5rem; }
+
+/* ── VIDEO ── */
+.video-wrap { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: var(--s2); border-radius: 16px; border: 1px solid var(--bd); }
+.video-wrap iframe, .video-wrap object, .video-wrap embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
 /* ── RESPONSIVE ── */
-.mobile-menu-btn { display: none; background: none; border: none; color: var(--w); font-size: 1.5rem; cursor: pointer; }
+.mobile-menu-btn { display: none; background: none; border: none; color: var(--w); font-size: 1.5rem; cursor: pointer; margin-left: auto; }
 .mobile-menu-overlay { display: none; position: fixed; inset: 0; background: var(--bk); z-index: 90; padding: 5rem 2rem 2rem; flex-direction: column; gap: 1rem; align-items: center; }
 .mobile-menu-overlay.open { display: flex; }
 .mobile-menu-overlay .nav-link { font-size: 1.2rem; padding: 0.5rem; }

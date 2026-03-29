@@ -56,6 +56,25 @@ async function injectAd(slotKey, containerId) {
   el.style.display = 'block';
 }
 
+async function injectSmartAds(slotKey, selector, position = 'afterend') {
+  const slot = await getAdSlot(slotKey);
+  if (!slot || !slot.is_active || !slot.ad_code) return;
+
+  const elements = document.querySelectorAll(selector);
+  elements.forEach((el, index) => {
+    // Only inject an ad after every 2nd or 3rd matched element,
+    // or configure it specifically based on needs.
+    // Here we inject after every element matched by the selector if desired,
+    // but a common pattern is specific index matches.
+    const adWrapper = document.createElement('div');
+    adWrapper.className = `ad-slot ad-${slotKey}`;
+    adWrapper.innerHTML = `<div class="ad-label">Advertisement</div>${slot.ad_code}`;
+    adWrapper.style.display = 'block';
+    adWrapper.style.margin = '2rem auto';
+    el.insertAdjacentElement(position, adWrapper);
+  });
+}
+
 // ── Auth helpers ───────────────────────────────────────────
 async function getUser() {
   const { data: { user } } = await sb.auth.getUser();
@@ -88,7 +107,10 @@ async function initNav() {
         btn.innerHTML = ov.classList.contains('open') ? '✕' : '☰';
       }
     };
-    nav.appendChild(btn);
+
+    // Append to container inside nav instead of nav directly if container exists
+    const navContainer = nav.querySelector('.container') || nav;
+    navContainer.appendChild(btn);
 
     const menu = document.createElement('div');
     menu.id = 'mobile-menu';
