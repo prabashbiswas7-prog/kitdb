@@ -124,6 +124,40 @@
   </div>
   </div>
 
+
+<!-- FEATURED -->
+  <div class="container" id="featured-wrap" style="margin-bottom: 3rem;">
+    <div class="section-head">
+      <span class="section-title" id="featured-title">FEATURED <span>KITS</span></span>
+      <a href="/browse.html" class="btn btn-g btn-sm" style="border-radius: 999px; font-size: 0.7rem; padding: 0.2rem 0.6rem;">View All →</a>
+    </div>
+    <div class="featured-grid" id="featured-grid" style="min-height: auto; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+      <div class="spinner" style="grid-column:1/-1"></div>
+    </div>
+  </div>
+
+
+<!-- LATEST + SIDEBAR -->
+  <div class="container" id="latest-wrap" style="margin-top:3rem">
+  <div class="latest-grid">
+    <div>
+      <div class="section-head">
+        <span class="section-title" id="latest-title">LATEST <span>ADDITIONS</span></span>
+      </div>
+      <div class="kit-grid" id="latest-grid"></div>
+    </div>
+    <!-- SIDEBAR -->
+    <div>
+      <div id="ad-sidebar" class="ad-slot ad-sidebar" style="margin-bottom:1.5rem"></div>
+      <!-- Top Rated -->
+      <div class="panel" style="margin-bottom:1rem; background: var(--bk);">
+        <div class="panel-title" style="color: var(--w3); font-size: 0.65rem;">⭐ TOP RATED</div>
+        <div id="top-rated-list"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+
 <!-- IMAGE BANNER -->
   <div class="container" style="margin-bottom: 3rem;">
     <div style="background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:200px; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden; position:relative;">
@@ -168,18 +202,7 @@
     </div>
   </div>
 
-<!-- FEATURED -->
-  <div class="container" id="featured-wrap" style="margin-bottom: 3rem;">
-    <div class="section-head">
-      <span class="section-title" id="featured-title">FEATURED <span>KITS</span></span>
-      <a href="/browse.html" class="btn btn-g btn-sm" style="border-radius: 999px; font-size: 0.7rem; padding: 0.2rem 0.6rem;">View All →</a>
-    </div>
-    <div class="featured-grid" id="featured-grid" style="min-height: auto; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
-      <div class="spinner" style="grid-column:1/-1"></div>
-    </div>
-  </div>
 
-<!-- LATEST + SIDEBAR -->
 <!-- ZIGZAG SECTIONS -->
   <div class="container" style="margin-bottom: 3rem;">
     <div class="zigzag-row">
@@ -216,6 +239,7 @@
     </div>
   </div>
 
+
 <!-- VIDEO SECTION -->
   <div class="container" style="margin-bottom: 4rem;">
     <div class="section-head">
@@ -226,26 +250,6 @@
     </div>
   </div>
 
-<!-- LATEST + SIDEBAR -->
-  <div class="container" id="latest-wrap" style="margin-top:3rem">
-  <div class="latest-grid">
-    <div>
-      <div class="section-head">
-        <span class="section-title" id="latest-title">LATEST <span>ADDITIONS</span></span>
-      </div>
-      <div class="kit-grid" id="latest-grid"></div>
-    </div>
-    <!-- SIDEBAR -->
-    <div>
-      <div id="ad-sidebar" class="ad-slot ad-sidebar" style="margin-bottom:1.5rem"></div>
-      <!-- Top Rated -->
-      <div class="panel" style="margin-bottom:1rem; background: var(--bk);">
-        <div class="panel-title" style="color: var(--w3); font-size: 0.65rem;">⭐ TOP RATED</div>
-        <div id="top-rated-list"></div>
-      </div>
-    </div>
-  </div>
-  </div>
 </main>
 
 <div style="height:3rem"></div>
@@ -274,7 +278,10 @@
 
   await Promise.allSettled([
     injectAd('top_banner', 'ad-top-banner'),
-    injectAd('sidebar', 'ad-sidebar')
+    injectAd('sidebar', 'ad-sidebar'),
+    // Smartly inject ads after the 2nd and 4th zigzag sections
+    injectSmartAds('in_article', '.zigzag-row:nth-child(2)', 'afterend'),
+    injectSmartAds('in_article', '.zigzag-row:nth-child(4)', 'afterend')
   ]);
 })();
 

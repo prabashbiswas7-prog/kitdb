@@ -185,8 +185,8 @@ select.chip option { background: var(--s2); }
 
 /* ── ZIGZAG ── */
 .zigzag-row { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem; }
-.zigzag-row:nth-child(even) .zigzag-txt { order: 1; }
-.zigzag-row:nth-child(even) .zigzag-img { order: 2; }
+.zigzag-row:nth-child(even) .zigzag-txt { order: 2; }
+.zigzag-row:nth-child(even) .zigzag-img { order: 1; }
 @media (max-width: 768px) {
   .zigzag-row { grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 3rem; }
   .zigzag-row .zigzag-txt { order: 2; }
