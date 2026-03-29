@@ -58,6 +58,10 @@
   <div class="browse-layout">
     <!-- FILTERS SIDEBAR -->
     <div class="filters-panel panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+        <h3 style="margin:0; font-size:1rem; color:var(--w);">Filters</h3>
+        <button onclick="clearFilters()" style="background:none; border:none; color:var(--w4); font-size:0.75rem; cursor:pointer; text-decoration:underline;">Clear All</button>
+      </div>
       <div class="fp-section">
         <span class="fp-label">Kit Type</span>
         <div class="fp-group" id="type-filters">
@@ -145,6 +149,18 @@ function toggleFilter(key, val, el) {
   const group = el.closest('.fp-group') || el.closest('#type-filters');
   group?.querySelectorAll('.fp-opt').forEach(o => o.classList.remove('active'));
   el.classList.add('active');
+  render();
+}
+function clearFilters() {
+  filters = { type: 'All', league: '', season: '', maker: '' };
+  document.querySelectorAll('.fp-opt').forEach(el => el.classList.remove('active'));
+  const allTypesLabel = document.querySelector('#type-filters .fp-opt:first-child');
+  if (allTypesLabel) allTypesLabel.classList.add('active');
+
+  // Also clear the search query if desired, but user asked for "clear filter option"
+  // Let's also clear search to fully reset the browse page
+  document.getElementById('search-q').value = '';
+
   render();
 }
 function setView(v) {
