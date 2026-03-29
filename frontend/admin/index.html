@@ -849,10 +849,72 @@ async function loadMaster() {
     if (cfg.site_url) siteUrlVal = cfg.site_url.replace(/https?:\/\//, '');
   }
 
-  const { data: km } = await sb.from('kits').select('maker').not('maker', 'is', null);
-  const db  = [...new Set((km || []).map(k => k.maker).filter(Boolean))];
-  const def = ['Adidas','Nike','Puma','Umbro','Kappa','Hummel','New Balance','Under Armour','Joma','Macron','Castore','Errea'];
-  allMakers = [...new Set([...db, ...def])].sort();
+  // Fetch all unique teams, leagues, seasons, and makers from the kits table to sync with admin lists
+  const { data: kitsData } = await sb.from('kits').select('team, league, season, maker');
+  const kits = kitsData || [];
+
+  // 1. Sync Seasons
+  const kitSeasons = [...new Set(kits.map(k => k.season).filter(Boolean))];
+  const missingSeasons = kitSeasons.filter(ks => !allSeasons.some(s => s.name === ks));
+  if (missingSeasons.length > 0) {
+    const newSeasons = missingSeasons.map(name => {
+      const parts = name.split('/');
+      const ys = parseInt(parts[0]) || new Date().getFullYear();
+      const ye = parts[1] ? (parts[1].length === 2 ? parseInt(parts[0].substring(0, 2) + parts[1]) : parseInt(parts[1])) : ys + 1;
+      return { name: name.trim(), year_start: ys, year_end: ye };
+    });
+    const { data: insertedSeasons } = await sb.from('seasons').insert(newSeasons).select('*');
+    if (insertedSeasons) {
+      allSeasons.push(...insertedSeasons);
+      allSeasons.sort((a, b) => b.year_start - a.year_start);
+    }
+  }
+
+  // 2. Sync Leagues
+  const kitLeagues = [...new Set(kits.map(k => k.league).filter(Boolean))];
+  const missingLeagues = kitLeagues.filter(kl => !allLeagues.some(l => l.name === kl));
+  if (missingLeagues.length > 0) {
+    const newLeagues = missingLeagues.map(name => ({ name: name.trim(), country: null }));
+    const { data: insertedLeagues } = await sb.from('leagues').insert(newLeagues).select('*');
+    if (insertedLeagues) {
+      allLeagues.push(...insertedLeagues);
+      allLeagues.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }
+
+  // 3. Sync Clubs (Teams)
+  // Re-build a map of league names to IDs to link clubs properly
+  const leagueNameToId = Object.fromEntries(allLeagues.map(l => [l.name, l.id]));
+  const missingClubs = [];
+
+  // Unique team/league combinations
+  const teamMap = new Map();
+  kits.forEach(k => {
+    if (!k.team) return;
+    if (!teamMap.has(k.team)) teamMap.set(k.team, k.league);
+  });
+
+  for (const [teamName, leagueName] of teamMap.entries()) {
+    if (!allClubs.some(c => c.name === teamName)) {
+      missingClubs.push({
+        name: teamName.trim(),
+        league_id: leagueNameToId[leagueName] || null
+      });
+    }
+  }
+
+  if (missingClubs.length > 0) {
+    const { data: insertedClubs } = await sb.from('clubs').insert(missingClubs).select('*');
+    if (insertedClubs) {
+      allClubs.push(...insertedClubs);
+      allClubs.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }
+
+  // 4. Sync Makers
+  const dbMakers = [...new Set(kits.map(k => k.maker).filter(Boolean))];
+  const defMakers = ['Adidas','Nike','Puma','Umbro','Kappa','Hummel','New Balance','Under Armour','Joma','Macron','Castore','Errea'];
+  allMakers = [...new Set([...dbMakers, ...defMakers])].sort();
 
   // populate type dropdown
   const sel = document.getElementById('kf-type');
@@ -1115,6 +1177,17 @@ async function saveKit() {
   let slug     = document.getElementById('kf-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
   if (!team || !season) { toast('Team and Season required', 'err'); return; }
   if (!slug) { autoSlug(); slug = document.getElementById('kf-slug').value.trim(); }
+
+  const type = document.getElementById('kf-type').value;
+  let dupQuery = sb.from('kits').select('id').eq('team', team).eq('season', season).eq('type', type);
+  if (editKitId) dupQuery = dupQuery.neq('id', editKitId);
+  const { data: dups, error: dupErr } = await dupQuery;
+  if (dupErr) { toast('Error checking duplicates: ' + dupErr.message, 'err'); return; }
+  if (dups && dups.length > 0) {
+    toast(`A ${type} kit for ${team} in ${season} already exists.`, 'err');
+    return;
+  }
+
   const payload = {
     team, season, slug,
     league:          document.getElementById('kf-league').value.trim() || null,
