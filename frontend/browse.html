@@ -61,14 +61,9 @@
   <div id="ad-top-banner" class="ad-slot ad-banner"></div>
 
   <!-- Mobile search -->
-  <div class="search-wrap" style="margin-bottom:1rem; display:flex; gap:0.5rem;">
-    <div style="position:relative; flex:1;">
-      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position:absolute; left: .95rem; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: .35;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-input" id="search-q" type="text" placeholder="Search kits…" oninput="render()"/>
-    </div>
-    <button class="mobile-filter-btn" onclick="toggleMobileFilters()">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-    </button>
+  <div class="search-wrap" style="margin-bottom:1rem">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="search-input" id="search-q" type="text" placeholder="Search kits…" oninput="render()"/>
   </div>
 
   <div class="browse-layout">
@@ -114,6 +109,9 @@
       <div class="results-bar">
         <span class="result-count" id="result-count">Loading…</span>
         <div style="display:flex;gap:.5rem;align-items:center">
+          <button class="mobile-filter-btn" onclick="toggleMobileFilters()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg> Filters
+          </button>
           <select class="sort-select" id="sort-sel" onchange="render()">
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>

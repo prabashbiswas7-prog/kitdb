@@ -88,7 +88,10 @@ async function initNav() {
         btn.innerHTML = ov.classList.contains('open') ? '✕' : '☰';
       }
     };
-    nav.appendChild(btn);
+
+    // Append to container inside nav instead of nav directly if container exists
+    const navContainer = nav.querySelector('.container') || nav;
+    navContainer.appendChild(btn);
 
     const menu = document.createElement('div');
     menu.id = 'mobile-menu';

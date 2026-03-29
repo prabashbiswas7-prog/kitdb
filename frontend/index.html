@@ -112,6 +112,62 @@
     </div>
   </div>
 
+<!-- STATS -->
+  <div id="stats-wrap" style="background:var(--s1);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:0;margin-bottom:3rem;">
+  <div class="container" style="padding-top:0;padding-bottom:0">
+    <div class="stat-strip" style="border:none;border-radius:0;background:transparent;">
+      <div class="stat-b"><span class="stat-n" id="s-kits">—</span><span class="stat-l">Kits</span></div>
+      <div class="stat-b"><span class="stat-n" id="s-clubs">—</span><span class="stat-l">Clubs</span></div>
+      <div class="stat-b"><span class="stat-n" id="s-leagues">—</span><span class="stat-l">Leagues</span></div>
+      <div class="stat-b"><span class="stat-n" id="s-seasons">—</span><span class="stat-l">Seasons</span></div>
+    </div>
+  </div>
+  </div>
+
+<!-- IMAGE BANNER -->
+  <div class="container" style="margin-bottom: 3rem;">
+    <div style="background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:200px; display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden; position:relative;">
+      <div style="position:absolute; inset:0; background:linear-gradient(45deg, rgba(0,200,83,0.1), transparent); pointer-events:none;"></div>
+      <div>
+        <h2 style="font-family:var(--fd); font-size:2rem; letter-spacing:2px; margin-bottom:.5rem;">DISCOVER RARE KITS</h2>
+        <p style="color:var(--w3); font-size:.9rem;">Join the community to unlock exclusive content and track your collection.</p>
+      </div>
+    </div>
+  </div>
+
+<!-- CLUBS -->
+  <div class="container" style="margin-bottom: 3rem;">
+    <div class="section-head">
+      <span class="section-title">VIEW BY <span>CLUBS</span></span>
+    </div>
+    <div class="clubs-grid">
+      <a href="/browse.html?q=Arsenal" class="club-card" onclick="trackClick()">
+        <div class="club-card-icon">🔴</div>
+        <div class="club-card-name">Arsenal</div>
+      </a>
+      <a href="/browse.html?q=Chelsea" class="club-card" onclick="trackClick()">
+        <div class="club-card-icon">🔵</div>
+        <div class="club-card-name">Chelsea</div>
+      </a>
+      <a href="/browse.html?q=Liverpool" class="club-card" onclick="trackClick()">
+        <div class="club-card-icon">🦅</div>
+        <div class="club-card-name">Liverpool</div>
+      </a>
+      <a href="/browse.html?q=Manchester" class="club-card" onclick="trackClick()">
+        <div class="club-card-icon">🐝</div>
+        <div class="club-card-name">Manchester</div>
+      </a>
+      <a href="/browse.html?q=Real+Madrid" class="club-card" onclick="trackClick()">
+        <div class="club-card-icon">👑</div>
+        <div class="club-card-name">Real Madrid</div>
+      </a>
+      <a href="/browse.html?q=Barcelona" class="club-card" onclick="trackClick()">
+        <div class="club-card-icon">🛡️</div>
+        <div class="club-card-name">Barcelona</div>
+      </a>
+    </div>
+  </div>
+
 <!-- FEATURED -->
   <div class="container" id="featured-wrap" style="margin-bottom: 3rem;">
     <div class="section-head">
@@ -120,6 +176,53 @@
     </div>
     <div class="featured-grid" id="featured-grid" style="min-height: auto; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
       <div class="spinner" style="grid-column:1/-1"></div>
+    </div>
+  </div>
+
+<!-- LATEST + SIDEBAR -->
+<!-- ZIGZAG SECTIONS -->
+  <div class="container" style="margin-bottom: 3rem;">
+    <div class="zigzag-row">
+      <div class="zigzag-txt">
+        <h3>ARCHIVE OF LEGENDS</h3>
+        <p>Explore thousands of meticulously cataloged football kits. From the iconic designs of the 90s to the sleek innovations of the modern era, our database covers every major league and international tournament. Each kit features detailed high-resolution images, historical context, and manufacturer details.</p>
+        <a href="/browse.html" class="btn btn-g btn-sm">Explore Archive</a>
+      </div>
+      <div class="zigzag-img">👕</div>
+    </div>
+    <div class="zigzag-row">
+      <div class="zigzag-txt">
+        <h3>RATE AND REVIEW</h3>
+        <p>Join the debate on the greatest kits of all time. Create an account to leave ratings and write reviews on your favorite (and least favorite) designs. Your votes contribute to our real-time Top Rated leaderboard, showcasing the community's definitive opinions on football fashion.</p>
+        <a href="/login.html#signup" class="btn btn-p btn-sm">Join the Community</a>
+      </div>
+      <div class="zigzag-img">⭐</div>
+    </div>
+    <div class="zigzag-row">
+      <div class="zigzag-txt">
+        <h3>TRACK YOUR COLLECTION</h3>
+        <p>Keep a digital inventory of the shirts you own. Our collection tracker lets you mark kits you possess, create wishlists for holy grails, and share your virtual wardrobe with other collectors. Turn your physical passion into a digital showcase.</p>
+        <a href="/profile.html" class="btn btn-g btn-sm">My Collection</a>
+      </div>
+      <div class="zigzag-img">📁</div>
+    </div>
+    <div class="zigzag-row">
+      <div class="zigzag-txt">
+        <h3>CONTRIBUTE TO HISTORY</h3>
+        <p>Can't find a specific obscure away kit from 2004? You can help! Our platform relies on passionate contributors. Submit missing kits, provide accurate details, and get credited for expanding the world's most comprehensive football kit encyclopedia.</p>
+        <a href="/submit.html" class="btn btn-p btn-sm">Submit a Kit</a>
+      </div>
+      <div class="zigzag-img">🤝</div>
+    </div>
+  </div>
+
+<!-- VIDEO SECTION -->
+  <div class="container" style="margin-bottom: 4rem;">
+    <div class="section-head">
+      <span class="section-title">FEATURED <span>VIDEO</span></span>
+    </div>
+    <div class="video-wrap">
+      <iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0" allowfullscreen></iframe>
     </div>
   </div>
 
@@ -162,6 +265,7 @@
   await initNav();
   const startupTasks = [
     loadHomepageConfig(),
+    loadStats(),
     loadFeatured(),
     loadLatest(),
     loadTopRated()
