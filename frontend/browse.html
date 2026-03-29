@@ -177,11 +177,11 @@ async function render() {
   grid.className = 'kit-grid' + (viewMode === 'list' ? ' list-view' : '');
   if (!kits.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>NO KITS FOUND</h3><p>Try different filters.</p></div>`; return; }
 
-  // insert ad slot every 6 cards
+  // insert ad slot every 8 cards
   let html = '';
   const adSlot = await getAdSlot('browse_grid');
   kits.forEach((k, i) => {
-    if (i > 0 && i % 6 === 0 && adSlot?.is_active && adSlot?.ad_code) {
+    if (i > 0 && i % 8 === 0 && adSlot?.is_active && adSlot?.ad_code) {
       html += `<div class="grid-ad"><div class="ad-slot ad-inline" style="display:block"><div class="ad-label">Advertisement</div>${adSlot.ad_code}</div></div>`;
     }
     html += kitCardHTML(k);
