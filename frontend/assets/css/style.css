@@ -177,12 +177,21 @@ select.chip option { background: var(--s2); }
 .grad-5 { background: linear-gradient(135deg,#180c1a,#200f22); }
 
 /* ── RESPONSIVE ── */
+.mobile-menu-btn { display: none; background: none; border: none; color: var(--w); font-size: 1.5rem; cursor: pointer; }
+.mobile-menu-overlay { display: none; position: fixed; inset: 0; background: var(--bk); z-index: 90; padding: 5rem 2rem 2rem; flex-direction: column; gap: 1rem; align-items: center; }
+.mobile-menu-overlay.open { display: flex; }
+.mobile-menu-overlay .nav-link { font-size: 1.2rem; padding: 0.5rem; }
+.mobile-menu-overlay #nav-auth { flex-direction: column; margin-top: 1rem; }
+
 @media (max-width: 768px) {
   .nav { padding: 0 1rem; }
   .container { padding: 0 1rem; }
   .kit-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .75rem; }
   .stat-strip { grid-template-columns: repeat(2,1fr); }
-  .nav-links .nav-link:not(.nav-admin) { display: none; }
+
+  .nav-links, #nav-auth { display: none; }
+  .mobile-menu-btn { display: block; z-index: 101; }
+
   .kit-card-img { height: 160px; }
   .kit-card-img img { height: 120px; }
 }

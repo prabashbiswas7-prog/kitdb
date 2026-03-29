@@ -8,8 +8,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .browse-layout { display:grid; grid-template-columns:220px 1fr; gap:2rem; align-items:start; }
-@media(max-width:800px){ .browse-layout{grid-template-columns:1fr;} .filters-panel{display:none;} }
 .filters-panel { position:sticky; top:calc(var(--nav-h) + 1rem); max-height:calc(100vh - var(--nav-h) - 2rem); overflow-y:auto; overscroll-behavior:contain; }
+.mobile-filter-btn { display:none; background:var(--s2); border:1px solid var(--bd); border-radius:9px; padding:0 1rem; color:var(--w); cursor:pointer; align-items:center; justify-content:center; }
+.mobile-filter-btn:hover { border-color:var(--bdg); color:var(--g); }
+@media(max-width:800px){
+  .browse-layout{grid-template-columns:1fr;}
+  .mobile-filter-btn { display:flex; }
+  .filters-panel {
+    display:none; position:fixed; inset:0; background:var(--bk); z-index:900;
+    max-height:100vh; top:0; padding:1.5rem; border-radius:0; border:none;
+  }
+  .filters-panel.open { display:block; }
+  .filters-panel.open .fp-mobile-header { display:flex !important; }
+}
 .fp-section { margin-bottom:1.5rem; }
 .fp-label { font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--w4); margin-bottom:.6rem; display:block; }
 .fp-group { display:flex; flex-direction:column; gap:.25rem; }
@@ -50,14 +61,23 @@
   <div id="ad-top-banner" class="ad-slot ad-banner"></div>
 
   <!-- Mobile search -->
-  <div class="search-wrap" style="margin-bottom:1rem">
-    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input class="search-input" id="search-q" type="text" placeholder="Search kits…" oninput="render()"/>
+  <div class="search-wrap" style="margin-bottom:1rem; display:flex; gap:0.5rem;">
+    <div style="position:relative; flex:1;">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position:absolute; left: .95rem; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: .35;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="search-q" type="text" placeholder="Search kits…" oninput="render()"/>
+    </div>
+    <button class="mobile-filter-btn" onclick="toggleMobileFilters()">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+    </button>
   </div>
 
   <div class="browse-layout">
     <!-- FILTERS SIDEBAR -->
-    <div class="filters-panel panel">
+    <div class="filters-panel panel" id="filters-panel">
+      <div class="fp-mobile-header" style="display:none; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 style="margin:0; font-size:1.2rem; color:var(--w);">Filters</h3>
+        <button onclick="toggleMobileFilters()" style="background:none; border:none; color:var(--w); font-size:1.5rem; cursor:pointer;">✕</button>
+      </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
         <h3 style="margin:0; font-size:1rem; color:var(--w);">Filters</h3>
         <button onclick="clearFilters()" style="background:none; border:none; color:var(--w4); font-size:0.75rem; cursor:pointer; text-decoration:underline;">Clear All</button>
@@ -170,6 +190,18 @@ function setView(v) {
   const g = document.getElementById('browse-grid');
   g.classList.toggle('list-view', v==='list');
   render();
+}
+
+function toggleMobileFilters() {
+  const panel = document.getElementById('filters-panel');
+  if (panel) {
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
 }
 
 async function render() {

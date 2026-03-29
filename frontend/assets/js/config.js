@@ -75,6 +75,27 @@ async function requireAuth(redirectTo = '/login.html') {
 
 // ── Dynamic nav from DB ────────────────────────────────────
 async function initNav() {
+  // Mobile menu toggle logic
+  const nav = document.querySelector('.nav');
+  if (nav && !document.querySelector('.mobile-menu-btn')) {
+    const btn = document.createElement('button');
+    btn.className = 'mobile-menu-btn';
+    btn.innerHTML = '☰';
+    btn.onclick = () => {
+      const ov = document.getElementById('mobile-menu');
+      if (ov) {
+        ov.classList.toggle('open');
+        btn.innerHTML = ov.classList.contains('open') ? '✕' : '☰';
+      }
+    };
+    nav.appendChild(btn);
+
+    const menu = document.createElement('div');
+    menu.id = 'mobile-menu';
+    menu.className = 'mobile-menu-overlay';
+    document.body.appendChild(menu);
+  }
+
   function normalizePath(input = '') {
     const [path] = String(input).split('?');
     const trimmed = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
@@ -133,31 +154,60 @@ async function initNav() {
       .select('*').eq('is_active', true).order('sort_order');
 
     const navLinks = document.getElementById('nav-links-dynamic') || document.querySelector('.nav-links');
+    const mobileMenu = document.getElementById('mobile-menu');
+
     if (navLinks && menuItems?.length) {
       const currentPath = window.location.pathname;
-      navLinks.innerHTML = menuItems.map(item => {
+      const linksHtml = menuItems.map(item => {
         const isActive = isNavItemActive(currentPath, item.url);
         return `<a href="${item.url}" class="nav-link ${isActive ? 'active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label}</a>`;
       }).join('');
+      navLinks.innerHTML = linksHtml;
+
+      if (mobileMenu) {
+         let mmLinks = document.createElement('div');
+         mmLinks.className = 'nav-links-mobile';
+         mmLinks.style.display = 'flex';
+         mmLinks.style.flexDirection = 'column';
+         mmLinks.style.alignItems = 'center';
+         mmLinks.style.gap = '1rem';
+         mmLinks.innerHTML = linksHtml;
+         mobileMenu.appendChild(mmLinks);
+      }
     }
   } catch {}
 
   // Auth state in nav
   const user = await getUser();
   const navAuth = document.getElementById('nav-auth');
-  if (!navAuth) return;
 
+  let authHtml = '';
   if (user) {
     const profile = await getProfile(user.id);
-    navAuth.innerHTML = `
+    authHtml = `
       <a href="/profile.html" class="nav-link">${profile?.username || 'Profile'}</a>
       <a href="/submit.html" class="nav-link" style="color:var(--g)">+ Submit Kit</a>
       ${profile?.role === 'admin' ? '<a href="/admin/" class="nav-link nav-admin">Admin</a>' : ''}
       <button onclick="sb.auth.signOut().then(()=>location.href='/')" class="btn-nav-out">Sign Out</button>`;
   } else {
-    navAuth.innerHTML = `
+    authHtml = `
       <a href="/login.html" class="btn-nav-login">Sign In</a>
       <a href="/login.html#signup" class="btn-nav-signup">Join Free</a>`;
+  }
+
+  if (navAuth) navAuth.innerHTML = authHtml;
+
+  const mobileMenu = document.getElementById('mobile-menu');
+  if (mobileMenu) {
+      let mmAuth = document.createElement('div');
+      mmAuth.id = 'nav-auth-mobile';
+      mmAuth.style.display = 'flex';
+      mmAuth.style.flexDirection = 'column';
+      mmAuth.style.alignItems = 'center';
+      mmAuth.style.gap = '1rem';
+      mmAuth.style.marginTop = '1rem';
+      mmAuth.innerHTML = authHtml;
+      mobileMenu.appendChild(mmAuth);
   }
 }
 

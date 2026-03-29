@@ -112,27 +112,15 @@
     </div>
   </div>
 
-<!-- STATS -->
-  <div id="stats-wrap" style="background:var(--s1);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:0;margin-bottom:3rem;display:none;">
-  <div class="container" style="padding-top:0;padding-bottom:0">
-    <div class="stat-strip" style="border:none;border-radius:0;background:transparent;">
-      <div class="stat-b"><span class="stat-n" id="s-kits">—</span><span class="stat-l">Kits</span></div>
-      <div class="stat-b"><span class="stat-n" id="s-clubs">—</span><span class="stat-l">Clubs</span></div>
-      <div class="stat-b"><span class="stat-n" id="s-leagues">—</span><span class="stat-l">Leagues</span></div>
-      <div class="stat-b"><span class="stat-n" id="s-seasons">—</span><span class="stat-l">Seasons</span></div>
-    </div>
-  </div>
-  </div>
-
 <!-- FEATURED -->
-  <div class="container" id="featured-wrap">
-  <div class="section-head">
-    <span class="section-title" id="featured-title">FEATURED <span>KITS</span></span>
-    <a href="/browse.html" class="btn btn-g btn-sm">View All →</a>
-  </div>
-  <div class="featured-grid" id="featured-grid">
-    <div class="spinner" style="grid-column:1/-1"></div>
-  </div>
+  <div class="container" id="featured-wrap" style="margin-bottom: 3rem;">
+    <div class="section-head">
+      <span class="section-title" id="featured-title">FEATURED <span>KITS</span></span>
+      <a href="/browse.html" class="btn btn-g btn-sm" style="border-radius: 999px; font-size: 0.7rem; padding: 0.2rem 0.6rem;">View All →</a>
+    </div>
+    <div class="featured-grid" id="featured-grid" style="min-height: auto; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+      <div class="spinner" style="grid-column:1/-1"></div>
+    </div>
   </div>
 
 <!-- LATEST + SIDEBAR -->
@@ -148,14 +136,13 @@
     <div>
       <div id="ad-sidebar" class="ad-slot ad-sidebar" style="margin-bottom:1.5rem"></div>
       <!-- Top Rated -->
-      <div class="panel" style="margin-bottom:1rem">
-        <div class="panel-title">⭐ Top Rated</div>
+      <div class="panel" style="margin-bottom:1rem; background: var(--bk);">
+        <div class="panel-title" style="color: var(--w3); font-size: 0.65rem;">⭐ TOP RATED</div>
         <div id="top-rated-list"></div>
       </div>
     </div>
   </div>
   </div>
-  <div id="extra-sections-wrap"></div>
 </main>
 
 <div style="height:3rem"></div>
@@ -173,213 +160,19 @@
 <script>
 (async () => {
   await initNav();
-  const usedBuilder = await loadHomepageSections();
-  if (!usedBuilder) {
-    const startupTasks = [
-      loadHomepageConfig(),
-      loadFeatured(),
-      loadLatest(),
-      loadTopRated()
-    ];
-    await Promise.allSettled(startupTasks);
-  }
+  const startupTasks = [
+    loadHomepageConfig(),
+    loadFeatured(),
+    loadLatest(),
+    loadTopRated()
+  ];
+  await Promise.allSettled(startupTasks);
+
   await Promise.allSettled([
-    loadStats(),
     injectAd('top_banner', 'ad-top-banner'),
     injectAd('sidebar', 'ad-sidebar')
   ]);
 })();
-
-async function loadHomepageSections() {
-  const { data, error } = await sb.from('homepage_sections')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order')
-    .order('id');
-  if (error || !data?.length) return false;
-
-  const byType = new Map();
-  for (const section of data) {
-    if (!byType.has(section.type)) byType.set(section.type, section);
-  }
-  const hero = byType.get('hero');
-  if (hero?.settings) {
-    if (hero.settings.title) document.getElementById('hero-title').innerHTML = String(hero.settings.title).replace(/\n/g, '<br/>');
-    if (hero.settings.subtitle) document.getElementById('hero-subtitle').textContent = hero.settings.subtitle;
-    if (hero.settings.cta_text) document.getElementById('hero-cta').textContent = hero.settings.cta_text;
-    if (hero.settings.cta_url) document.getElementById('hero-cta').href = hero.settings.cta_url;
-  }
-
-  const banner = byType.get('banner');
-  const announcementEl = document.getElementById('announcement');
-  if (banner?.settings?.text) {
-    announcementEl.textContent = '📢 ' + banner.settings.text;
-    announcementEl.style.display = 'block';
-    if (banner.settings.bg_color) announcementEl.style.background = banner.settings.bg_color;
-    if (banner.settings.text_color) announcementEl.style.color = banner.settings.text_color;
-  } else {
-    announcementEl.style.display = 'none';
-  }
-  if (!hero && !banner) {
-    document.getElementById('hero-wrap').style.display = 'none';
-  }
-
-  const featured = byType.get('featured_kits');
-  if (featured) {
-    if (featured.settings?.title) {
-      document.getElementById('featured-title').innerHTML = `${featured.settings.title} <span>KITS</span>`;
-    }
-    await loadFeatured(Math.max(parseInt(featured.settings?.limit || 5, 10), 1));
-  } else {
-    document.getElementById('featured-wrap').style.display = 'none';
-  }
-
-  const latest = byType.get('latest_kits');
-  if (latest) {
-    if (latest.settings?.title) {
-      document.getElementById('latest-title').innerHTML = `${latest.settings.title} <span>ADDITIONS</span>`;
-    }
-    await loadLatest(Math.max(parseInt(latest.settings?.limit || 6, 10), 1));
-  } else {
-    document.getElementById('latest-wrap').style.display = 'none';
-  }
-
-  // top-rated sidebar is currently tied to latest layout; only load when latest section is active
-  if (latest) await loadTopRated();
-  await renderAdditionalSections(data.filter(s => !['hero', 'banner', 'featured_kits', 'latest_kits'].includes(s.type)));
-  applyBuilderSectionOrder(data);
-  return true;
-}
-
-function applyBuilderSectionOrder(sections) {
-  const root = document.getElementById('home-sections-root');
-  if (!root) return;
-  const heroWrap = document.getElementById('hero-wrap');
-  const statsWrap = document.getElementById('stats-wrap');
-  const featuredWrap = document.getElementById('featured-wrap');
-  const latestWrap = document.getElementById('latest-wrap');
-  const extraWrap = document.getElementById('extra-sections-wrap');
-
-  const extraNodeBySectionId = new Map(
-    Array.from(extraWrap?.querySelectorAll('[data-builder-section-id]') || [])
-      .map(node => [node.getAttribute('data-builder-section-id'), node])
-  );
-  const mountedStatic = new Set();
-  let statsPlaced = false;
-
-  const placeStats = () => {
-    if (!statsWrap || statsPlaced) return;
-    root.appendChild(statsWrap);
-    statsPlaced = true;
-  };
-  const placeStatic = (key, el) => {
-    if (!el || el.style.display === 'none' || mountedStatic.has(key)) return;
-    root.appendChild(el);
-    mountedStatic.add(key);
-    if (key === 'hero') placeStats();
-  };
-
-  for (const section of sections) {
-    if (section.type === 'hero' || section.type === 'banner') {
-      placeStatic('hero', heroWrap);
-      continue;
-    }
-    if (section.type === 'featured_kits') {
-      placeStatic('featured_kits', featuredWrap);
-      continue;
-    }
-    if (section.type === 'latest_kits') {
-      placeStatic('latest_kits', latestWrap);
-      continue;
-    }
-    const extraNode = extraNodeBySectionId.get(String(section.id));
-    if (extraNode) root.appendChild(extraNode);
-  }
-
-  // Default stats removed from automatic placement. Now depends on builder "stats" widget or legacy behavior if needed.
-  if (!statsPlaced && statsWrap && !sections.some(s => s.type === 'stats') && sections.length === 0) {
-    if (heroWrap && heroWrap.style.display !== 'none') {
-      root.insertBefore(statsWrap, featuredWrap?.style.display !== 'none' ? featuredWrap : latestWrap);
-    } else {
-      root.prepend(statsWrap);
-    }
-  }
-}
-
-function esc(s) {
-  return String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-}
-
-async function renderAdditionalSections(sections) {
-  const wrap = document.getElementById('extra-sections-wrap');
-  if (!wrap) return;
-  if (!sections.length) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-
-  const blocks = [];
-  for (const s of sections) {
-    const c = s.settings || {};
-    if (s.type === 'content') {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || s.label || 'Content')}</div><div>${c.body || ''}</div></div></div>`);
-    } else if (s.type === 'custom_html') {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem">${c.html || ''}</div>`);
-    } else if (s.type === 'newsletter') {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Newsletter')}</div><p style="color:var(--w3);margin:.5rem 0 1rem">${esc(c.subtitle || 'Get updates from KitDB')}</p><a href="/login.html#signup" class="btn btn-p btn-sm">${esc(c.button_text || 'Subscribe')}</a></div></div>`);
-    } else if (s.type === 'blog_posts') {
-      const limit = Math.max(parseInt(c.limit || 3, 10), 1);
-      const { data: posts } = await sb.from('blog_posts').select('title,slug,excerpt,published_at,cover_image,tags').eq('is_published', true).order('published_at', { ascending: false }).limit(limit);
-      const cards = (posts || []).map(p => `
-        <a href="/blog-post.html?slug=${encodeURIComponent(p.slug)}" class="home-blog-card" onclick="trackClick()">
-          <div class="home-blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${esc(p.title)}"/>` : '📝'}</div>
-          <div class="home-blog-body">
-            ${p.tags?.length ? `<div class="home-blog-tags">${p.tags.map(t => `<span class="home-blog-tag">${esc(t)}</span>`).join('')}</div>` : ''}
-            <div class="home-blog-title">${esc(p.title)}</div>
-            ${p.excerpt ? `<div class="home-blog-excerpt">${esc(p.excerpt)}</div>` : ''}
-            <div class="home-blog-meta"><span>${fmtDate(p.published_at)}</span><span style="color:var(--g)">Read more →</span></div>
-          </div>
-        </a>`).join('');
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="section-head"><span class="section-title">${esc(c.title || 'BLOG')} <span>POSTS</span></span><a href="/blog.html" class="btn btn-g btn-sm">View All →</a></div><div class="home-blog-grid">${cards || '<div class="empty" style="grid-column:1/-1"><p>No posts yet.</p></div>'}</div></div>`);
-    } else if (s.type === 'kit_of_week') {
-      const { data: kotw } = await sb.from('kit_of_week').select('*,kits(team,season,type,slug,image_url)').eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle();
-      const k = kotw?.kits;
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Kit of the Week')}</div>${k ? `<a href="/kit.html?slug=${encodeURIComponent(k.slug)}" style="display:flex;gap:1rem;align-items:center;text-decoration:none"><div class="kit-card-img grad-1" style="width:160px;flex:0 0 160px">${k.image_url ? `<img src="${k.image_url}" alt="${esc(k.team)}"/>` : '⚽'}</div><div><div style="font-weight:700">${esc(k.team)}</div><div style="color:var(--w3)">${esc(k.season)} · ${esc(k.type)}</div></div></a>` : '<div class="empty"><p>No active kit of the week.</p></div>'}</div></div>`);
-    } else if (s.type === 'stats') {
-      const bg = c.bg_color || 'var(--s1)';
-      blocks.push(`<div data-builder-section-id="${s.id}" style="background:${esc(bg)};border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:0;margin-top:3rem"><div class="container" style="padding-top:0;padding-bottom:0"><div class="stat-strip" style="border:none;border-radius:0;background:transparent;"><div class="stat-b"><span class="stat-n" id="s-kits-d-${s.id}">—</span><span class="stat-l">Kits</span></div><div class="stat-b"><span class="stat-n" id="s-clubs-d-${s.id}">—</span><span class="stat-l">Clubs</span></div><div class="stat-b"><span class="stat-n" id="s-leagues-d-${s.id}">—</span><span class="stat-l">Leagues</span></div><div class="stat-b"><span class="stat-n" id="s-seasons-d-${s.id}">—</span><span class="stat-l">Seasons</span></div></div></div></div>`);
-    } else if (s.type === 'kit_filter') {
-      const ft = (c.filter_type || 'league').toLowerCase();
-      const col = ['league', 'type', 'season'].includes(ft) ? ft : 'league';
-      const { data: kits } = await sb.from('kits').select(col).eq('is_published', true).not(col, 'is', null).limit(100);
-      const vals = [...new Set((kits || []).map(k => k[col]).filter(Boolean))].slice(0, 18);
-      const chips = vals.map(v => `<a class="btn btn-g btn-sm" style="margin:.25rem" href="/browse.html?${encodeURIComponent(col)}=${encodeURIComponent(v)}">${esc(v)}</a>`).join('');
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || 'Browse by ' + col)}</div><div>${chips || '<span style="color:var(--w4)">No filters available.</span>'}</div></div></div>`);
-    } else if (s.type === 'gallery') {
-      const limit = Math.max(parseInt(c.limit || 8, 10), 1);
-      const { data: kits } = await sb.from('kits_with_stats')
-        .select('slug,team,season,type,image_url,id')
-        .eq('is_published', true)
-        .not('image_url', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      const cards = (kits || []).map(k => `
-        <a href="/kit.html?slug=${encodeURIComponent(k.slug)}" class="home-gallery-card" onclick="trackClick()">
-          <div class="home-gallery-media">${k.image_url ? `<img src="${k.image_url}" alt="${esc(k.team)}"/>` : '⚽'}</div>
-          <div class="home-gallery-meta"><strong style="color:var(--w)">${esc(k.team)}</strong><br/>${esc(k.season)} · ${esc(k.type)}</div>
-        </a>`).join('');
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="section-head"><span class="section-title">${esc(c.title || 'IMAGE')} <span>GALLERY</span></span></div><div class="home-gallery-grid">${cards || '<div class="empty" style="grid-column:1/-1"><p>No gallery items available.</p></div>'}</div></div>`);
-    } else if (s.type === 'row_2col') {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="home-row-2col"><div class="home-row-cell">${c.left_html || ''}</div><div class="home-row-cell">${c.right_html || ''}</div></div></div>`);
-    } else if (s.type === 'row_3col') {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="home-row-3col"><div class="home-row-cell">${c.col1_html || ''}</div><div class="home-row-cell">${c.col2_html || ''}</div><div class="home-row-cell">${c.col3_html || ''}</div></div></div>`);
-    } else if (s.type === 'spacer') {
-      const h = Math.max(parseInt(c.height || 48, 10), 8);
-      blocks.push(`<div data-builder-section-id="${s.id}" style="height:${h}px"></div>`);
-    } else {
-      blocks.push(`<div class="container" data-builder-section-id="${s.id}" style="margin-top:3rem"><div class="panel"><div class="panel-title">${esc(c.title || s.label || s.type)}</div><p style="color:var(--w4);margin-top:.5rem">Section type <code>${esc(s.type)}</code> is enabled but not configured yet.</p></div></div>`);
-    }
-  }
-  wrap.innerHTML = blocks.join('');
-}
 
 async function loadHomepageConfig() {
   const { data } = await sb.from('homepage_config').select('*');
@@ -424,28 +217,14 @@ async function loadStats() {
   document.querySelectorAll('[id^="s-seasons-d-"]').forEach(el => el.textContent = seasonsCount);
 }
 
-async function loadFeatured(limit = 5) {
+async function loadFeatured(limit = 4) {
   const { data } = await sb.from('kits_with_stats').select('*').eq('is_featured', true).eq('is_published', true).limit(limit);
   const grid = document.getElementById('featured-grid');
-  if (!data || !data.length) { grid.innerHTML = '<div class="empty"><div class="empty-icon">⚽</div><h3>NO FEATURED KITS</h3></div>'; return; }
-  grid.innerHTML = data.map((k, i) => `
-    <a href="/kit.html?slug=${k.slug}" class="featured-card ${i === 0 ? 'featured-main' : ''}" onclick="trackClick()">
-      <div class="featured-img grad-${k.id.charCodeAt(0) % 6}">
-        ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="ph">⚽</span>`}
-        <span class="badge b-${k.type.toLowerCase().replace(' ','-')} featured-badge">${k.type}</span>
-      </div>
-      <div class="featured-body">
-        <div class="featured-team">${k.team}</div>
-        <div class="featured-sub">
-          <span style="font-family:var(--fm);color:var(--g);font-size:.72rem">${k.season}</span>
-          <span>${k.league || ''}</span>
-          <span>${renderStars(parseFloat(k.avg_rating), k.rating_count)}</span>
-        </div>
-      </div>
-    </a>`).join('');
+  if (!data || !data.length) { grid.innerHTML = '<div class="empty" style="grid-column: 1/-1; padding: 2rem;"><div class="empty-icon" style="font-size: 2rem;">⚽</div><h3 style="font-size: 1rem; letter-spacing: 1px;">NO FEATURED KITS</h3></div>'; return; }
+  grid.innerHTML = data.map((k) => kitCardHTML(k)).join('');
 }
 
-async function loadLatest(limit = 6) {
+async function loadLatest(limit = 8) {
   const { data } = await sb.from('kits_with_stats').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(limit);
   const grid = document.getElementById('latest-grid');
   if (!data) return;
@@ -457,11 +236,12 @@ async function loadTopRated() {
   const el = document.getElementById('top-rated-list');
   if (!data) return;
   el.innerHTML = data.map((k, i) => `
-    <a href="/kit.html?slug=${k.slug}" style="display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
-      <span style="font-family:var(--fm);font-size:.7rem;color:var(--g);width:16px">${i+1}</span>
-      <div style="flex:1;min-width:0"><div style="font-weight:500;font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team}</div><div style="font-size:.7rem;color:var(--w4)">${k.season}</div></div>
+    <a href="/kit.html?slug=${k.slug}" style="display:flex;align-items:center;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
+      <span style="font-family:var(--fm);font-size:.7rem;color:var(--w4);width:16px">${i+1}</span>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--w);">${k.team}</div><div style="font-size:.75rem;color:var(--w4)">${k.season}</div></div>
       <span style="font-family:var(--fm);font-size:.72rem;color:var(--gold)">★ ${parseFloat(k.avg_rating).toFixed(1)}</span>
     </a>`).join('');
+  if (el.lastElementChild) el.lastElementChild.style.borderBottom = 'none';
 }
 
 function kitCardHTML(k) {
