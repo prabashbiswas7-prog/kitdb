@@ -9,7 +9,7 @@
 <style>
 .browse-layout { display:grid; grid-template-columns:220px 1fr; gap:2rem; align-items:start; }
 @media(max-width:800px){ .browse-layout{grid-template-columns:1fr;} .filters-panel{display:none;} }
-.filters-panel { position:sticky; top:calc(var(--nav-h) + 1rem); }
+.filters-panel { position:sticky; top:calc(var(--nav-h) + 1rem); max-height:calc(100vh - var(--nav-h) - 2rem); overflow-y:auto; }
 .fp-section { margin-bottom:1.5rem; }
 .fp-label { font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--w4); margin-bottom:.6rem; display:block; }
 .fp-group { display:flex; flex-direction:column; gap:.25rem; }
