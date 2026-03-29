@@ -1115,6 +1115,17 @@ async function saveKit() {
   let slug     = document.getElementById('kf-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
   if (!team || !season) { toast('Team and Season required', 'err'); return; }
   if (!slug) { autoSlug(); slug = document.getElementById('kf-slug').value.trim(); }
+
+  const type = document.getElementById('kf-type').value;
+  let dupQuery = sb.from('kits').select('id').eq('team', team).eq('season', season).eq('type', type);
+  if (editKitId) dupQuery = dupQuery.neq('id', editKitId);
+  const { data: dups, error: dupErr } = await dupQuery;
+  if (dupErr) { toast('Error checking duplicates: ' + dupErr.message, 'err'); return; }
+  if (dups && dups.length > 0) {
+    toast(`A ${type} kit for ${team} in ${season} already exists.`, 'err');
+    return;
+  }
+
   const payload = {
     team, season, slug,
     league:          document.getElementById('kf-league').value.trim() || null,
