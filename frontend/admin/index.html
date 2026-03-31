@@ -265,8 +265,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
       <button class="ln active" id="lnb-kits"        onclick="sv('kits',this)">👕<span class="ln-tip">Kit Manager</span></button>
       <button class="ln"        id="lnb-submissions"  onclick="sv('submissions',this)">📥<span class="ln-tip">Submissions</span></button>
       <div class="ln-sep"></div>
-      <button class="ln"        id="lnb-menu"         onclick="sv('menu',this)">☰<span class="ln-tip">Menu Manager</span></button>
-      <button class="ln"        id="lnb-blog"         onclick="sv('blog',this)">📝<span class="ln-tip">Blog</span></button>
+            <button class="ln"        id="lnb-blog"         onclick="sv('blog',this)">📝<span class="ln-tip">Blog</span></button>
       <button class="ln"        id="lnb-pages"        onclick="sv('pages',this)">📄<span class="ln-tip">Pages</span></button>
       <div class="ln-sep"></div>
       <button class="ln"        id="lnb-types"        onclick="sv('types',this)">🏷️<span class="ln-tip">Kit Types</span></button>
@@ -321,18 +320,6 @@ td{padding:.62rem .9rem;vertical-align:middle}
             <tbody id="sub-tbody"></tbody>
           </table>
         </div>
-      </div>
-    </div>
-
-    <!-- MENU MANAGER -->
-    <div class="fp" id="view-menu">
-      <div class="fpi">
-        <div class="sh">
-          <span class="st">MENU <span>MANAGER</span></span>
-          <button class="btn btn-p btn-sm" onclick="openMenuForm(null)">+ Add Item</button>
-        </div>
-        <p style="font-size:.82rem;color:var(--w3);margin-bottom:1.25rem">Drag to reorder. Toggle to show/hide. These items appear in your site navigation.</p>
-        <div id="menulist" style="display:flex;flex-direction:column;gap:.5rem"></div>
       </div>
     </div>
 
@@ -548,23 +535,6 @@ td{padding:.62rem .9rem;vertical-align:middle}
       <input type="hidden" id="kf-id"/>
     </div>
     <div class="mf"><button class="btn btn-g" onclick="closeKitForm()">Cancel</button><button class="btn btn-p" onclick="saveKit()">Save Kit</button></div>
-  </div>
-</div>
-
-<!-- MENU FORM MODAL -->
-<div class="ov" id="menu-ov" onclick="if(event.target===this)closeMenuForm()">
-  <div class="mbox" style="max-width:460px">
-    <div class="mh"><div class="mt" id="mft">ADD MENU <span>ITEM</span></div><button class="mc" onclick="closeMenuForm()">✕</button></div>
-    <div class="mb">
-      <div style="display:flex;flex-direction:column;gap:.875rem">
-        <div class="field"><label>Label *</label><input id="mf-label" placeholder="e.g. Browse Kits"/></div>
-        <div class="field"><label>URL *</label><input id="mf-url" placeholder="e.g. /browse.html or https://…"/></div>
-        <div class="field"><label>Open in</label><select id="mf-target"><option value="_self">Same tab</option><option value="_blank">New tab</option></select></div>
-        <div class="tr"><span style="font-size:.82rem;font-weight:500">Visible in nav</span><label class="tgl"><input type="checkbox" id="mf-active" checked/><span class="tgl-s"></span></label></div>
-        <input type="hidden" id="mf-id"/>
-      </div>
-    </div>
-    <div class="mf"><button class="btn btn-g" onclick="closeMenuForm()">Cancel</button><button class="btn btn-p" onclick="saveMenuItem()">Save</button></div>
   </div>
 </div>
 
@@ -864,7 +834,6 @@ function sv(v, btn) {
   }
   const loaders = {
     submissions: loadSubmissions,
-    menu: loadMenu,
     blog: loadBlog, pages: loadPages,
     types: loadTypes, kotw: loadKotw,
     comments: loadComments, badges: loadBadges,
@@ -1270,95 +1239,6 @@ async function rejectSubmission(id) {
     reviewed_at: new Date().toISOString(), rejection_reason: reason,
   }).eq('id', id);
   toast('Submission rejected.'); loadSubmissions();
-}
-
-// ── MENU MANAGER ─────────────────────────────────────────────
-async function loadMenu() {
-  const { data } = await sb.from('menu_items').select('*').order('sort_order');
-  const list = document.getElementById('menulist');
-  if (!data || !data.length) {
-    list.innerHTML = '<div class="empty"><p>No menu items yet.</p></div>';
-    return;
-  }
-  list.innerHTML = data.map(item => `
-    <div class="mic" id="mi-${item.id}" draggable="true"
-      ondragstart="menuDragStart(event,'${item.id}')"
-      ondragover="event.preventDefault();this.classList.add('drag-over')"
-      ondragexit="this.classList.remove('drag-over')"
-      ondrop="menuDragDrop(event,'${item.id}')">
-      <span style="color:var(--w4);font-size:1rem;cursor:grab">⠿</span>
-      <span style="font-size:.9rem">${item.url.startsWith('http') ? '🔗' : '📄'}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:.88rem">${item.label}</div>
-        <div style="font-family:var(--fm);font-size:.7rem;color:var(--w4)">${item.url} ${item.target === '_blank' ? '↗' : ''}</div>
-      </div>
-      <label class="tgl" onclick="event.stopPropagation()">
-        <input type="checkbox" ${item.is_active ? 'checked' : ''} onchange="toggleMenuItem('${item.id}',this.checked)"/>
-        <span class="tgl-s"></span>
-      </label>
-      <button class="btn-ed" onclick="openMenuForm(${JSON.stringify(item).replace(/"/g, '&quot;')})">Edit</button>
-      <button class="btn-del" onclick="delMenuItem('${item.id}','${item.label.replace(/'/g, "\\'")}')">Del</button>
-    </div>`).join('');
-}
-
-function menuDragStart(e, id) { menuDragId = id; e.dataTransfer.effectAllowed = 'move'; }
-async function menuDragDrop(e, targetId) {
-  e.preventDefault();
-  document.querySelectorAll('.mic').forEach(c => c.classList.remove('drag-over'));
-  if (!menuDragId || menuDragId === targetId) return;
-  const cards = [...document.querySelectorAll('.mic')];
-  const ids   = cards.map(c => c.id.replace('mi-', ''));
-  const fi    = ids.indexOf(menuDragId);
-  const ti    = ids.indexOf(targetId);
-  ids.splice(fi, 1); ids.splice(ti, 0, menuDragId);
-  const error = await applySortOrderUpdates('menu_items', ids);
-  menuDragId = null;
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  loadMenu(); toast('Menu order saved!');
-}
-
-async function toggleMenuItem(id, active) {
-  await sb.from('menu_items').update({ is_active: active }).eq('id', id);
-  toast(active ? 'Shown in nav' : 'Hidden from nav');
-}
-
-function openMenuForm(item) {
-  editMenuId = item?.id || null;
-  document.getElementById('mft').innerHTML = item ? 'EDIT MENU <span>ITEM</span>' : 'ADD MENU <span>ITEM</span>';
-  document.getElementById('mf-label').value  = item?.label || '';
-  document.getElementById('mf-url').value    = item?.url || '';
-  document.getElementById('mf-target').value = item?.target || '_self';
-  document.getElementById('mf-active').checked = item?.is_active !== false;
-  document.getElementById('mf-id').value     = item?.id || '';
-  document.getElementById('menu-ov').classList.add('open');
-}
-function closeMenuForm() { document.getElementById('menu-ov').classList.remove('open'); }
-
-async function saveMenuItem() {
-  const label = document.getElementById('mf-label').value.trim();
-  const url   = document.getElementById('mf-url').value.trim();
-  if (!label || !url) { toast('Label and URL required', 'err'); return; }
-  const payload = {
-    label, url,
-    target:    document.getElementById('mf-target').value,
-    is_active: document.getElementById('mf-active').checked,
-  };
-  const id = document.getElementById('mf-id').value;
-  let error;
-  if (id) {
-    ({ error } = await sb.from('menu_items').update(payload).eq('id', id));
-  } else {
-    const { data: ex } = await sb.from('menu_items').select('sort_order').order('sort_order', { ascending: false }).limit(1);
-    ({ error } = await sb.from('menu_items').insert({ ...payload, sort_order: (ex?.[0]?.sort_order || 0) + 1 }));
-  }
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  toast('Menu saved!'); closeMenuForm(); loadMenu();
-}
-
-async function delMenuItem(id, label) {
-  if (!confirm(`Remove "${label}" from menu?`)) return;
-  await sb.from('menu_items').delete().eq('id', id);
-  toast('Removed'); loadMenu();
 }
 
 // ── KIT TYPES ────────────────────────────────────────────────

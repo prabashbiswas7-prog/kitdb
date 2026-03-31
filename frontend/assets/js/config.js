@@ -170,21 +170,23 @@ async function initNav() {
     }
   }
 
-  // Load menu items from DB
+  // Set active class on hardcoded nav and copy to mobile menu
   try {
-    const { data: menuItems } = await sb.from('menu_items')
-      .select('*').eq('is_active', true).order('sort_order');
-
-    const navLinks = document.getElementById('nav-links-dynamic') || document.querySelector('.nav-links');
+    const navLinks = document.querySelector('.nav-links');
     const mobileMenu = document.getElementById('mobile-menu');
+    const currentPath = window.location.pathname;
 
-    if (navLinks && menuItems?.length) {
-      const currentPath = window.location.pathname;
-      const linksHtml = menuItems.map(item => {
-        const isActive = isNavItemActive(currentPath, item.url);
-        return `<a href="${item.url}" class="nav-link ${isActive ? 'active' : ''}" ${item.target === '_blank' ? 'target="_blank" rel="noopener"' : ''}>${item.label}</a>`;
-      }).join('');
-      navLinks.innerHTML = linksHtml;
+    if (navLinks) {
+      // Set active state on hardcoded links
+      const links = navLinks.querySelectorAll('a');
+      links.forEach(link => {
+        const url = new URL(link.href).pathname;
+        if (isNavItemActive(currentPath, url)) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
 
       if (mobileMenu) {
          let mmLinks = document.createElement('div');
@@ -193,7 +195,7 @@ async function initNav() {
          mmLinks.style.flexDirection = 'column';
          mmLinks.style.alignItems = 'center';
          mmLinks.style.gap = '1rem';
-         mmLinks.innerHTML = linksHtml;
+         mmLinks.innerHTML = navLinks.innerHTML; // Copy hardcoded links to mobile overlay
          mobileMenu.appendChild(mmLinks);
       }
     }
