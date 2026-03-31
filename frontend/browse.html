@@ -21,13 +21,21 @@
   .filters-panel.open { display:block; }
   .filters-panel.open .fp-mobile-header { display:flex !important; }
 }
-.fp-section { margin-bottom:1.5rem; }
-.fp-label { font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--w4); margin-bottom:.6rem; display:block; }
+.fp-section { margin-bottom:1.5rem; border-bottom:1px solid var(--bd); padding-bottom:1rem; }
+.fp-section:last-of-type { border-bottom:none; }
+.fp-label {
+  font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  color:var(--w4); margin-bottom:.6rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;
+}
+.fp-label:hover { color:var(--w); }
+.fp-label svg { width:12px; height:12px; transition:transform .2s; }
+.fp-section.collapsed .fp-label svg { transform:rotate(-90deg); }
+.fp-section.collapsed .fp-group { display:none; }
 .fp-group { display:flex; flex-direction:column; gap:.25rem; }
 .fp-opt { display:flex; align-items:center; gap:.5rem; padding:.38rem .6rem; border-radius:6px; cursor:pointer; font-size:.82rem; color:var(--w3); transition:all .15s; }
 .fp-opt:hover { background:var(--s3); color:var(--w); }
 .fp-opt.active { background:var(--gf); color:var(--g); }
-.fp-opt input { display:none; }
+.fp-opt input[type="checkbox"] { display:inline-block; accent-color:var(--g); cursor:pointer; width:14px; height:14px; margin:0; flex-shrink:0; }
 .results-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:.5rem; }
 .result-count { font-family:var(--fm); font-size:.75rem; color:var(--w4); }
 .sort-select { background:var(--s2); border:1px solid var(--bd); border-radius:6px; padding:.35rem .8rem; font-size:.75rem; color:var(--w3); outline:none; font-family:var(--fb); }
@@ -79,28 +87,40 @@
         <h3 style="margin:0; font-size:1rem; color:var(--w);">Filters</h3>
         <button onclick="clearFilters()" style="background:none; border:none; color:var(--w4); font-size:0.75rem; cursor:pointer; text-decoration:underline;">Clear All</button>
       </div>
-      <div class="fp-section">
-        <span class="fp-label">Kit Type</span>
+      <div class="fp-section" id="sec-type">
+        <span class="fp-label" onclick="toggleSection('sec-type')">Kit Type <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         <div class="fp-group" id="type-filters">
-          <label class="fp-opt active" onclick="toggleFilter('type','All',this)"><input type="radio" name="type"/>All Types</label>
-          <label class="fp-opt" onclick="toggleFilter('type','Home',this)"><input type="radio" name="type"/>🟢 Home</label>
-          <label class="fp-opt" onclick="toggleFilter('type','Away',this)"><input type="radio" name="type"/>⚫ Away</label>
-          <label class="fp-opt" onclick="toggleFilter('type','Third',this)"><input type="radio" name="type"/>🔵 Third</label>
-          <label class="fp-opt" onclick="toggleFilter('type','Special Edition',this)"><input type="radio" name="type"/>⭐ Special</label>
-          <label class="fp-opt" onclick="toggleFilter('type','GK',this)"><input type="radio" name="type"/>🧤 GK</label>
+          <label class="fp-opt" onclick="toggleFilter(event, 'type','Home',this)"><input type="checkbox" name="type" value="Home"/>🟢 Home</label>
+          <label class="fp-opt" onclick="toggleFilter(event, 'type','Away',this)"><input type="checkbox" name="type" value="Away"/>⚫ Away</label>
+          <label class="fp-opt" onclick="toggleFilter(event, 'type','Third',this)"><input type="checkbox" name="type" value="Third"/>🔵 Third</label>
+          <label class="fp-opt" onclick="toggleFilter(event, 'type','Special Edition',this)"><input type="checkbox" name="type" value="Special Edition"/>⭐ Special</label>
+          <label class="fp-opt" onclick="toggleFilter(event, 'type','GK',this)"><input type="checkbox" name="type" value="GK"/>🧤 GK</label>
         </div>
       </div>
-      <div class="fp-section">
-        <span class="fp-label">League</span>
+      <div class="fp-section" id="sec-league">
+        <span class="fp-label" onclick="toggleSection('sec-league')">League <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         <div class="fp-group" id="league-filters"></div>
       </div>
-      <div class="fp-section">
-        <span class="fp-label">Season</span>
+      <div class="fp-section" id="sec-season">
+        <span class="fp-label" onclick="toggleSection('sec-season')">Season <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         <div class="fp-group" id="season-filters"></div>
       </div>
-      <div class="fp-section">
-        <span class="fp-label">Manufacturer</span>
+      <div class="fp-section" id="sec-maker">
+        <span class="fp-label" onclick="toggleSection('sec-maker')">Manufacturer <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         <div class="fp-group" id="maker-filters"></div>
+      </div>
+      <div class="fp-section" id="sec-color">
+        <span class="fp-label" onclick="toggleSection('sec-color')">Color <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+        <div class="fp-group" id="color-filters"></div>
+      </div>
+      <div class="fp-section" id="sec-rating">
+        <span class="fp-label" onclick="toggleSection('sec-rating')">Rating <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+        <div class="fp-group" id="rating-filters">
+          <label class="fp-opt" onclick="toggleFilter(event, 'rating','4',this)"><input type="checkbox" name="rating" value="4"/>4+ Stars</label>
+          <label class="fp-opt" onclick="toggleFilter(event, 'rating','3',this)"><input type="checkbox" name="rating" value="3"/>3+ Stars</label>
+          <label class="fp-opt" onclick="toggleFilter(event, 'rating','2',this)"><input type="checkbox" name="rating" value="2"/>2+ Stars</label>
+          <label class="fp-opt" onclick="toggleFilter(event, 'rating','1',this)"><input type="checkbox" name="rating" value="1"/>1+ Stars</label>
+        </div>
       </div>
       <!-- SIDEBAR AD -->
       <div id="ad-sidebar" class="ad-slot ad-sidebar" style="margin-top:1rem"></div>
@@ -136,7 +156,7 @@
 
 <script src="/assets/js/config.js"></script>
 <script>
-let allKits = [], filters = { type: 'All', league: '', season: '', maker: '' }, viewMode = 'grid';
+let allKits = [], filters = { type: [], league: [], season: [], maker: [], color: [], rating: [] }, viewMode = 'grid';
 
 (async () => {
   await initNav();
@@ -155,32 +175,44 @@ function buildFilterOptions() {
   const leagues = [...new Set(allKits.map(k=>k.league).filter(Boolean))].sort();
   const seasons = [...new Set(allKits.map(k=>k.season).filter(Boolean))].sort().reverse();
   const makers  = [...new Set(allKits.map(k=>k.maker).filter(Boolean))].sort();
+  const colors  = [...new Set(allKits.map(k=>k.color).filter(Boolean))].sort();
   fillFilter('league-filters', leagues, 'league');
   fillFilter('season-filters', seasons, 'season');
   fillFilter('maker-filters',  makers,  'maker');
+  fillFilter('color-filters',  colors,  'color');
 }
 function fillFilter(id, vals, key) {
   document.getElementById(id).innerHTML = vals.map(v =>
-    `<label class="fp-opt" onclick="toggleFilter('${key}','${v}',this)"><input type="radio" name="${key}"/>${v}</label>`
+    `<label class="fp-opt" onclick="toggleFilter(event, '${key}','${v}',this)"><input type="checkbox" name="${key}" value="${v}"/>${v}</label>`
   ).join('');
 }
-function toggleFilter(key, val, el) {
-  filters[key] = val;
-  const group = el.closest('.fp-group') || el.closest('#type-filters');
-  group?.querySelectorAll('.fp-opt').forEach(o => o.classList.remove('active'));
-  el.classList.add('active');
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('collapsed');
+}
+function toggleFilter(e, key, val, el) {
+  e.preventDefault();
+  const cb = el.querySelector('input[type="checkbox"]');
+  cb.checked = !cb.checked;
+
+  if (cb.checked) {
+    el.classList.add('active');
+    if (!filters[key].includes(val)) filters[key].push(val);
+  } else {
+    el.classList.remove('active');
+    filters[key] = filters[key].filter(v => v !== val);
+  }
   render();
 }
 function clearFilters() {
-  filters = { type: 'All', league: '', season: '', maker: '' };
-  document.querySelectorAll('.fp-opt').forEach(el => el.classList.remove('active'));
-  const allTypesLabel = document.querySelector('#type-filters .fp-opt:first-child');
-  if (allTypesLabel) allTypesLabel.classList.add('active');
+  filters = { type: [], league: [], season: [], maker: [], color: [], rating: [] };
+  document.querySelectorAll('.fp-opt').forEach(el => {
+    el.classList.remove('active');
+    const cb = el.querySelector('input');
+    if (cb) cb.checked = false;
+  });
 
-  // Also clear the search query if desired, but user asked for "clear filter option"
-  // Let's also clear search to fully reset the browse page
   document.getElementById('search-q').value = '';
-
   render();
 }
 function setView(v) {
@@ -208,10 +240,17 @@ async function render() {
   const q = document.getElementById('search-q').value.toLowerCase().trim();
   const sort = document.getElementById('sort-sel').value;
   let kits = allKits.filter(k => {
-    if (filters.type !== 'All' && k.type !== filters.type) return false;
-    if (filters.league && k.league !== filters.league) return false;
-    if (filters.season && k.season !== filters.season) return false;
-    if (filters.maker  && k.maker  !== filters.maker)  return false;
+    if (filters.type.length && !filters.type.includes(k.type)) return false;
+    if (filters.league.length && !filters.league.includes(k.league)) return false;
+    if (filters.season.length && !filters.season.includes(k.season)) return false;
+    if (filters.maker.length  && !filters.maker.includes(k.maker))  return false;
+    if (filters.color.length  && !filters.color.includes(k.color))  return false;
+    if (filters.rating.length) {
+      const avgRating = parseFloat(k.avg_rating) || 0;
+      // Rating matches if it's >= the minimum rating selected
+      const minRatingSelected = Math.min(...filters.rating.map(Number));
+      if (avgRating < minRatingSelected) return false;
+    }
     if (q) { const h = [k.team,k.league,k.season,k.maker,k.type,k.color,k.description].join(' ').toLowerCase(); if (!h.includes(q)) return false; }
     return true;
   });
