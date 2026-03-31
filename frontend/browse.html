@@ -176,13 +176,12 @@ function buildFilterOptions() {
   const seasons = [...new Set(allKits.map(k=>k.season).filter(Boolean))].sort().reverse();
   const makers  = [...new Set(allKits.map(k=>k.maker).filter(Boolean))].sort();
 
-  const allColors = allKits.map(k => k.color).filter(Boolean).flatMap(c => c.split('/').map(s => s.trim()));
-  const colors  = [...new Set(allColors)].sort();
+  const basicColors = ['Black', 'Blue', 'Brown', 'Green', 'Grey', 'Orange', 'Pink', 'Purple', 'Red', 'White', 'Yellow'];
 
   fillFilter('league-filters', leagues, 'league');
   fillFilter('season-filters', seasons, 'season');
   fillFilter('maker-filters',  makers,  'maker');
-  fillFilter('color-filters',  colors,  'color');
+  fillFilter('color-filters',  basicColors,  'color');
 }
 function fillFilter(id, vals, key) {
   document.getElementById(id).innerHTML = vals.map(v =>
@@ -247,9 +246,26 @@ async function render() {
 
     if (filters.color.length) {
       if (!k.color) return false;
-      const kitColors = k.color.split('/').map(c => c.trim());
-      // Match if the kit has AT LEAST ONE of the selected colors
-      const hasSelectedColor = filters.color.some(c => kitColors.includes(c));
+      const kitColors = k.color.toLowerCase();
+      const colorMap = {
+        'black': ['black', 'charcoal', 'obsidian'],
+        'blue': ['blue', 'navy', 'cyan', 'teal', 'azure', 'sapphire'],
+        'brown': ['brown', 'tan', 'khaki'],
+        'green': ['green', 'olive', 'emerald', 'lime'],
+        'grey': ['grey', 'gray', 'silver'],
+        'orange': ['orange', 'tangerine'],
+        'pink': ['pink', 'magenta', 'salmon', 'rose'],
+        'purple': ['purple', 'violet', 'lilac', 'plum'],
+        'red': ['red', 'maroon', 'crimson', 'burgundy', 'garnet', 'wine'],
+        'white': ['white', 'cream', 'ivory', 'off-white'],
+        'yellow': ['yellow', 'gold', 'mustard']
+      };
+
+      const hasSelectedColor = filters.color.some(selCol => {
+        const key = selCol.toLowerCase();
+        const keywords = colorMap[key] || [key];
+        return keywords.some(kw => kitColors.includes(kw));
+      });
       if (!hasSelectedColor) return false;
     }
 
