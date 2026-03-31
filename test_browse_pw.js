@@ -8,13 +8,13 @@ const { chromium } = require('playwright');
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(2000); // let db load
 
-  // Rating 4+ Stars
-  const ratingOpt = page.locator('text=4+ Stars');
-  await ratingOpt.click();
-  await page.waitForTimeout(500);
+  // Click on the LABEL explicitly for Color - White
+  const whiteColorLabel = page.locator('#color-filters label:has-text("White")').first();
+  await whiteColorLabel.click();
+  await page.waitForTimeout(1000);
 
   // Take screenshot
-  await page.screenshot({ path: 'verification2.png' });
+  await page.screenshot({ path: 'verification4.png' });
 
   await browser.close();
 })();

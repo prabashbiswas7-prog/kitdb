@@ -90,11 +90,11 @@
       <div class="fp-section" id="sec-type">
         <span class="fp-label" onclick="toggleSection('sec-type')">Kit Type <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         <div class="fp-group" id="type-filters">
-          <label class="fp-opt" onclick="toggleFilter(event, 'type','Home',this)"><input type="checkbox" name="type" value="Home"/>🟢 Home</label>
-          <label class="fp-opt" onclick="toggleFilter(event, 'type','Away',this)"><input type="checkbox" name="type" value="Away"/>⚫ Away</label>
-          <label class="fp-opt" onclick="toggleFilter(event, 'type','Third',this)"><input type="checkbox" name="type" value="Third"/>🔵 Third</label>
-          <label class="fp-opt" onclick="toggleFilter(event, 'type','Special Edition',this)"><input type="checkbox" name="type" value="Special Edition"/>⭐ Special</label>
-          <label class="fp-opt" onclick="toggleFilter(event, 'type','GK',this)"><input type="checkbox" name="type" value="GK"/>🧤 GK</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="Home" onchange="toggleFilter('type','Home',this.parentElement)"/>🟢 Home</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="Away" onchange="toggleFilter('type','Away',this.parentElement)"/>⚫ Away</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="Third" onchange="toggleFilter('type','Third',this.parentElement)"/>🔵 Third</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="Special Edition" onchange="toggleFilter('type','Special Edition',this.parentElement)"/>⭐ Special</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="GK" onchange="toggleFilter('type','GK',this.parentElement)"/>🧤 GK</label>
         </div>
       </div>
       <div class="fp-section" id="sec-league">
@@ -116,10 +116,10 @@
       <div class="fp-section" id="sec-rating">
         <span class="fp-label" onclick="toggleSection('sec-rating')">Rating <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         <div class="fp-group" id="rating-filters">
-          <label class="fp-opt" onclick="toggleFilter(event, 'rating','4',this)"><input type="checkbox" name="rating" value="4"/>4+ Stars</label>
-          <label class="fp-opt" onclick="toggleFilter(event, 'rating','3',this)"><input type="checkbox" name="rating" value="3"/>3+ Stars</label>
-          <label class="fp-opt" onclick="toggleFilter(event, 'rating','2',this)"><input type="checkbox" name="rating" value="2"/>2+ Stars</label>
-          <label class="fp-opt" onclick="toggleFilter(event, 'rating','1',this)"><input type="checkbox" name="rating" value="1"/>1+ Stars</label>
+          <label class="fp-opt"><input type="checkbox" name="rating" value="4" onchange="toggleFilter('rating','4',this.parentElement)"/>4+ Stars</label>
+          <label class="fp-opt"><input type="checkbox" name="rating" value="3" onchange="toggleFilter('rating','3',this.parentElement)"/>3+ Stars</label>
+          <label class="fp-opt"><input type="checkbox" name="rating" value="2" onchange="toggleFilter('rating','2',this.parentElement)"/>2+ Stars</label>
+          <label class="fp-opt"><input type="checkbox" name="rating" value="1" onchange="toggleFilter('rating','1',this.parentElement)"/>1+ Stars</label>
         </div>
       </div>
       <!-- SIDEBAR AD -->
@@ -175,7 +175,10 @@ function buildFilterOptions() {
   const leagues = [...new Set(allKits.map(k=>k.league).filter(Boolean))].sort();
   const seasons = [...new Set(allKits.map(k=>k.season).filter(Boolean))].sort().reverse();
   const makers  = [...new Set(allKits.map(k=>k.maker).filter(Boolean))].sort();
-  const colors  = [...new Set(allKits.map(k=>k.color).filter(Boolean))].sort();
+
+  const allColors = allKits.map(k => k.color).filter(Boolean).flatMap(c => c.split('/').map(s => s.trim()));
+  const colors  = [...new Set(allColors)].sort();
+
   fillFilter('league-filters', leagues, 'league');
   fillFilter('season-filters', seasons, 'season');
   fillFilter('maker-filters',  makers,  'maker');
@@ -183,18 +186,15 @@ function buildFilterOptions() {
 }
 function fillFilter(id, vals, key) {
   document.getElementById(id).innerHTML = vals.map(v =>
-    `<label class="fp-opt" onclick="toggleFilter(event, '${key}','${v}',this)"><input type="checkbox" name="${key}" value="${v}"/>${v}</label>`
+    `<label class="fp-opt"><input type="checkbox" name="${key}" value="${v}" onchange="toggleFilter('${key}','${v}',this.parentElement)"/>${v}</label>`
   ).join('');
 }
 function toggleSection(id) {
   const el = document.getElementById(id);
   if (el) el.classList.toggle('collapsed');
 }
-function toggleFilter(e, key, val, el) {
-  e.preventDefault();
+function toggleFilter(key, val, el) {
   const cb = el.querySelector('input[type="checkbox"]');
-  cb.checked = !cb.checked;
-
   if (cb.checked) {
     el.classList.add('active');
     if (!filters[key].includes(val)) filters[key].push(val);
@@ -244,7 +244,15 @@ async function render() {
     if (filters.league.length && !filters.league.includes(k.league)) return false;
     if (filters.season.length && !filters.season.includes(k.season)) return false;
     if (filters.maker.length  && !filters.maker.includes(k.maker))  return false;
-    if (filters.color.length  && !filters.color.includes(k.color))  return false;
+
+    if (filters.color.length) {
+      if (!k.color) return false;
+      const kitColors = k.color.split('/').map(c => c.trim());
+      // Match if the kit has AT LEAST ONE of the selected colors
+      const hasSelectedColor = filters.color.some(c => kitColors.includes(c));
+      if (!hasSelectedColor) return false;
+    }
+
     if (filters.rating.length) {
       const avgRating = parseFloat(k.avg_rating) || 0;
       // Rating matches if it's >= the minimum rating selected
