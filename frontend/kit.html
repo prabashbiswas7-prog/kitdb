@@ -113,8 +113,32 @@
     <!-- KIT DETAIL AD -->
     <div id="ad-kit-detail" class="ad-slot" style="margin-bottom:2rem"></div>
 
+    <!-- COMMENTS SECTION -->
+    <div class="comments-section" style="margin-top: 3rem; border-top: 1px solid var(--bd); padding-top: 2rem;">
+      <div class="section-head"><span class="section-title">USER <span>COMMENTS</span></span></div>
+
+      <!-- Comment Form -->
+      <div id="comment-form-wrap" style="background:var(--s1); border:1px solid var(--bd); border-radius:12px; padding:1.5rem; margin-bottom:2rem; display:none;">
+        <h4 style="margin-bottom:1rem; font-family:var(--fd); font-size:1.1rem;">Leave a Comment</h4>
+        <textarea id="new-comment" rows="3" placeholder="Share your thoughts on this kit..." style="width:100%; background:var(--bk); border:1px solid var(--bd); border-radius:8px; padding:0.75rem; color:var(--w); font-size:0.95rem; margin-bottom:1rem; resize:vertical; outline:none; font-family:inherit;"></textarea>
+        <div style="display:flex; justify-content:flex-end;">
+          <button class="btn btn-g btn-sm" onclick="postComment()" id="submit-comment-btn">Post Comment</button>
+        </div>
+      </div>
+
+      <div id="comment-login-msg" style="background:var(--s1); border:1px solid var(--bd); border-radius:12px; padding:1.5rem; text-align:center; margin-bottom:2rem; color:var(--w3);">
+        <p style="margin-bottom:0.75rem;">Join the discussion!</p>
+        <a href="/login.html" class="btn btn-p btn-sm">Sign In to Comment</a>
+      </div>
+
+      <!-- Comments List -->
+      <div id="comments-list" style="display:flex; flex-direction:column; gap:1.5rem;">
+        <div class="spinner" style="margin: 2rem auto;"></div>
+      </div>
+    </div>
+
     <!-- Related kits -->
-    <div class="related-section">
+    <div class="related-section" style="margin-top: 4rem;">
       <div class="section-head"><span class="section-title">MORE FROM <span id="related-team-name">THIS CLUB</span></span></div>
       <div class="kit-grid" id="related-grid"></div>
     </div>
@@ -153,7 +177,10 @@ let kit = null, currentUser = null, userProfile = null, isSaved = false, userRat
   if (currentUser) {
     await loadUserRating();
     await checkSaved();
+    document.getElementById('comment-form-wrap').style.display = 'block';
+    document.getElementById('comment-login-msg').style.display = 'none';
   }
+  await loadComments();
   loadRelated();
   injectAd('top_banner','ad-top-banner');
   injectAd('kit_detail','ad-kit-detail');
@@ -298,6 +325,61 @@ async function checkSaved() {
   isSaved = !!data;
   updateSaveBtn();
 }
+async function loadComments() {
+  const { data } = await sb.from('comments').select('*, profiles(username, avatar_url)').eq('kit_id', kit.id).eq('is_approved', true).order('created_at', { ascending: false });
+  const list = document.getElementById('comments-list');
+  if (!data || !data.length) {
+    list.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--w4);">No comments yet. Be the first to share your thoughts!</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(c => `
+    <div style="background:var(--s1); border:1px solid var(--bd); border-radius:12px; padding:1.2rem; display:flex; gap:1rem;">
+      <div style="flex-shrink:0;">
+        <img src="${c.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${c.profiles?.username || 'U'}`}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:1px solid var(--bdg);" alt="${c.profiles?.username || 'User'}">
+      </div>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+          <strong style="font-size:0.95rem; color:var(--g);">${c.profiles?.username || 'Unknown User'}</strong>
+          <span style="font-size:0.75rem; color:var(--w4);">${new Date(c.created_at).toLocaleDateString()}</span>
+        </div>
+        <div style="font-size:0.95rem; color:var(--w); line-height:1.6; white-space:pre-wrap;">${(c.content || '').replace(/[&<>"']/g, function(m) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]; })}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function postComment() {
+  const textarea = document.getElementById('new-comment');
+  const content = textarea.value.trim();
+  if (!content) return toast('Comment cannot be empty', 'err');
+  if (!currentUser) return window.location.href = '/login.html';
+
+  const btn = document.getElementById('submit-comment-btn');
+  btn.disabled = true;
+  btn.textContent = 'Posting...';
+
+  const { error } = await sb.from('comments').insert({
+    kit_id: kit.id,
+    user_id: currentUser.id,
+    content: content,
+    is_approved: true // Auto-approve for now, or match existing logic
+  });
+
+  if (error) {
+    toast('Error posting comment', 'err');
+    btn.disabled = false;
+    btn.textContent = 'Post Comment';
+    return;
+  }
+
+  toast('Comment posted!');
+  textarea.value = '';
+  btn.disabled = false;
+  btn.textContent = 'Post Comment';
+  await loadComments();
+}
+
 function updateSaveBtn() {
   const btn = document.getElementById('save-btn');
   btn.classList.toggle('saved', isSaved);
