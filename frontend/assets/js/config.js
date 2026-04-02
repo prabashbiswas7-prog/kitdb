@@ -120,7 +120,11 @@ async function initNav() {
 
   function normalizePath(input = '') {
     const [path] = String(input).split('?');
-    const trimmed = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
+    let trimmed = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
+    if (trimmed.endsWith('.html')) {
+      trimmed = trimmed.slice(0, -5);
+    }
+    if (trimmed === '/index') trimmed = '/';
     return trimmed || '/';
   }
   function isNavItemActive(currentPath, itemUrl) {
