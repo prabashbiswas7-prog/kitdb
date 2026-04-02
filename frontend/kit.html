@@ -8,14 +8,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .kit-layout { display:grid; grid-template-columns:1fr 380px; gap:2.5rem; align-items:start; padding:2rem 0; }
-@media(max-width:900px){ .kit-layout{grid-template-columns:1fr;} }
-.kit-img-main { background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:640px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; margin-bottom:1rem; }
-.kit-img-main img { height:580px; object-fit:contain; filter:drop-shadow(0 16px 40px rgba(0,0,0,.7)); }
+@media(max-width:900px){ .kit-layout{grid-template-columns:1fr;} .kit-img-main{height:400px;} }
+.kit-img-main { background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:640px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; margin-bottom:1rem; cursor:pointer; }
+.kit-img-main img { width:100%; height:100%; object-fit:cover; border-radius:16px; transition:transform .3s; }
+.kit-img-main:hover img { transform:scale(1.02); }
 .kit-img-main .ph { font-size:7rem; opacity:.08; }
 .kit-thumbs { display:flex; gap:.5rem; }
 .kit-thumb { width:72px; height:72px; background:var(--s2); border:1px solid var(--bd); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; overflow:hidden; transition:border-color .15s; }
 .kit-thumb:hover, .kit-thumb.active { border-color:var(--g); }
-.kit-thumb img { height:58px; object-fit:contain; }
+.kit-thumb img { width:100%; height:100%; object-fit:cover; border-radius:6px; }
 .kit-info-panel { }
 .kit-breadcrumb { font-size:.72rem; color:var(--w4); margin-bottom:.9rem; display:flex; gap:.4rem; align-items:center; flex-wrap:wrap; }
 .kit-breadcrumb a { color:var(--w3); transition:color .15s; }
@@ -39,6 +40,13 @@
 .save-btn:hover { border-color:var(--bdg); color:var(--g); }
 .save-btn.saved { background:var(--gf); border-color:var(--bdg); color:var(--g); }
 .related-section { margin-top:3rem; }
+
+/* Lightbox Styles */
+.lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+.lightbox.active { display: flex; }
+.lightbox img { max-width: 90%; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+.lightbox-close { position: absolute; top: 20px; right: 30px; font-size: 2.5rem; color: #fff; cursor: pointer; transition: color 0.2s; user-select: none; }
+.lightbox-close:hover { color: var(--g); }
 </style>
 </head>
 <body>
@@ -151,6 +159,12 @@
   </div>
 </div>
 
+<!-- Lightbox Markup -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+  <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+  <img id="lightbox-img" src="" alt="Full view" onclick="event.stopPropagation()"/>
+</div>
+
 <div style="height:3rem"></div>
 <footer><strong>KitDB</strong> &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a></footer>
 
@@ -202,7 +216,7 @@ function renderKit() {
   // images
   const imgs = [kit.image_url, kit.image_url_2, kit.image_url_3].filter(Boolean);
   document.getElementById('kit-img-main').innerHTML = imgs.length
-    ? `<img src="${imgs[0]}" id="main-img" alt="${kit.team}"/>`
+    ? `<img src="${imgs[0]}" id="main-img" alt="${kit.team}" onclick="openLightbox(this.src)"/>`
     : `<span class="ph">⚽</span>`;
   document.getElementById('kit-img-main').classList.add('grad-' + idx);
 
@@ -279,6 +293,24 @@ function switchImg(url, el) {
   document.querySelectorAll('.kit-thumb').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
 }
+
+function openLightbox(url) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e) {
+  if (e && e.target.id === 'lightbox-img') return;
+  document.getElementById('lightbox').classList.remove('active');
+  document.getElementById('lightbox-img').src = '';
+  document.body.style.overflow = '';
+}
+
+// Add escape key listener to close lightbox
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
 
 function renderInteractiveStars(current) {
   const el = document.getElementById('user-stars');
