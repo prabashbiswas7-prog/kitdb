@@ -678,6 +678,7 @@ const SUPABASE_URL      = 'https://dpelurhaljmnogdxqpoj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZWx1cmhhbGptbm9nZHhxcG9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTE4MzksImV4cCI6MjA4OTc2NzgzOX0.cvWry3iR8MZg7zV6ewKyw8YIOxIUCaV3gUBZlPsykNM';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
 // ── STATE ───────────────────────────────────────────────────
 let adminProfile = null;
@@ -849,7 +850,7 @@ function renderP1() {
   const q = document.getElementById('p1q').value.toLowerCase();
   const f = allSeasons.filter(s => s.name.toLowerCase().includes(q));
   document.getElementById('p1list').innerHTML = f.length
-    ? f.map(s => `<div class="ti ${selSeason?.id === s.id ? 'active' : ''}" onclick="selectSeason('${s.id}')"><span class="ti-ic">📅</span>${s.name}</div>`).join('')
+    ? f.map(s => `<div class="ti ${selSeason?.id === s.id ? 'active' : ''}" onclick="selectSeason('${s.id}')"><span class="ti-ic">📅</span>${esc(s.name)}</div>`).join('')
     : '<div class="empty"><p style="font-size:.8rem">No seasons</p></div>';
 }
 
@@ -884,7 +885,7 @@ function renderP2Leagues() {
     const cc = allClubs.filter(c => c.league_id === l.id).length;
     return `<div class="ti ${selLeague?.id === l.id ? 'active' : ''}" onclick="selectLeague('${l.id}')">
       <span class="ti-ic">🏆</span>
-      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</span>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.name)}</span>
       <span class="ti-ct">${cc}</span>
     </div>`;
   }).join('') || '<div class="empty"><p>No leagues</p></div>';
@@ -900,7 +901,7 @@ async function selectLeague(id) {
 function renderP2Clubs() {
   p2Mode = 'clubs';
   document.getElementById('p2head').innerHTML =
-    `<span style="cursor:pointer;color:var(--w3);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px" onclick="selLeague=null;selClub=null;renderP2Leagues()">← ${selLeague?.name || ''}</span>
+    `<span style="cursor:pointer;color:var(--w3);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px" onclick="selLeague=null;selClub=null;renderP2Leagues()">← ${esc(selLeague?.name || '')}</span>
      <button class="ph-add" onclick="promptAddClub()">+</button>`;
   document.getElementById('p2q').placeholder = 'Search club…';
   const q = document.getElementById('p2q').value.toLowerCase();
@@ -908,7 +909,7 @@ function renderP2Clubs() {
   document.getElementById('p2list').innerHTML = clubs.length
     ? clubs.map(c => `<div class="ti ${selClub?.id === c.id ? 'active' : ''}" onclick="selectClub('${c.id}')">
         <span class="ti-ic">⚽</span>
-        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span>
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name)}</span>
       </div>`).join('')
     : '<div class="empty"><p style="font-size:.8rem">No clubs — click + to add</p></div>';
 }
@@ -942,8 +943,8 @@ async function loadP3() {
   p3.innerHTML = `
     <div class="p3h">
       <div>
-        <div class="p3t">${selClub.name} <span>${selSeason.name}</span></div>
-        <div class="p3s">${selLeague?.name || ''} · ${(kits || []).length} kit${(kits || []).length !== 1 ? 's' : ''}</div>
+        <div class="p3t">${esc(selClub.name)} <span>${esc(selSeason.name)}</span></div>
+        <div class="p3s">${esc(selLeague?.name || '')} · ${(kits || []).length} kit${(kits || []).length !== 1 ? 's' : ''}</div>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
         <button class="btn btn-g btn-sm" onclick="copyToSeason()">⊕ Copy to Season</button>
@@ -968,9 +969,9 @@ async function loadP3() {
           const bs = typ ? `background:${typ.bg_color};color:${typ.color};border-color:${typ.color}40` : '';
           return `<tr id="kr-${k.id}">
             <td><input type="checkbox" class="cb kit-cb" data-id="${k.id}" onchange="toggleKitSel('${k.id}',this.checked)"/></td>
-            <td><div class="tdi">${k.image_url ? `<img src="${k.image_url}" onerror="this.style.display='none'"/>` : '👕'}</div></td>
-            <td><span class="badge" style="${bs}">${k.type}</span></td>
-            <td style="color:var(--w3);font-size:.78rem">${k.maker || '—'}</td>
+            <td><div class="tdi">${k.image_url ? `<img src="${esc(k.image_url)}" onerror="this.style.display='none'"/>` : '👕'}</div></td>
+            <td><span class="badge" style="${bs}">${esc(k.type)}</span></td>
+            <td style="color:var(--w3);font-size:.78rem">${esc(k.maker || '—')}</td>
             <td><span class="badge ${k.is_published ? 'pub-y' : 'pub-n'}">${k.is_published ? 'Live' : 'Draft'}</span></td>
             <td style="text-align:center">${k.is_featured ? '⭐' : '—'}</td>
             <td style="font-size:.72rem;color:var(--w3)">${k.submitted_by ? `👤 ${k.is_verified ? '✅' : '⏳'}` : '<span style="color:var(--g)">Admin ✓</span>'}</td>
@@ -1057,7 +1058,7 @@ function closeKitForm() { document.getElementById('kit-ov').classList.remove('op
 function prevImg() {
   const u = document.getElementById('kf-img').value.trim();
   const b = document.getElementById('ip');
-  b.innerHTML = u ? `<img src="${u}" onerror="this.parentElement.innerHTML='📷'"/>` : '📷';
+  b.innerHTML = u ? `<img src="${esc(u)}" onerror="this.parentElement.innerHTML='📷'"/>` : '📷';
 }
 function autoSlug() {
   if (editKitId) return;
@@ -1138,8 +1139,8 @@ function acIn(key) {
   const exact   = src.find(v => v.toLowerCase() === q);
   if (!matches.length && !q) { list.classList.remove('open'); return; }
   list.innerHTML = matches.map(v =>
-    `<div class="aci" onmousedown="acSet('${key}','${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">  ${v}</div>`
-  ).join('') + (q && !exact ? `<div class="aci aci-new" onmousedown="acSet('${key}','${inp.value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">+ Use "${inp.value}"</div>` : '');
+    `<div class="aci" onmousedown="acSet('${key}','${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">${esc(v)}</div>`
+  ).join('') + (q && !exact ? `<div class="aci aci-new" onmousedown="acSet('${key}','${inp.value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">+ Use "${esc(inp.value)}"</div>` : '');
   list.classList.add('open');
 }
 function acSet(key, val) { document.getElementById('kf-' + key).value = val; acClose(key); if (key === 'team') autoFill(); setTimeout(autoSlug, 30); }
@@ -1157,7 +1158,7 @@ async function acKotw() {
   const { data } = await sb.from('kits').select('slug,team,season,type').ilike('team', '%' + q + '%').limit(8);
   const list = document.getElementById('acl-kotw');
   list.innerHTML = (data || []).map(k =>
-    `<div class="aci" onmousedown="document.getElementById('kotw-kit').value='${k.slug}';document.getElementById('acl-kotw').classList.remove('open')">${k.team} ${k.season} ${k.type}</div>`
+    `<div class="aci" onmousedown="document.getElementById('kotw-kit').value='${k.slug}';document.getElementById('acl-kotw').classList.remove('open')">${esc(k.team)} ${esc(k.season)} ${esc(k.type)}</div>`
   ).join('');
   list.classList.add('open');
 }
@@ -1170,10 +1171,10 @@ async function loadSubmissions() {
   const { data } = await query;
   const statusClass = { pending: 'pend', approved: 'pub-y', rejected: 'pub-n' };
   document.getElementById('sub-tbody').innerHTML = (data || []).map(s => `<tr>
-    <td style="font-weight:600">${s.team}</td>
-    <td style="font-family:var(--fm);font-size:.75rem;color:var(--g)">${s.season}</td>
-    <td><span class="badge ${s.type === 'Home' ? 'bh' : s.type === 'Away' ? 'ba' : 'bt'}">${s.type}</span></td>
-    <td style="font-size:.78rem;color:var(--w3)">${s.profiles?.username || '—'}</td>
+    <td style="font-weight:600">${esc(s.team)}</td>
+    <td style="font-family:var(--fm);font-size:.75rem;color:var(--g)">${esc(s.season)}</td>
+    <td><span class="badge ${s.type === 'Home' ? 'bh' : s.type === 'Away' ? 'ba' : 'bt'}">${esc(s.type)}</span></td>
+    <td style="font-size:.78rem;color:var(--w3)">${esc(s.profiles?.username || '—')}</td>
     <td style="font-size:.72rem;color:var(--w4)">${new Date(s.created_at).toLocaleDateString('en-GB')}</td>
     <td><span class="badge ${statusClass[s.status] || 'pub-n'}">${s.status}</span></td>
     <td><div style="display:flex;gap:.35rem">
@@ -1188,11 +1189,11 @@ async function reviewSubmission(id) {
   if (!s) return;
   document.getElementById('sub-detail').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
-      ${s.image_url ? `<div style="grid-column:1/-1"><img src="${s.image_url}" style="max-height:200px;object-fit:contain;border-radius:10px;background:var(--s2);padding:.5rem"/></div>` : ''}
-      ${[['Team',s.team],['Season',s.season],['League',s.league||'—'],['Type',s.type],['Maker',s.maker||'—'],['Color',s.color||'—'],['Price',s.price_label||'—'],['Submitted by',s.profiles?.username||'—']].map(([k,v])=>
+      ${s.image_url ? `<div style="grid-column:1/-1"><img src="${esc(s.image_url)}" style="max-height:200px;object-fit:contain;border-radius:10px;background:var(--s2);padding:.5rem"/></div>` : ''}
+      ${[['Team',esc(s.team)],['Season',esc(s.season)],['League',esc(s.league||'—')],['Type',esc(s.type)],['Maker',esc(s.maker||'—')],['Color',esc(s.color||'—')],['Price',esc(s.price_label||'—')],['Submitted by',esc(s.profiles?.username||'—')]].map(([k,v])=>
         `<div style="background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.2rem">${k}</div><div style="font-size:.875rem">${v}</div></div>`
       ).join('')}
-      ${s.description ? `<div style="grid-column:1/-1;background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Description</div><div style="font-size:.875rem;color:var(--w3)">${s.description}</div></div>` : ''}
+      ${s.description ? `<div style="grid-column:1/-1;background:var(--s2);border-radius:8px;padding:.75rem"><div style="font-size:.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--w4);margin-bottom:.3rem">Description</div><div style="font-size:.875rem;color:var(--w3)">${esc(s.description)}</div></div>` : ''}
     </div>`;
   const actEl = document.getElementById('sub-actions');
   actEl.innerHTML = s.status === 'pending'
@@ -1245,8 +1246,8 @@ async function rejectSubmission(id) {
 async function loadTypes() {
   const { data } = await sb.from('kit_types').select('*').order('sort_order');
   document.getElementById('types-tb').innerHTML = (data || []).map(t => `<tr>
-    <td style="font-weight:600">${t.name}</td>
-    <td><span class="badge" style="background:${t.bg_color};color:${t.color};border-color:${t.color}40">${t.name}</span></td>
+    <td style="font-weight:600">${esc(t.name)}</td>
+    <td><span class="badge" style="background:${t.bg_color};color:${t.color};border-color:${t.color}40">${esc(t.name)}</span></td>
     <td><span class="badge ${t.is_active ? 'pub-y' : 'pub-n'}">${t.is_active ? 'Active' : 'Hidden'}</span></td>
     <td><div style="display:flex;gap:.35rem">
       <button class="btn-ed" onclick="openTypeForm(${JSON.stringify(t).replace(/"/g, '&quot;')})">Edit</button>
@@ -1306,8 +1307,8 @@ async function delType(id, name) {
 async function loadKotw() {
   const { data } = await sb.from('kit_of_week').select('*,kits(team,season,type)').order('created_at', { ascending: false });
   document.getElementById('kotw-tb').innerHTML = (data || []).map(k => `<tr>
-    <td style="font-weight:600">${k.kits?.team || '—'} <span style="color:var(--w4)">${k.kits?.season || ''} ${k.kits?.type || ''}</span></td>
-    <td style="font-size:.78rem;color:var(--w3)">${k.week_start} → ${k.week_end}</td>
+    <td style="font-weight:600">${esc(k.kits?.team || '—')} <span style="color:var(--w4)">${esc(k.kits?.season || '')} ${esc(k.kits?.type || '')}</span></td>
+    <td style="font-size:.78rem;color:var(--w3)">${esc(k.week_start)} → ${esc(k.week_end)}</td>
     <td style="font-family:var(--fm);font-size:.8rem;color:var(--gold)">★ ${k.votes}</td>
     <td><span class="badge ${k.is_active ? 'pub-y' : 'pub-n'}">${k.is_active ? 'Active' : 'Ended'}</span></td>
     <td><button class="btn-del" onclick="delKotw('${k.id}')">Del</button></td>
@@ -1359,9 +1360,9 @@ function filterComments() {
 }
 function renderComments(comments) {
   document.getElementById('comments-tb').innerHTML = comments.map(c => `<tr>
-    <td style="font-weight:500;font-size:.8rem">${c.profiles?.username || '—'}</td>
-    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem;color:var(--w3)">${c.content}</td>
-    <td style="font-size:.78rem;color:var(--w3)">${c.kits?.team || '—'} ${c.kits?.season || ''}</td>
+    <td style="font-weight:500;font-size:.8rem">${esc(c.profiles?.username || '—')}</td>
+    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem;color:var(--w3)">${esc(c.content)}</td>
+    <td style="font-size:.78rem;color:var(--w3)">${esc(c.kits?.team || '—')} ${esc(c.kits?.season || '')}</td>
     <td style="font-size:.72rem;color:var(--w4)">${new Date(c.created_at).toLocaleDateString('en-GB')}</td>
     <td><span class="badge ${c.is_approved ? 'pub-y' : 'pub-n'}">${c.is_approved ? 'Approved' : 'Hidden'}</span></td>
     <td><div style="display:flex;gap:.35rem">
@@ -1380,8 +1381,8 @@ async function loadBadges() {
   const earnCounts = {};
   (ub || []).forEach(u => earnCounts[u.badge_id] = (earnCounts[u.badge_id] || 0) + 1);
   document.getElementById('badges-tb').innerHTML = (badges || []).map(b => `<tr>
-    <td><span style="font-size:1.2rem">${b.icon}</span> <span style="font-weight:600;font-size:.85rem">${b.name}</span><div style="font-size:.72rem;color:var(--w4)">${b.description || ''}</div></td>
-    <td style="font-size:.78rem;color:var(--w3)">${b.condition_type.replace(/_/g, ' ')} ≥ ${b.condition_value}</td>
+    <td><span style="font-size:1.2rem">${esc(b.icon)}</span> <span style="font-weight:600;font-size:.85rem">${esc(b.name)}</span><div style="font-size:.72rem;color:var(--w4)">${esc(b.description || '')}</div></td>
+    <td style="font-size:.78rem;color:var(--w3)">${esc(b.condition_type.replace(/_/g, ' '))} ≥ ${esc(b.condition_value)}</td>
     <td style="font-family:var(--fm);font-size:.8rem;color:var(--gold)">+${b.reward_points} pts</td>
     <td style="font-family:var(--fm);font-size:.78rem;color:var(--g)">${earnCounts[b.id] || 0}</td>
     <td><div style="display:flex;gap:.35rem">
@@ -1459,10 +1460,10 @@ async function delBadge(id, name) { if (!confirm(`Delete badge "${name}"?`)) ret
 async function loadBlog() {
   const { data } = await sb.from('blog_posts').select('*').order('created_at', { ascending: false });
   document.getElementById('blog-tb').innerHTML = (data || []).map(p => `<tr>
-    <td style="font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</td>
+    <td style="font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.title)}</td>
     <td><span class="badge ${p.is_published ? 'pub-y' : 'pub-n'}">${p.is_published ? 'Live' : 'Draft'}</span></td>
     <td style="font-size:.75rem;color:var(--w4)">${p.published_at ? new Date(p.published_at).toLocaleDateString('en-GB') : '—'}</td>
-    <td style="font-size:.72rem;color:var(--w3)">${(p.tags || []).slice(0, 3).join(', ') || '—'}</td>
+    <td style="font-size:.72rem;color:var(--w3)">${(p.tags || []).slice(0, 3).map(t => esc(t)).join(', ') || '—'}</td>
     <td><div style="display:flex;gap:.35rem">
       <button class="btn-ed" onclick="openBlogForm(${JSON.stringify(p).replace(/"/g, '&quot;')})">Edit</button>
       <button class="btn-del" onclick="delBlog('${p.id}','${p.title.replace(/'/g, "\\'")}')">Del</button>
@@ -1512,7 +1513,7 @@ function renderBlogTags() {
   blogTagsList.forEach(t => {
     const span = document.createElement('span');
     span.className = 'tag';
-    span.innerHTML = `${t}<button onclick="removeTag('${t}')">✕</button>`;
+    span.innerHTML = `${esc(t)}<button onclick="removeTag('${t.replace(/'/g, "\\'")}')">✕</button>`;
     wrap.appendChild(span);
   });
   wrap.appendChild(inp);
@@ -1583,8 +1584,8 @@ function edVideo(editorId) {
 async function loadPages() {
   const { data } = await sb.from('pages').select('*').order('sort_order');
   document.getElementById('pages-tb').innerHTML = (data || []).map(p => `<tr>
-    <td style="font-weight:600">${p.title}</td>
-    <td style="font-family:var(--fm);font-size:.72rem;color:var(--g)">${p.slug}</td>
+    <td style="font-weight:600">${esc(p.title)}</td>
+    <td style="font-family:var(--fm);font-size:.72rem;color:var(--g)">${esc(p.slug)}</td>
     <td style="text-align:center">${p.show_in_footer ? '✓' : '—'}</td>
     <td style="text-align:center">${p.show_in_nav ? '✓' : '—'}</td>
     <td><span class="badge ${p.is_published ? 'pub-y' : 'pub-n'}">${p.is_published ? 'Live' : 'Draft'}</span></td>
@@ -1722,9 +1723,9 @@ async function renderUsers(users) {
   document.getElementById('users-tb').innerHTML = users.map(u => {
     const sc = subCounts[u.id] || { total: 0, approved: 0 };
     return `<tr>
-      <td style="font-weight:600">${u.username || '—'}</td>
-      <td style="color:var(--w3);font-size:.78rem">${u.country || '—'}</td>
-      <td style="color:var(--w3);font-size:.78rem">${u.fav_club || '—'}</td>
+      <td style="font-weight:600">${esc(u.username || '—')}</td>
+      <td style="color:var(--w3);font-size:.78rem">${esc(u.country || '—')}</td>
+      <td style="color:var(--w3);font-size:.78rem">${esc(u.fav_club || '—')}</td>
       <td style="font-family:var(--fm);font-size:.75rem;color:var(--gold)">${u.total_points || 0}</td>
       <td style="font-family:var(--fm);font-size:.75rem;color:var(--g)">${u.badge_count || 0}</td>
       <td style="font-family:var(--fm);font-size:.72rem;color:var(--w3)">${sc.approved}/${sc.total}</td>
@@ -1745,7 +1746,7 @@ async function loadAdmins() {
   document.getElementById('admins-list').innerHTML = (data || []).map(a => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd)">
       <div>
-        <div style="font-weight:600;font-size:.875rem">⚙️ ${a.username || 'Admin'}</div>
+        <div style="font-weight:600;font-size:.875rem">⚙️ ${esc(a.username || 'Admin')}</div>
         <div style="font-size:.7rem;color:var(--w4)">${new Date(a.created_at).toLocaleDateString('en-GB')}</div>
       </div>
       ${a.id !== adminProfile?.id
@@ -1829,14 +1830,14 @@ async function loadDash() {
   const { data: rk } = await sb.from('kits').select('team,season,type,created_at').order('created_at', { ascending: false }).limit(6);
   document.getElementById('d-rk').innerHTML = (rk || []).map(k =>
     `<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem">
-      <span>${k.team} <span style="color:var(--w4)">${k.season} ${k.type}</span></span>
+      <span>${esc(k.team)} <span style="color:var(--w4)">${esc(k.season)} ${esc(k.type)}</span></span>
       <span style="font-size:.68rem;color:var(--w4)">${new Date(k.created_at).toLocaleDateString('en-GB')}</span>
     </div>`).join('');
 
   const { data: ru } = await sb.from('profiles').select('username,country,created_at').eq('role', 'subscriber').order('created_at', { ascending: false }).limit(6);
   document.getElementById('d-ru').innerHTML = (ru || []).map(u =>
     `<div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);font-size:.8rem">
-      <span>${u.username || '—'} <span style="color:var(--w4)">${u.country || ''}</span></span>
+      <span>${esc(u.username || '—')} <span style="color:var(--w4)">${esc(u.country || '')}</span></span>
       <span style="font-size:.68rem;color:var(--w4)">${new Date(u.created_at).toLocaleDateString('en-GB')}</span>
     </div>`).join('');
 }
