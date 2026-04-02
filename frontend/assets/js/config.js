@@ -130,8 +130,22 @@ async function initNav() {
   function isNavItemActive(currentPath, itemUrl) {
     const current = normalizePath(currentPath);
     const target = normalizePath(itemUrl);
-    if (target === '/') return current === '/';
-    return current === target || current.startsWith(target + '/');
+
+    // Exact match for home page. Also match /index if running locally.
+    if (target === '/' || target === '/index' || target === '/C:/') {
+        return current === '/' || current.endsWith('/index') || current === '/C:/';
+    }
+
+    // For other pages, check exact match or if current path starts with target directory.
+    // If testing locally (file://), current might have full path, so we also check endsWith.
+    // To avoid false positives (e.g. out matching /layout), we enforce trailing slash or exact match.
+    if (current === target || current.startsWith(target + '/')) return true;
+
+    // Fallback for file protocol
+    const targetName = target.split('/').pop();
+    if (targetName && current.endsWith('/' + targetName)) return true;
+
+    return false;
   }
 
   // Load site settings for logo/branding
@@ -184,7 +198,7 @@ async function initNav() {
       // Set active state on hardcoded links
       const links = navLinks.querySelectorAll('a');
       links.forEach(link => {
-        const url = new URL(link.href).pathname;
+        const url = new URL(link.href, window.location.href).pathname;
         if (isNavItemActive(currentPath, url)) {
           link.classList.add('active');
         } else {
