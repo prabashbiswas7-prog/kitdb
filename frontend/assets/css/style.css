@@ -235,13 +235,23 @@ select.chip option { background: var(--s2); }
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 2rem;
   margin-bottom: 3rem;
 }
 
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
 .footer-col {
   text-align: left;
+}
+
+.footer-col.brand-col {
+  padding-right: 2rem;
 }
 
 .footer-col h4 {
