@@ -887,8 +887,31 @@ function renderP2Leagues() {
       <span class="ti-ic"><i class="fa-solid fa-trophy"></i></span>
       <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</span>
       <span class="ti-ct">${cc}</span>
+      <button class="ph-add" style="margin-left:5px" onclick="event.stopPropagation(); promptEditLeague('${l.id}', '${l.name.replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen" style="font-size:0.6rem"></i></button>
     </div>`;
   }).join('') || '<div class="empty"><p>No leagues</p></div>';
+}
+
+async function promptEditLeague(id, oldName) {
+  const newName = prompt(`Rename/Merge "${oldName}" to:`, oldName);
+  if (!newName || newName.trim() === oldName) return;
+
+  const nameTrim = newName.trim();
+  const existing = allLeagues.find(l => l.name.toLowerCase() === nameTrim.toLowerCase());
+
+  if (existing) {
+    if (!confirm(`Merge "${oldName}" into existing "${existing.name}"? This cannot be undone.`)) return;
+    await sb.from('kits').update({ league: existing.name }).eq('league', oldName);
+    await sb.from('clubs').update({ league_id: existing.id }).eq('league_id', id);
+    await sb.from('leagues').delete().eq('id', id);
+    toast('League merged!');
+  } else {
+    await sb.from('leagues').update({ name: nameTrim }).eq('id', id);
+    await sb.from('kits').update({ league: nameTrim }).eq('league', oldName);
+    toast('League renamed!');
+  }
+  await loadMaster();
+  renderP2Leagues();
 }
 
 async function selectLeague(id) {
