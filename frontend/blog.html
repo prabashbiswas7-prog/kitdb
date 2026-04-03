@@ -24,6 +24,7 @@
 .blog-excerpt { font-size:.83rem; color:var(--w3); line-height:1.6; margin-bottom:.875rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 .blog-meta { display:flex; align-items:center; justify-content:space-between; font-size:.72rem; color:var(--w4); }
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <nav class="nav">
@@ -76,10 +77,10 @@ async function loadSEO() {
 async function loadPosts() {
   const { data } = await sb.from('blog_posts').select('*').eq('is_published', true).order('published_at', { ascending: false });
   const grid = document.getElementById('blog-grid');
-  if (!data?.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📝</div><h3>NO POSTS YET</h3><p>Check back soon.</p></div>`; return; }
+  if (!data?.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fa-solid fa-file-lines"></i></div><h3>NO POSTS YET</h3><p>Check back soon.</p></div>`; return; }
   grid.innerHTML = data.map(p => `
     <a href="/blog-post.html?slug=${p.slug}" class="blog-card" onclick="trackClick()">
-      <div class="blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${p.title}"/>` : '📝'}</div>
+      <div class="blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${p.title}"/>` : '<i class="fa-solid fa-file-lines" style="font-size:3rem;color:var(--w3)"></i>'}</div>
       <div class="blog-body">
         ${p.tags?.length ? `<div class="blog-tags">${p.tags.map(t=>`<span class="blog-tag">${t}</span>`).join('')}</div>` : ''}
         <div class="blog-title">${p.title}</div>
@@ -121,7 +122,7 @@ async function loadBlogSections() {
         <div class="section-head"><span class="section-title">${esc(c.title || 'FEATURED')} <span>STORY</span></span></div>
         ${post ? `
           <a href="/blog-post.html?slug=${encodeURIComponent(post.slug)}" class="blog-card" onclick="trackClick()" style="margin-bottom:1.5rem;display:block">
-            <div class="blog-cover" style="height:320px">${post.cover_image ? `<img src="${post.cover_image}" alt="${esc(post.title)}"/>` : '📝'}</div>
+            <div class="blog-cover" style="height:320px">${post.cover_image ? `<img src="${post.cover_image}" alt="${esc(post.title)}"/>` : '<i class="fa-solid fa-file-lines" style="font-size:3rem;color:var(--w3)"></i>'}</div>
             <div class="blog-body">
               ${post.tags?.length ? `<div class="blog-tags">${post.tags.map(t=>`<span class="blog-tag">${esc(t)}</span>`).join('')}</div>` : ''}
               <div class="blog-title">${esc(post.title)}</div>
@@ -144,7 +145,7 @@ async function loadBlogSections() {
         <div class="blog-grid">
           ${(posts || []).map(p => `
             <a href="/blog-post.html?slug=${encodeURIComponent(p.slug)}" class="blog-card" onclick="trackClick()">
-              <div class="blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${esc(p.title)}"/>` : '📝'}</div>
+              <div class="blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${esc(p.title)}"/>` : '<i class="fa-solid fa-file-lines" style="font-size:3rem;color:var(--w3)"></i>'}</div>
               <div class="blog-body">
                 ${p.tags?.length ? `<div class="blog-tags">${p.tags.map(t=>`<span class="blog-tag">${esc(t)}</span>`).join('')}</div>` : ''}
                 <div class="blog-title">${esc(p.title)}</div>

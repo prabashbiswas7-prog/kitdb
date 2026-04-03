@@ -72,6 +72,7 @@
 @media(max-width:900px){.home-row-2col,.home-row-3col{grid-template-columns:1fr}}
 .home-row-cell{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:1rem}
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
@@ -99,7 +100,7 @@
   <div class="container" id="hero-wrap">
     <div id="announcement" class="announcement"></div>
     <div class="hero" id="hero-section">
-      <div class="hero-tag">⚽ Football Kit Encyclopedia</div>
+      <div class="hero-tag"><i class="fa-solid fa-futbol"></i> Football Kit Encyclopedia</div>
       <h1 id="hero-title">THE WORLD'S<br/><em>KIT ARCHIVE</em></h1>
       <p id="hero-subtitle">Browse, rate and collect football kits from every club and era.</p>
       <div class="hero-btns">
@@ -164,7 +165,7 @@
       <div id="ad-sidebar" class="ad-slot ad-sidebar" style="margin-bottom:1.5rem"></div>
       <!-- Top Rated -->
       <div class="panel" style="margin-bottom:1rem; background: var(--bk);">
-        <div class="panel-title" style="color: var(--w3); font-size: 0.65rem;">⭐ TOP RATED</div>
+        <div class="panel-title" style="color: var(--w3); font-size: 0.65rem;"><i class="fa-solid fa-star"></i> TOP RATED</div>
         <div id="top-rated-list"></div>
       </div>
     </div>
@@ -189,27 +190,27 @@
     </div>
     <div class="clubs-grid">
       <a href="/browse.html?q=Arsenal" class="club-card" onclick="trackClick()">
-        <div class="club-card-icon">🔴</div>
+        <div class="club-card-icon"><i class="fa-solid fa-circle" style="color:#d32f2f"></i></div>
         <div class="club-card-name">Arsenal</div>
       </a>
       <a href="/browse.html?q=Chelsea" class="club-card" onclick="trackClick()">
-        <div class="club-card-icon">🔵</div>
+        <div class="club-card-icon"><i class="fa-solid fa-circle" style="color:#1976d2"></i></div>
         <div class="club-card-name">Chelsea</div>
       </a>
       <a href="/browse.html?q=Liverpool" class="club-card" onclick="trackClick()">
-        <div class="club-card-icon">🦅</div>
+        <div class="club-card-icon"><i class="fa-solid fa-dove"></i></div>
         <div class="club-card-name">Liverpool</div>
       </a>
       <a href="/browse.html?q=Manchester" class="club-card" onclick="trackClick()">
-        <div class="club-card-icon">🐝</div>
+        <div class="club-card-icon"><i class="fa-solid fa-bug"></i></div>
         <div class="club-card-name">Manchester</div>
       </a>
       <a href="/browse.html?q=Real+Madrid" class="club-card" onclick="trackClick()">
-        <div class="club-card-icon">👑</div>
+        <div class="club-card-icon"><i class="fa-solid fa-crown"></i></div>
         <div class="club-card-name">Real Madrid</div>
       </a>
       <a href="/browse.html?q=Barcelona" class="club-card" onclick="trackClick()">
-        <div class="club-card-icon">🛡️</div>
+        <div class="club-card-icon"><i class="fa-solid fa-shield"></i></div>
         <div class="club-card-name">Barcelona</div>
       </a>
     </div>
@@ -232,7 +233,7 @@
         <p>Join the debate on the greatest kits of all time. Create an account to leave ratings and write reviews on your favorite (and least favorite) designs. Your votes contribute to our real-time Top Rated leaderboard, showcasing the community's definitive opinions on football fashion.</p>
         <a href="/login.html#signup" class="btn btn-p btn-sm">Join the Community</a>
       </div>
-      <div class="zigzag-img">⭐</div>
+      <div class="zigzag-img"><i class="fa-solid fa-star"></i></div>
     </div>
     <div class="zigzag-row">
       <div class="zigzag-txt">
@@ -240,7 +241,7 @@
         <p>Keep a digital inventory of the shirts you own. Our collection tracker lets you mark kits you possess, create wishlists for holy grails, and share your virtual wardrobe with other collectors. Turn your physical passion into a digital showcase.</p>
         <a href="/profile.html" class="btn btn-g btn-sm">My Collection</a>
       </div>
-      <div class="zigzag-img">📁</div>
+      <div class="zigzag-img"><i class="fa-solid fa-folder"></i></div>
     </div>
     <div class="zigzag-row">
       <div class="zigzag-txt">
@@ -248,7 +249,7 @@
         <p>Can't find a specific obscure away kit from 2004? You can help! Our platform relies on passionate contributors. Submit missing kits, provide accurate details, and get credited for expanding the world's most comprehensive football kit encyclopedia.</p>
         <a href="/submit.html" class="btn btn-p btn-sm">Submit a Kit</a>
       </div>
-      <div class="zigzag-img">🤝</div>
+      <div class="zigzag-img"><i class="fa-solid fa-handshake"></i></div>
     </div>
   </div>
 
@@ -323,7 +324,7 @@ async function loadHomepageConfig() {
   if (cfg.featured_title) document.getElementById('featured-title').innerHTML = cfg.featured_title + ' <span>KITS</span>';
   if (cfg.announcement_on === 'true' && cfg.announcement) {
     const el = document.getElementById('announcement');
-    el.textContent = '📢 ' + cfg.announcement;
+    el.innerHTML = '<i class="fa-solid fa-bullhorn"></i> ' + cfg.announcement;
     el.style.display = 'block';
   }
 }
@@ -370,10 +371,10 @@ async function loadKotw() {
     <div style="display:flex; gap:2rem; background:var(--s1); border:1px solid var(--bdg); border-radius:16px; padding:2rem; align-items:center; flex-wrap:wrap;">
       <div style="flex:1; min-width:280px; text-align:center; position:relative;">
         <div style="position:absolute; inset:0; background:radial-gradient(circle, rgba(0,200,83,0.15) 0%, transparent 70%); pointer-events:none; border-radius:50%;"></div>
-        ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" style="max-height:300px; object-fit:contain; filter:drop-shadow(0 20px 30px rgba(0,0,0,0.5)); position:relative; z-index:1;" loading="lazy"/>` : `<div style="font-size:6rem; opacity:0.2;">⚽</div>`}
+        ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" style="max-height:300px; object-fit:contain; filter:drop-shadow(0 20px 30px rgba(0,0,0,0.5)); position:relative; z-index:1;" loading="lazy"/>` : `<div style="font-size:6rem; opacity:0.2;"><i class="fa-solid fa-futbol"></i></div>`}
       </div>
       <div style="flex:1; min-width:280px;">
-        <div style="display:inline-block; background:rgba(0,200,83,0.1); color:var(--g); padding:0.3rem 0.8rem; border-radius:100px; font-size:0.75rem; font-weight:700; letter-spacing:1px; margin-bottom:1rem; border:1px solid var(--bdg);">🏆 FEATURED KIT</div>
+        <div style="display:inline-block; background:rgba(0,200,83,0.1); color:var(--g); padding:0.3rem 0.8rem; border-radius:100px; font-size:0.75rem; font-weight:700; letter-spacing:1px; margin-bottom:1rem; border:1px solid var(--bdg);"><i class="fa-solid fa-trophy"></i> FEATURED KIT</div>
         <h3 style="font-family:var(--fd); font-size:2.5rem; line-height:1.1; margin-bottom:0.5rem;">${k.team}</h3>
         <div style="font-size:1.25rem; color:var(--w3); margin-bottom:1.5rem; font-weight:300;">${k.season} &middot; ${k.type}</div>
         <p style="color:var(--w4); line-height:1.6; margin-bottom:2rem; font-size:0.95rem;">${data.description || 'This week\'s spotlight falls on a true classic. A design that defined an era and captured the imagination of fans worldwide.'}</p>
@@ -386,7 +387,7 @@ async function loadKotw() {
 async function loadFeatured(limit = 4) {
   const { data } = await sb.from('kits_with_stats').select('*').eq('is_featured', true).eq('is_published', true).limit(limit);
   const grid = document.getElementById('featured-grid');
-  if (!data || !data.length) { grid.innerHTML = '<div class="empty" style="grid-column: 1/-1; padding: 2rem;"><div class="empty-icon" style="font-size: 2rem;">⚽</div><h3 style="font-size: 1rem; letter-spacing: 1px;">NO FEATURED KITS</h3></div>'; return; }
+  if (!data || !data.length) { grid.innerHTML = '<div class="empty" style="grid-column: 1/-1; padding: 2rem;"><div class="empty-icon" style="font-size: 2rem;"><i class="fa-solid fa-futbol"></i></div><h3 style="font-size: 1rem; letter-spacing: 1px;">NO FEATURED KITS</h3></div>'; return; }
   grid.innerHTML = data.map((k) => kitCardHTML(k)).join('');
 }
 
@@ -405,7 +406,7 @@ async function loadTopRated() {
     <a href="/kit.html?slug=${k.slug}" style="display:flex;align-items:center;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--bd);text-decoration:none" onclick="trackClick()">
       <span style="font-family:var(--fm);font-size:.7rem;color:var(--w4);width:16px">${i+1}</span>
       <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--w);">${k.team}</div><div style="font-size:.75rem;color:var(--w4)">${k.season}</div></div>
-      <span style="font-family:var(--fm);font-size:.72rem;color:var(--gold)">★ ${parseFloat(k.avg_rating).toFixed(1)}</span>
+      <span style="font-family:var(--fm);font-size:.72rem;color:var(--gold)"><i class="fa-solid fa-star"></i> ${parseFloat(k.avg_rating).toFixed(1)}</span>
     </a>`).join('');
   if (el.lastElementChild) el.lastElementChild.style.borderBottom = 'none';
 }
@@ -414,7 +415,7 @@ function kitCardHTML(k) {
   const bc = k.type === 'Home' ? 'b-home' : k.type === 'Away' ? 'b-away' : k.type === 'Special Edition' ? 'b-special' : 'b-third';
   return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
     <div class="kit-card-img grad-${k.id.charCodeAt(0) % 6}">
-      ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
+      ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph"><i class="fa-solid fa-futbol"></i></span>`}
       <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
     </div>
     <div class="kit-card-body">

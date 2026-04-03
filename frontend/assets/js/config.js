@@ -99,12 +99,12 @@ async function initNav() {
   if (nav && !document.querySelector('.mobile-menu-btn')) {
     const btn = document.createElement('button');
     btn.className = 'mobile-menu-btn';
-    btn.innerHTML = '☰';
+    btn.innerHTML = '<i class="fa-solid fa-bars"></i>';
     btn.onclick = () => {
       const ov = document.getElementById('mobile-menu');
       if (ov) {
         ov.classList.toggle('open');
-        btn.innerHTML = ov.classList.contains('open') ? '✕' : '☰';
+        btn.innerHTML = ov.classList.contains('open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
       }
     };
 
@@ -245,8 +245,8 @@ function renderStars(avg, count, interactive, onRate) {
   for (let i = 1; i <= 5; i++) {
     const cls = i <= full ? 'star-full' : (i === full + 1 && half ? 'star-half' : 'star-empty');
     html += interactive
-      ? `<span class="star ${cls}" data-v="${i}" onclick="if(window._onRate)window._onRate(${i})" style="cursor:pointer">★</span>`
-      : `<span class="star ${cls}">★</span>`;
+      ? `<span class="star ${cls}" data-v="${i}" onclick="if(window._onRate)window._onRate(${i})" style="cursor:pointer"><i class="fa-solid fa-star"></i></span>`
+      : `<span class="star ${cls}"><i class="fa-solid fa-star"></i></span>`;
   }
   html += `</div><span class="rating-count">${avg > 0 ? avg.toFixed(1) : 'No ratings'} ${count > 0 ? `(${count})` : ''}</span>`;
   if (interactive && onRate) window._onRate = onRate;
@@ -262,7 +262,7 @@ function toast(msg, type = 'ok') {
     t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:8888;padding:.8rem 1.3rem;border-radius:9px;font-size:.85rem;font-weight:500;transform:translateY(60px);opacity:0;transition:all .28s;pointer-events:none;font-family:DM Sans,sans-serif;border:1px solid';
     document.body.appendChild(t);
   }
-  t.textContent = (type === 'ok' ? '✓ ' : '✗ ') + msg;
+  t.innerHTML = (type === 'ok' ? '<i class="fa-solid fa-check"></i> ' : '<i class="fa-solid fa-xmark"></i> ') + msg;
   t.style.background = type === 'ok' ? '#00C853' : '#ff4444';
   t.style.color       = type === 'ok' ? '#000' : '#fff';
   t.style.borderColor = type === 'ok' ? '#009c41' : '#cc0000';

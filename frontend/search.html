@@ -6,6 +6,7 @@
 <title>Search — KitDB</title>
 <link rel="stylesheet" href="/assets/css/style.css"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <nav class="nav">
@@ -64,12 +65,12 @@ function search() {
     [k.team,k.league,k.season,k.maker,k.type,k.color,k.description].join(' ').toLowerCase().includes(q)
   );
   info.textContent = `${found.length} result${found.length!==1?'s':''} for "${q}"`;
-  if (!found.length) { grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>NO RESULTS</h3><p>Try a different search.</p></div>`; return; }
+  if (!found.length) { grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div><h3>NO RESULTS</h3><p>Try a different search.</p></div>`; return; }
   grid.innerHTML = found.map(k => {
     const bc = k.type==='Home'?'b-home':k.type==='Away'?'b-away':k.type==='Special Edition'?'b-special':'b-third';
     return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
       <div class="kit-card-img grad-${k.id.charCodeAt(0)%6}">
-        ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
+        ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph"><i class="fa-solid fa-futbol"></i></span>`}
         <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
       </div>
       <div class="kit-card-body">

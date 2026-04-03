@@ -67,7 +67,7 @@
           <div class="profile-stats">
             <div class="ps-cell"><span class="ps-num" id="ps-collection">0</span><span class="ps-lbl">Saved</span></div>
             <div class="ps-cell"><span class="ps-num" id="ps-ratings">0</span><span class="ps-lbl">Rated</span></div>
-            <div class="ps-cell"><span class="ps-num" id="ps-avg">—</span><span class="ps-lbl">Avg ★</span></div>
+            <div class="ps-cell"><span class="ps-num" id="ps-avg">—</span><span class="ps-lbl">Avg <i class="fa-solid fa-star"></i></span></div>
           </div>
           <div style="font-size:.7rem;color:var(--w4);text-align:center" id="p-joined"></div>
 
@@ -231,7 +231,7 @@ async function loadRatings() {
         <a href="/kit.html?slug=${k.slug}" style="font-weight:600;font-size:.875rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.team}</a>
         <div style="font-size:.72rem;color:var(--w4)">${k.season} · Rated ${new Date(r.updated_at).toLocaleDateString('en-GB')}</div>
       </div>
-      <div style="display:flex;gap:.1rem">${[1,2,3,4,5].map(i=>`<span style="color:${i<=r.rating?'var(--gold)':'var(--s4)'}">★</span>`).join('')}</div>
+      <div style="display:flex;gap:.1rem">${[1,2,3,4,5].map(i=>`<span style="color:${i<=r.rating?'var(--gold)':'var(--s4)'}"><i class="fa-solid fa-star"></i></span>`).join('')}</div>
     </div>`;
   }).join('');
 }

@@ -24,6 +24,7 @@
 .auth-switch { text-align:center; font-size:.8rem; color:var(--w4); margin-top:1.25rem; }
 .auth-switch a { color:var(--g); }
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <div class="auth-wrap">
@@ -120,7 +121,7 @@ async function doSignup() {
   });
   btn.textContent = 'Create Free Account'; btn.disabled = false;
   if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
-  sucEl.textContent = '✓ Account created! Check your email to confirm, then sign in.';
+  sucEl.innerHTML = '<i class="fa-solid fa-check"></i> Account created! Check your email to confirm, then sign in.';
   sucEl.style.display = 'block';
   setTimeout(() => switchTab('login'), 3000);
 }

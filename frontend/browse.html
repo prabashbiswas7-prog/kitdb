@@ -52,6 +52,7 @@
 .kit-grid.list-view .kit-card-body { flex:1; display:flex; align-items:center; gap:1.5rem; padding:.7rem .9rem .7rem 0; }
 .kit-grid.list-view .kit-card-team { min-width:140px; margin-bottom:0; }
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <nav class="nav">
@@ -82,7 +83,7 @@
     <div class="filters-panel panel" id="filters-panel">
       <div class="fp-mobile-header" style="display:none; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
         <h3 style="margin:0; font-size:1.2rem; color:var(--w);">Filters</h3>
-        <button onclick="toggleMobileFilters()" style="background:none; border:none; color:var(--w); font-size:1.5rem; cursor:pointer;">✕</button>
+        <button onclick="toggleMobileFilters()" style="background:none; border:none; color:var(--w); font-size:1.5rem; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
         <h3 style="margin:0; font-size:1rem; color:var(--w);">Filters</h3>
@@ -91,11 +92,11 @@
       <div class="fp-section" id="sec-type">
         <span class="fp-label" onclick="toggleSection('sec-type')">Kit Type <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
         <div class="fp-group" id="type-filters">
-          <label class="fp-opt"><input type="checkbox" name="type" value="Home" onchange="toggleFilter('type','Home',this.parentElement)"/>🟢 Home</label>
-          <label class="fp-opt"><input type="checkbox" name="type" value="Away" onchange="toggleFilter('type','Away',this.parentElement)"/>⚫ Away</label>
-          <label class="fp-opt"><input type="checkbox" name="type" value="Third" onchange="toggleFilter('type','Third',this.parentElement)"/>🔵 Third</label>
-          <label class="fp-opt"><input type="checkbox" name="type" value="Special Edition" onchange="toggleFilter('type','Special Edition',this.parentElement)"/>⭐ Special</label>
-          <label class="fp-opt"><input type="checkbox" name="type" value="GK" onchange="toggleFilter('type','GK',this.parentElement)"/>🧤 GK</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="Home" onchange="toggleFilter('type','Home',this.parentElement)"/><i class="fa-solid fa-circle" style="color:#00C853"></i> Home</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="Away" onchange="toggleFilter('type','Away',this.parentElement)"/><i class="fa-solid fa-circle" style="color:#000"></i> Away</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="Third" onchange="toggleFilter('type','Third',this.parentElement)"/><i class="fa-solid fa-circle" style="color:#1976d2"></i> Third</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="Special Edition" onchange="toggleFilter('type','Special Edition',this.parentElement)"/><i class="fa-solid fa-star" style="color:var(--gold)"></i> Special</label>
+          <label class="fp-opt"><input type="checkbox" name="type" value="GK" onchange="toggleFilter('type','GK',this.parentElement)"/><i class="fa-solid fa-hands"></i> GK</label>
         </div>
       </div>
       <div class="fp-section" id="sec-league">
@@ -287,7 +288,7 @@ async function render() {
   document.getElementById('result-count').textContent = `${kits.length} kit${kits.length !== 1 ? 's' : ''}`;
   const grid = document.getElementById('browse-grid');
   grid.className = 'kit-grid' + (viewMode === 'list' ? ' list-view' : '');
-  if (!kits.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><h3>NO KITS FOUND</h3><p>Try different filters.</p></div>`; return; }
+  if (!kits.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div><h3>NO KITS FOUND</h3><p>Try different filters.</p></div>`; return; }
 
   // insert ad slot every 8 cards
   let html = '';
@@ -306,7 +307,7 @@ function kitCardHTML(k) {
   const idx = k.id.charCodeAt(0) % 6;
   return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
     <div class="kit-card-img grad-${idx}">
-      ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph">⚽</span>`}
+      ${k.image_url ? `<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>` : `<span class="kit-card-ph"><i class="fa-solid fa-futbol"></i></span>`}
       <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
     </div>
     <div class="kit-card-body">
