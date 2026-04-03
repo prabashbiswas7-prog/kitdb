@@ -339,8 +339,8 @@ function acSIn(key) {
   if (!matches.length && !q) { list.classList.remove('open'); return; }
   const exact = src.find(v => v.toLowerCase() === q);
   list.innerHTML = matches.map(v =>
-    `<div class="ac-item" onmousedown="acSSet('${key}','${v.replace(/'/g,"\\'")}')">  ${v}</div>`
-  ).join('') + (q && !exact ? `<div class="ac-item" style="color:var(--g);font-style:italic" onmousedown="acSSet('${key}','${inp.value.replace(/'/g,"\\'")}')">+ Use "${inp.value}"</div>` : '');
+    `<div class="ac-item" onmousedown="acSSet('${key}','${v.replace(/'/g,"\\'").replace(/"/g, '&quot;')}')">  ${v}</div>`
+  ).join('') + (q && !exact ? `<div class="ac-item" style="color:var(--g);font-style:italic" onmousedown="acSSet('${key}','${inp.value.replace(/'/g,"\\'").replace(/"/g, '&quot;')}')">+ Use "${inp.value}"</div>` : '');
   list.classList.add('open');
   if (key === 'team' || key === 'season') checkDuplicate();
 }
