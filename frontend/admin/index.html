@@ -56,12 +56,13 @@ button,input,select,textarea{font-family:var(--fb)}
 .ln:hover .ln-tip{opacity:1}
 .ln-sep{width:28px;height:1px;background:var(--bd);margin:.2rem 0;flex-shrink:0}
 
-/* ── THREE PANE KIT MANAGER ── */
-.three-pane{display:flex;flex:1;overflow:hidden}
+/* ── FOUR PANE KIT MANAGER ── */
+.four-pane{display:flex;flex:1;overflow:hidden}
 .kp{overflow-y:auto;flex-shrink:0}
 .kp1{width:185px;border-right:1px solid var(--bd);background:var(--s1)}
 .kp2{width:230px;border-right:1px solid var(--bd);background:var(--s2)}
-.kp3{flex:1;background:var(--bk);overflow-y:auto}
+.kp3{width:230px;border-right:1px solid var(--bd);background:var(--s2)}
+.kp4{flex:1;background:var(--bk);overflow-y:auto}
 .ph{padding:.7rem 1rem;font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--w4);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:inherit;position:sticky;top:0;z-index:10}
 .ph-add{background:none;border:none;color:var(--g);font-size:.95rem;padding:.1rem .3rem;border-radius:4px;cursor:pointer;line-height:1}
 .ph-add:hover{background:var(--gf)}
@@ -76,12 +77,12 @@ button,input,select,textarea{font-family:var(--fb)}
 .ti-ct{margin-left:auto;font-family:var(--fm);font-size:.6rem;color:var(--w4);background:var(--s4);padding:.1rem .32rem;border-radius:100px;flex-shrink:0}
 .ti.active .ti-ct{background:var(--gf);color:var(--g)}
 
-/* ── PANE 3 KIT VIEW ── */
-.p3h{padding:1.1rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-.p3t{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}
-.p3t span{color:var(--g)}
-.p3s{font-size:.72rem;color:var(--w4);margin-top:.15rem}
-.p3-body{padding:1.25rem 1.5rem}
+/* ── PANE 4 KIT VIEW ── */
+.p4h{padding:1.1rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.p4t{font-family:var(--fd);font-size:1.2rem;letter-spacing:2px}
+.p4t span{color:var(--g)}
+.p4s{font-size:.72rem;color:var(--w4);margin-top:.15rem}
+.p4-body{padding:1.25rem 1.5rem}
 .bulk-bar{background:var(--gf);border:1px solid var(--bdg);border-radius:8px;padding:.65rem 1rem;display:none;align-items:center;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap}
 .bulk-bar.show{display:flex}
 
@@ -283,8 +284,8 @@ td{padding:.62rem .9rem;vertical-align:middle}
       <button class="ln"        id="lnb-dash"         onclick="sv('dash',this)"><i class="fa-solid fa-chart-bar"></i><span class="ln-tip">Dashboard</span></button>
     </div>
 
-    <!-- KIT MANAGER 3-PANE -->
-    <div class="three-pane" id="view-kits">
+    <!-- KIT MANAGER 4-PANE -->
+    <div class="four-pane" id="view-kits">
       <div class="kp kp1">
         <div class="ph">SEASON<button class="ph-add" onclick="promptAddSeason()">+</button></div>
         <div class="psearch"><input type="text" id="p1q" placeholder="Search season…" oninput="renderP1()"/></div>
@@ -292,10 +293,15 @@ td{padding:.62rem .9rem;vertical-align:middle}
       </div>
       <div class="kp kp2">
         <div class="ph" id="p2head">LEAGUE<button class="ph-add" onclick="promptAddLeague()">+</button></div>
-        <div class="psearch"><input type="text" id="p2q" placeholder="Search…" oninput="renderP2()"/></div>
+        <div class="psearch"><input type="text" id="p2q" placeholder="Search league…" oninput="renderP2()"/></div>
         <div id="p2list"></div>
       </div>
-      <div class="kp kp3" id="p3">
+      <div class="kp kp3">
+        <div class="ph" id="p3head">CLUB<button class="ph-add" onclick="promptAddClub()">+</button></div>
+        <div class="psearch"><input type="text" id="p3q" placeholder="Search club…" oninput="renderP3()"/></div>
+        <div id="p3list"></div>
+      </div>
+      <div class="kp kp4" id="p4">
         <div class="empty" style="margin-top:5rem"><div class="empty-i"><i class="fa-solid fa-shirt"></i></div><p>Season → League → Club</p></div>
       </div>
     </div>
@@ -884,9 +890,11 @@ async function promptEditSeason(id, oldName) {
 
 async function selectSeason(id) {
   selSeason = allSeasons.find(s => s.id === id);
-  selLeague = null; selClub = null; p2Mode = 'leagues';
-  renderP1(); renderP2Leagues();
-  document.getElementById('p3').innerHTML = '<div class="empty" style="margin-top:5rem"><div class="empty-i"><i class="fa-solid fa-trophy"></i></div><p style="font-size:.85rem">Select a league</p></div>';
+  selLeague = null; selClub = null;
+  renderP1();
+  renderP2();
+  document.getElementById('p3list').innerHTML = '';
+  document.getElementById('p4').innerHTML = '<div class="empty" style="margin-top:5rem"><div class="empty-i"><i class="fa-solid fa-trophy"></i></div><p style="font-size:.85rem">Select a league</p></div>';
 }
 
 async function promptAddSeason() {
@@ -900,13 +908,8 @@ async function promptAddSeason() {
   toast('Season added!'); await loadMaster(); renderP1();
 }
 
-// ── PANE 2 — LEAGUES / CLUBS ─────────────────────────────────
-function renderP2() { p2Mode === 'leagues' ? renderP2Leagues() : renderP2Clubs(); }
-
-function renderP2Leagues() {
-  p2Mode = 'leagues';
-  document.getElementById('p2head').innerHTML = `LEAGUE <button class="ph-add" onclick="promptAddLeague()">+</button>`;
-  document.getElementById('p2q').placeholder = 'Search league…';
+// ── PANE 2 — LEAGUES ─────────────────────────────────────────
+function renderP2() {
   const q = document.getElementById('p2q').value.toLowerCase();
   const f = allLeagues.filter(l => l.name.toLowerCase().includes(q));
   document.getElementById('p2list').innerHTML = f.map(l => {
@@ -939,25 +942,30 @@ async function promptEditLeague(id, oldName) {
     toast('League renamed!');
   }
   await loadMaster();
-  renderP2Leagues();
+  renderP2();
 }
 
 async function selectLeague(id) {
   selLeague = allLeagues.find(l => l.id === id);
   selClub = null;
-  renderP2Clubs();
-  document.getElementById('p3').innerHTML = '<div class="empty" style="margin-top:5rem"><div class="empty-i"><i class="fa-solid fa-futbol"></i></div><p style="font-size:.85rem">Select a club</p></div>';
+  renderP2();
+  renderP3();
+  document.getElementById('p4').innerHTML = '<div class="empty" style="margin-top:5rem"><div class="empty-i"><i class="fa-solid fa-futbol"></i></div><p style="font-size:.85rem">Select a club</p></div>';
 }
 
-function renderP2Clubs() {
-  p2Mode = 'clubs';
-  document.getElementById('p2head').innerHTML =
-    `<span style="cursor:pointer;color:var(--w3);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px" onclick="selLeague=null;selClub=null;renderP2Leagues()">← ${selLeague?.name || ''}</span>
-     <button class="ph-add" onclick="promptAddClub()">+</button>`;
-  document.getElementById('p2q').placeholder = 'Search club…';
-  const q = document.getElementById('p2q').value.toLowerCase();
+async function promptAddLeague() {
+  const name = prompt('League name:'); if (!name) return;
+  const country = prompt('Country:');
+  const { error } = await sb.from('leagues').insert({ name: name.trim(), country: country || null });
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  toast('League added!'); await loadMaster(); renderP2();
+}
+
+// ── PANE 3 — CLUBS ───────────────────────────────────────────
+function renderP3() {
+  const q = document.getElementById('p3q').value.toLowerCase();
   const clubs = allClubs.filter(c => c.league_id === selLeague?.id && c.name.toLowerCase().includes(q));
-  document.getElementById('p2list').innerHTML = clubs.length
+  document.getElementById('p3list').innerHTML = clubs.length
     ? clubs.map(c => `<div class="ti ${selClub?.id === c.id ? 'active' : ''}" onclick="selectClub('${c.id}')">
         <span class="ti-ic"><i class="fa-solid fa-futbol"></i></span>
         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span>
@@ -984,47 +992,46 @@ async function promptEditClub(id, oldName) {
     toast('Club renamed!');
   }
   await loadMaster();
-  if (selLeague) renderP2Clubs();
+  if (selLeague) renderP3();
 }
 
-async function selectClub(id) { selClub = allClubs.find(c => c.id === id); renderP2Clubs(); loadP3(); }
-async function promptAddLeague() {
-  const name = prompt('League name:'); if (!name) return;
-  const country = prompt('Country:');
-  const { error } = await sb.from('leagues').insert({ name: name.trim(), country: country || null });
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  toast('League added!'); await loadMaster(); renderP2Leagues();
+async function selectClub(id) {
+  selClub = allClubs.find(c => c.id === id);
+  renderP3();
+  loadP4();
 }
+
 async function promptAddClub() {
+  if (!selLeague) { toast('Please select a league first.', 'err'); return; }
   const name = prompt('Club name:'); if (!name) return;
-  const { error } = await sb.from('clubs').insert({ name: name.trim(), league_id: selLeague?.id || null });
+  const { error } = await sb.from('clubs').insert({ name: name.trim(), league_id: selLeague.id });
   if (error) { toast('Error: ' + error.message, 'err'); return; }
-  toast('Club added!'); await loadMaster(); if (selLeague) renderP2Clubs();
+  toast('Club added!'); await loadMaster(); renderP3();
 }
 
-// ── PANE 3 — KIT VIEW ───────────────────────────────────────
-async function loadP3() {
+// ── PANE 4 — KIT VIEW ───────────────────────────────────────
+async function loadP4() {
   if (!selSeason || !selClub) return;
-  const p3 = document.getElementById('p3');
-  p3.innerHTML = '<div class="spinner"></div>';
+  const p4 = document.getElementById('p4');
+  p4.innerHTML = '<div class="spinner"></div>';
   const { data: kits } = await sb.from('kits_with_stats').select('*')
     .eq('team', selClub.name).eq('season', selSeason.name).order('type');
   selectedKits.clear();
 
   const typeMap = Object.fromEntries(allKitTypes.map(t => [t.name, t]));
 
-  p3.innerHTML = `
-    <div class="p3h">
+  p4.innerHTML = `
+    <div class="p4h">
       <div>
-        <div class="p3t">${selClub.name} <span>${selSeason.name}</span></div>
-        <div class="p3s">${selLeague?.name || ''} · ${(kits || []).length} kit${(kits || []).length !== 1 ? 's' : ''}</div>
+        <div class="p4t">${selClub.name} <span>${selSeason.name}</span></div>
+        <div class="p4s">${selLeague?.name || ''} · ${(kits || []).length} kit${(kits || []).length !== 1 ? 's' : ''}</div>
       </div>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
         <button class="btn btn-g btn-sm" onclick="copyToSeason()">⊕ Copy to Season</button>
         <button class="btn btn-p btn-sm" onclick="openKitForm(null,'${selClub.name.replace(/'/g,"\\'")}','${selSeason.name}','${(selLeague?.name || '').replace(/'/g,"\\'")}')">+ Add Kit</button>
       </div>
     </div>
-    <div class="p3-body">
+    <div class="p4-body">
       <div class="bulk-bar" id="bulk-bar">
         <span style="font-size:.82rem;font-weight:600;color:var(--g)" id="bulk-count">0 selected</span>
         <button class="btn btn-p btn-sm" onclick="bulkPublish(true)"><i class="fa-solid fa-check"></i> Publish</button>
@@ -1070,17 +1077,17 @@ function updateBulkBar() {
 async function bulkPublish(pub) {
   if (!selectedKits.size) return;
   for (const id of selectedKits) await sb.from('kits').update({ is_published: pub }).eq('id', id);
-  toast(`${selectedKits.size} kits ${pub ? 'published' : 'unpublished'}!`); loadP3();
+  toast(`${selectedKits.size} kits ${pub ? 'published' : 'unpublished'}!`); loadP4();
 }
 async function bulkDelete() {
   if (!selectedKits.size) return;
   if (!confirm(`Delete ${selectedKits.size} kits?`)) return;
   for (const id of selectedKits) await sb.from('kits').delete().eq('id', id);
-  toast(`${selectedKits.size} kits deleted`); loadP3();
+  toast(`${selectedKits.size} kits deleted`); loadP4();
 }
 async function quickPub(id, pub) {
   await sb.from('kits').update({ is_published: pub }).eq('id', id);
-  toast(pub ? 'Published!' : 'Unpublished!'); loadP3();
+  toast(pub ? 'Published!' : 'Unpublished!'); loadP4();
 }
 async function copyToSeason() {
   const target = prompt(`Copy all kits from ${selSeason.name} to season (e.g. 2025/26):`);
@@ -1187,13 +1194,13 @@ async function saveKit() {
   const maker = payload.maker;
   if (maker && !allMakers.includes(maker)) { allMakers.push(maker); allMakers.sort(); }
   toast(editKitId ? 'Kit updated!' : 'Kit added!');
-  closeKitForm(); if (selClub && selSeason) loadP3();
+  closeKitForm(); if (selClub && selSeason) loadP4();
 }
 async function delKit(id, name) {
   if (!confirm(`Delete "${name}"?`)) return;
   const { error } = await sb.from('kits').delete().eq('id', id);
   if (error) { toast('Error: ' + error.message, 'err'); return; }
-  toast('Deleted'); if (selClub && selSeason) loadP3();
+  toast('Deleted'); if (selClub && selSeason) loadP4();
 }
 
 // ── AUTOCOMPLETE ────────────────────────────────────────────
