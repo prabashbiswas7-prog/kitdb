@@ -8,9 +8,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .kit-layout { display:grid; grid-template-columns:1fr 380px; gap:2.5rem; align-items:start; padding:2rem 0; }
-@media(max-width:900px){ .kit-layout{grid-template-columns:1fr;} .kit-img-main{height:350px;} }
-.kit-img-main { background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:640px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; margin-bottom:1rem; cursor:pointer; }
-.kit-img-main img { width:80%; height:80%; object-fit:contain; border-radius:16px; transition:transform .3s; }
+@media(max-width:900px){ .kit-layout{grid-template-columns:1fr;} }
+.kit-img-main { background:var(--s2); border:1px solid var(--bd); border-radius:16px; height:auto; padding:10%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; margin-bottom:1rem; cursor:pointer; }
+.kit-img-main img { width:100%; height:auto; object-fit:contain; border-radius:16px; transition:transform .3s; }
 .kit-img-main:hover img { transform:scale(1.02); }
 .kit-img-main .ph { font-size:7rem; opacity:.08; }
 .kit-thumbs { display:flex; gap:.5rem; }
