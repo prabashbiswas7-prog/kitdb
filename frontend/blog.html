@@ -108,7 +108,8 @@ async function loadSEO() {
   const { data } = await sb.from('site_settings').select('*');
   if (!data) return;
   const s = Object.fromEntries(data.map(r => [r.key, r.value]));
-  if (s.footer_text) document.getElementById('footer-text').textContent = s.footer_text;
+  const fText = document.getElementById('footer-text');
+  if (s.footer_text && fText) fText.textContent = s.footer_text;
   if (s.google_analytics_id) loadGA(s.google_analytics_id);
 }
 

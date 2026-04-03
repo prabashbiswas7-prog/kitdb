@@ -266,8 +266,10 @@ async function loadSiteSettings() {
   const { data } = await sb.from('site_settings').select('key,value');
   if (!data) return;
   const s = Object.fromEntries(data.map(r => [r.key, r.value]));
-  if (s.site_name) document.getElementById('footer-site-name').textContent = s.site_name;
-  if (s.footer_text) document.getElementById('footer-text').textContent = s.footer_text;
+  const fName = document.getElementById('footer-site-name');
+  if (s.site_name && fName) fName.textContent = s.site_name;
+  const fText = document.getElementById('footer-text');
+  if (s.footer_text && fText) fText.textContent = s.footer_text;
 }
 
 async function loadMasterData() {
