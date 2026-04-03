@@ -28,6 +28,14 @@
 .edit-form { display:flex; flex-direction:column; gap:.9rem; }
 .rating-history-row { display:flex; align-items:center; gap:.9rem; padding:.65rem 0; border-bottom:1px solid var(--bd); }
 .rating-history-row:last-child { border-bottom:none; }
+
+.pb-title { font-size:.65rem; font-weight:700; color:var(--w4); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:.8rem; text-align:center; }
+.badge-item { display:flex; align-items:center; gap:.6rem; background:var(--s2); border:1px solid var(--bd); padding:.5rem .75rem; border-radius:10px; margin-bottom:.5rem; transition:border-color .15s; }
+.badge-item:hover { border-color:var(--g); }
+.badge-icon { font-size:1.3rem; }
+.badge-info { flex:1; display:flex; flex-direction:column; gap:.1rem; }
+.badge-name { font-family:var(--fd); font-size:.8rem; letter-spacing:1px; color:var(--w); }
+.badge-desc { font-size:.62rem; color:var(--w4); line-height:1.3; }
 </style>
 </head>
 <body>
@@ -61,6 +69,11 @@
             <div class="ps-cell"><span class="ps-num" id="ps-avg">—</span><span class="ps-lbl">Avg ★</span></div>
           </div>
           <div style="font-size:.7rem;color:var(--w4);text-align:center" id="p-joined"></div>
+
+          <div id="p-badges" style="margin-top:1.75rem; border-top:1px solid var(--bd); padding-top:1.5rem">
+            <div class="pb-title">Badges & Rewards</div>
+            <div id="badges-list"><div class="spinner" style="width:20px;height:20px;border-width:2px;margin:1rem auto"></div></div>
+          </div>
         </div>
       </div>
 
@@ -131,9 +144,33 @@ let currentUser = null, profile = null;
   renderProfile();
   loadCollection();
   loadRatings();
+  loadBadges();
   document.getElementById('loading').style.display = 'none';
   document.getElementById('profile-content').style.display = 'block';
 })();
+
+async function loadBadges() {
+  const { data: ub } = await sb.from('user_badges').select('badge_id').eq('user_id', currentUser.id);
+  if (!ub || ub.length === 0) {
+    document.getElementById('badges-list').innerHTML = '<div style="font-size:.7rem;color:var(--w4);text-align:center;padding:.5rem 0">No badges earned yet.</div>';
+    return;
+  }
+  const badgeIds = ub.map(b => b.badge_id);
+  const { data: badges } = await sb.from('badges').select('*').in('id', badgeIds);
+  if (!badges || badges.length === 0) {
+    document.getElementById('badges-list').innerHTML = '<div style="font-size:.7rem;color:var(--w4);text-align:center;padding:.5rem 0">No badges earned yet.</div>';
+    return;
+  }
+  document.getElementById('badges-list').innerHTML = badges.map(b => `
+    <div class="badge-item" title="Earned +${b.reward_points || 0} pts">
+      <div class="badge-icon">${b.icon || '🎖️'}</div>
+      <div class="badge-info">
+        <span class="badge-name">${b.name}</span>
+        <span class="badge-desc">${b.description || ''}</span>
+      </div>
+    </div>
+  `).join('');
+}
 
 function renderProfile() {
   document.getElementById('p-avatar').textContent = (profile.username||'?')[0].toUpperCase();
