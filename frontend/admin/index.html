@@ -232,6 +232,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
 .toast.ok{color:var(--g)}
 .toast.err{border-color:rgba(255,68,68,.4);color:var(--red)}
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
@@ -262,24 +263,24 @@ td{padding:.62rem .9rem;vertical-align:middle}
   <div class="app-body">
     <!-- LEFT NAV -->
     <div class="leftnav">
-      <button class="ln active" id="lnb-kits"        onclick="sv('kits',this)">👕<span class="ln-tip">Kit Manager</span></button>
-      <button class="ln"        id="lnb-submissions"  onclick="sv('submissions',this)">📥<span class="ln-tip">Submissions</span></button>
+      <button class="ln active" id="lnb-kits"        onclick="sv('kits',this)"><i class="fa-solid fa-shirt"></i><span class="ln-tip">Kit Manager</span></button>
+      <button class="ln"        id="lnb-submissions"  onclick="sv('submissions',this)"><i class="fa-solid fa-inbox"></i><span class="ln-tip">Submissions</span></button>
       <div class="ln-sep"></div>
-            <button class="ln"        id="lnb-blog"         onclick="sv('blog',this)">📝<span class="ln-tip">Blog</span></button>
-      <button class="ln"        id="lnb-pages"        onclick="sv('pages',this)">📄<span class="ln-tip">Pages</span></button>
+            <button class="ln"        id="lnb-blog"         onclick="sv('blog',this)"><i class="fa-solid fa-file-lines"></i><span class="ln-tip">Blog</span></button>
+      <button class="ln"        id="lnb-pages"        onclick="sv('pages',this)"><i class="fa-solid fa-file"></i><span class="ln-tip">Pages</span></button>
       <div class="ln-sep"></div>
-      <button class="ln"        id="lnb-types"        onclick="sv('types',this)">🏷️<span class="ln-tip">Kit Types</span></button>
-      <button class="ln"        id="lnb-kotw"         onclick="sv('kotw',this)">🏆<span class="ln-tip">Kit of the Week</span></button>
-      <button class="ln"        id="lnb-comments"     onclick="sv('comments',this)">💬<span class="ln-tip">Comments</span></button>
-      <button class="ln"        id="lnb-badges"       onclick="sv('badges',this)">🎖️<span class="ln-tip">Badges & Rewards</span></button>
+      <button class="ln"        id="lnb-types"        onclick="sv('types',this)"><i class="fa-solid fa-tag"></i><span class="ln-tip">Kit Types</span></button>
+      <button class="ln"        id="lnb-kotw"         onclick="sv('kotw',this)"><i class="fa-solid fa-trophy"></i><span class="ln-tip">Kit of the Week</span></button>
+      <button class="ln"        id="lnb-comments"     onclick="sv('comments',this)"><i class="fa-solid fa-comment"></i><span class="ln-tip">Comments</span></button>
+      <button class="ln"        id="lnb-badges"       onclick="sv('badges',this)"><i class="fa-solid fa-medal"></i><span class="ln-tip">Badges & Rewards</span></button>
       <div class="ln-sep"></div>
-      <button class="ln"        id="lnb-seo"          onclick="sv('seo',this)">🔍<span class="ln-tip">SEO & Analytics</span></button>
-      <button class="ln"        id="lnb-ads"          onclick="sv('ads',this)">📢<span class="ln-tip">Ad Slots</span></button>
-      <button class="ln"        id="lnb-users"        onclick="sv('users',this)">👥<span class="ln-tip">Users</span></button>
-      <button class="ln"        id="lnb-admins"       onclick="sv('admins',this)">🔑<span class="ln-tip">Admins</span></button>
-      <button class="ln"        id="lnb-settings"     onclick="sv('settings',this)">⚙️<span class="ln-tip">Site Settings</span></button>
+      <button class="ln"        id="lnb-seo"          onclick="sv('seo',this)"><i class="fa-solid fa-magnifying-glass"></i><span class="ln-tip">SEO & Analytics</span></button>
+      <button class="ln"        id="lnb-ads"          onclick="sv('ads',this)"><i class="fa-solid fa-bullhorn"></i><span class="ln-tip">Ad Slots</span></button>
+      <button class="ln"        id="lnb-users"        onclick="sv('users',this)"><i class="fa-solid fa-users"></i><span class="ln-tip">Users</span></button>
+      <button class="ln"        id="lnb-admins"       onclick="sv('admins',this)"><i class="fa-solid fa-key"></i><span class="ln-tip">Admins</span></button>
+      <button class="ln"        id="lnb-settings"     onclick="sv('settings',this)"><i class="fa-solid fa-gear"></i><span class="ln-tip">Site Settings</span></button>
       <div class="ln-sep"></div>
-      <button class="ln"        id="lnb-dash"         onclick="sv('dash',this)">📊<span class="ln-tip">Dashboard</span></button>
+      <button class="ln"        id="lnb-dash"         onclick="sv('dash',this)"><i class="fa-solid fa-chart-bar"></i><span class="ln-tip">Dashboard</span></button>
     </div>
 
     <!-- KIT MANAGER 3-PANE -->
@@ -295,7 +296,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
         <div id="p2list"></div>
       </div>
       <div class="kp kp3" id="p3">
-        <div class="empty" style="margin-top:5rem"><div class="empty-i">👕</div><p>Season → League → Club</p></div>
+        <div class="empty" style="margin-top:5rem"><div class="empty-i"><i class="fa-solid fa-shirt"></i></div><p>Season → League → Club</p></div>
       </div>
     </div>
 
@@ -501,7 +502,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
 <!-- KIT FORM MODAL -->
 <div class="ov" id="kit-ov" onclick="if(event.target===this)closeKitForm()">
   <div class="mbox">
-    <div class="mh"><div class="mt" id="kft">ADD <span>KIT</span></div><button class="mc" onclick="closeKitForm()">✕</button></div>
+    <div class="mh"><div class="mt" id="kft">ADD <span>KIT</span></div><button class="mc" onclick="closeKitForm()"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="mb">
       <div class="fg">
         <div class="fsec">Kit Identity</div>
@@ -514,7 +515,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
         <div class="fsec">Images</div>
         <div class="field ff" style="display:flex;gap:.875rem;align-items:flex-start">
           <div style="flex:1"><label>Main Image URL</label><input id="kf-img" placeholder="https://… or /assets/img/kits/name.jpg" oninput="prevImg()"/></div>
-          <div class="ip" id="ip">📷</div>
+          <div class="ip" id="ip"><i class="fa-solid fa-camera"></i></div>
         </div>
         <div class="field"><label>Image 2 URL</label><input id="kf-img2" placeholder="https://…"/></div>
         <div class="field"><label>Image 3 URL</label><input id="kf-img3" placeholder="https://…"/></div>
@@ -541,7 +542,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
 <!-- KIT TYPE FORM -->
 <div class="ov" id="type-ov" onclick="if(event.target===this)closeTypeForm()">
   <div class="mbox" style="max-width:420px">
-    <div class="mh"><div class="mt" id="tft">ADD KIT <span>TYPE</span></div><button class="mc" onclick="closeTypeForm()">✕</button></div>
+    <div class="mh"><div class="mt" id="tft">ADD KIT <span>TYPE</span></div><button class="mc" onclick="closeTypeForm()"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="mb">
       <div style="display:flex;flex-direction:column;gap:.875rem">
         <div class="field"><label>Type Name *</label><input id="tf-name" placeholder="e.g. Champions League Away" oninput="updateTypePrev()"/></div>
@@ -561,7 +562,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
 <!-- BLOG FORM MODAL -->
 <div class="ov" id="blog-ov" onclick="if(event.target===this)closeBlogForm()">
   <div class="mbox mbox-lg">
-    <div class="mh"><div class="mt" id="bft">NEW <span>POST</span></div><button class="mc" onclick="closeBlogForm()">✕</button></div>
+    <div class="mh"><div class="mt" id="bft">NEW <span>POST</span></div><button class="mc" onclick="closeBlogForm()"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="mb">
       <div class="fg">
         <div class="fsec">Post Details</div>
@@ -585,9 +586,9 @@ td{padding:.62rem .9rem;vertical-align:middle}
             <button onclick="ec('ol')">1. List</button>
             <button onclick="ec('quote')">"  "</button>
             <div class="esep"></div>
-            <button onclick="ec('link')">🔗</button>
-            <button onclick="edImg('blog-editor')">🖼</button>
-            <button onclick="edVideo('blog-editor')">▶</button>
+            <button onclick="ec('link')"><i class="fa-solid fa-link"></i></button>
+            <button onclick="edImg('blog-editor')"><i class="fa-regular fa-image"></i></button>
+            <button onclick="edVideo('blog-editor')"><i class="fa-solid fa-play"></i></button>
             <div class="esep"></div>
             <button onclick="ec('undo')">↩</button>
             <button onclick="ec('redo')">↪</button>
@@ -609,7 +610,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
 <!-- PAGE FORM MODAL -->
 <div class="ov" id="page-ov" onclick="if(event.target===this)closePageForm()">
   <div class="mbox mbox-lg">
-    <div class="mh"><div class="mt" id="pft">NEW <span>PAGE</span></div><button class="mc" onclick="closePageForm()">✕</button></div>
+    <div class="mh"><div class="mt" id="pft">NEW <span>PAGE</span></div><button class="mc" onclick="closePageForm()"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="mb">
       <div class="fg">
         <div class="fsec">Page</div>
@@ -625,8 +626,8 @@ td{padding:.62rem .9rem;vertical-align:middle}
             <button onclick="pec('h3')">H3</button>
             <div class="esep"></div>
             <button onclick="pec('ul')">• List</button>
-            <button onclick="pec('link')">🔗</button>
-            <button onclick="edImg('page-editor')">🖼</button>
+            <button onclick="pec('link')"><i class="fa-solid fa-link"></i></button>
+            <button onclick="edImg('page-editor')"><i class="fa-regular fa-image"></i></button>
           </div>
           <div class="editor" id="page-editor" contenteditable="true" data-placeholder="Write page content…" style="min-height:220px"></div>
         </div>
@@ -648,7 +649,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
 <!-- KOTW FORM -->
 <div class="ov" id="kotw-ov" onclick="if(event.target===this)document.getElementById('kotw-ov').classList.remove('open')">
   <div class="mbox" style="max-width:460px">
-    <div class="mh"><div class="mt">KIT OF THE <span>WEEK</span></div><button class="mc" onclick="document.getElementById('kotw-ov').classList.remove('open')">✕</button></div>
+    <div class="mh"><div class="mt">KIT OF THE <span>WEEK</span></div><button class="mc" onclick="document.getElementById('kotw-ov').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="mb">
       <div style="display:flex;flex-direction:column;gap:.875rem">
         <div class="field"><label>Kit Slug *</label><div class="acw"><input id="kotw-kit" placeholder="Search kit…" autocomplete="off" oninput="acKotw()" onblur="setTimeout(()=>document.getElementById('acl-kotw').classList.remove('open'),180)"/><div class="acl" id="acl-kotw"></div></div></div>
@@ -664,7 +665,7 @@ td{padding:.62rem .9rem;vertical-align:middle}
 <!-- SUBMISSION DETAIL MODAL -->
 <div class="ov" id="sub-ov" onclick="if(event.target===this)document.getElementById('sub-ov').classList.remove('open')">
   <div class="mbox">
-    <div class="mh"><div class="mt">SUBMISSION <span>REVIEW</span></div><button class="mc" onclick="document.getElementById('sub-ov').classList.remove('open')">✕</button></div>
+    <div class="mh"><div class="mt">SUBMISSION <span>REVIEW</span></div><button class="mc" onclick="document.getElementById('sub-ov').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="mb" id="sub-detail"></div>
     <div class="mf" id="sub-actions"></div>
   </div>
@@ -724,7 +725,7 @@ async function doSignOut() { await sb.auth.signOut(); location.reload(); }
 async function showApp() {
   document.getElementById('ls').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  document.getElementById('tb-user').textContent = '⚙️ ' + adminProfile.username;
+  document.getElementById('tb-user').innerHTML = '<i class="fa-solid fa-gear"></i> ' + adminProfile.username;
   await loadMaster();
   renderP1();
 }
@@ -849,7 +850,7 @@ function renderP1() {
   const q = document.getElementById('p1q').value.toLowerCase();
   const f = allSeasons.filter(s => s.name.toLowerCase().includes(q));
   document.getElementById('p1list').innerHTML = f.length
-    ? f.map(s => `<div class="ti ${selSeason?.id === s.id ? 'active' : ''}" onclick="selectSeason('${s.id}')"><span class="ti-ic">📅</span>${s.name}</div>`).join('')
+    ? f.map(s => `<div class="ti ${selSeason?.id === s.id ? 'active' : ''}" onclick="selectSeason('${s.id}')"><span class="ti-ic"><i class="fa-regular fa-calendar"></i></span>${s.name}</div>`).join('')
     : '<div class="empty"><p style="font-size:.8rem">No seasons</p></div>';
 }
 
@@ -857,7 +858,7 @@ async function selectSeason(id) {
   selSeason = allSeasons.find(s => s.id === id);
   selLeague = null; selClub = null; p2Mode = 'leagues';
   renderP1(); renderP2Leagues();
-  document.getElementById('p3').innerHTML = '<div class="empty" style="margin-top:5rem"><div class="empty-i">🏆</div><p style="font-size:.85rem">Select a league</p></div>';
+  document.getElementById('p3').innerHTML = '<div class="empty" style="margin-top:5rem"><div class="empty-i"><i class="fa-solid fa-trophy"></i></div><p style="font-size:.85rem">Select a league</p></div>';
 }
 
 async function promptAddSeason() {
@@ -883,7 +884,7 @@ function renderP2Leagues() {
   document.getElementById('p2list').innerHTML = f.map(l => {
     const cc = allClubs.filter(c => c.league_id === l.id).length;
     return `<div class="ti ${selLeague?.id === l.id ? 'active' : ''}" onclick="selectLeague('${l.id}')">
-      <span class="ti-ic">🏆</span>
+      <span class="ti-ic"><i class="fa-solid fa-trophy"></i></span>
       <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</span>
       <span class="ti-ct">${cc}</span>
     </div>`;
@@ -894,7 +895,7 @@ async function selectLeague(id) {
   selLeague = allLeagues.find(l => l.id === id);
   selClub = null;
   renderP2Clubs();
-  document.getElementById('p3').innerHTML = '<div class="empty" style="margin-top:5rem"><div class="empty-i">⚽</div><p style="font-size:.85rem">Select a club</p></div>';
+  document.getElementById('p3').innerHTML = '<div class="empty" style="margin-top:5rem"><div class="empty-i"><i class="fa-solid fa-futbol"></i></div><p style="font-size:.85rem">Select a club</p></div>';
 }
 
 function renderP2Clubs() {
@@ -907,7 +908,7 @@ function renderP2Clubs() {
   const clubs = allClubs.filter(c => c.league_id === selLeague?.id && c.name.toLowerCase().includes(q));
   document.getElementById('p2list').innerHTML = clubs.length
     ? clubs.map(c => `<div class="ti ${selClub?.id === c.id ? 'active' : ''}" onclick="selectClub('${c.id}')">
-        <span class="ti-ic">⚽</span>
+        <span class="ti-ic"><i class="fa-solid fa-futbol"></i></span>
         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span>
       </div>`).join('')
     : '<div class="empty"><p style="font-size:.8rem">No clubs — click + to add</p></div>';
@@ -953,8 +954,8 @@ async function loadP3() {
     <div class="p3-body">
       <div class="bulk-bar" id="bulk-bar">
         <span style="font-size:.82rem;font-weight:600;color:var(--g)" id="bulk-count">0 selected</span>
-        <button class="btn btn-p btn-sm" onclick="bulkPublish(true)">✓ Publish</button>
-        <button class="btn btn-g btn-sm" onclick="bulkPublish(false)">✕ Unpublish</button>
+        <button class="btn btn-p btn-sm" onclick="bulkPublish(true)"><i class="fa-solid fa-check"></i> Publish</button>
+        <button class="btn btn-g btn-sm" onclick="bulkPublish(false)"><i class="fa-solid fa-xmark"></i> Unpublish</button>
         <button class="btn btn-r btn-sm" onclick="bulkDelete()">🗑 Delete</button>
       </div>
       ${(kits || []).length ? `
@@ -968,12 +969,12 @@ async function loadP3() {
           const bs = typ ? `background:${typ.bg_color};color:${typ.color};border-color:${typ.color}40` : '';
           return `<tr id="kr-${k.id}">
             <td><input type="checkbox" class="cb kit-cb" data-id="${k.id}" onchange="toggleKitSel('${k.id}',this.checked)"/></td>
-            <td><div class="tdi">${k.image_url ? `<img src="${k.image_url}" onerror="this.style.display='none'"/>` : '👕'}</div></td>
+            <td><div class="tdi">${k.image_url ? `<img src="${k.image_url}" onerror="this.style.display='none'"/>` : '<i class="fa-solid fa-shirt"></i>'}</div></td>
             <td><span class="badge" style="${bs}">${k.type}</span></td>
             <td style="color:var(--w3);font-size:.78rem">${k.maker || '—'}</td>
             <td><span class="badge ${k.is_published ? 'pub-y' : 'pub-n'}">${k.is_published ? 'Live' : 'Draft'}</span></td>
-            <td style="text-align:center">${k.is_featured ? '⭐' : '—'}</td>
-            <td style="font-size:.72rem;color:var(--w3)">${k.submitted_by ? `👤 ${k.is_verified ? '✅' : '⏳'}` : '<span style="color:var(--g)">Admin ✓</span>'}</td>
+            <td style="text-align:center">${k.is_featured ? '<i class="fa-solid fa-star" style="color:var(--gold)"></i>' : '—'}</td>
+            <td style="font-size:.72rem;color:var(--w3)">${k.submitted_by ? `<i class="fa-solid fa-user"></i> ${k.is_verified ? '<i class="fa-solid fa-check-circle" style="color:#00C853"></i>' : '<i class="fa-solid fa-hourglass-half"></i>'}` : '<span style="color:var(--g)">Admin <i class="fa-solid fa-check"></i></span>'}</td>
             <td><div style="display:flex;gap:.3rem;flex-wrap:wrap">
               <button class="btn-ed" onclick='openKitForm(${JSON.stringify(k).replace(/'/g, "&#39;")})'>Edit</button>
               <button class="btn-ed" style="color:${k.is_published ? 'var(--red)' : 'var(--g)'}" onclick="quickPub('${k.id}',${!k.is_published})">${k.is_published ? 'Unpub' : 'Pub'}</button>
@@ -981,7 +982,7 @@ async function loadP3() {
             </div></td>
           </tr>`;
         }).join('')}</tbody>
-      </table>` : '<div class="empty"><div class="empty-i">👕</div><p>No kits yet — click + Add Kit</p></div>'}
+      </table>` : '<div class="empty"><div class="empty-i"><i class="fa-solid fa-shirt"></i></div><p>No kits yet — click + Add Kit</p></div>'}
     </div>`;
 }
 
@@ -1057,7 +1058,7 @@ function closeKitForm() { document.getElementById('kit-ov').classList.remove('op
 function prevImg() {
   const u = document.getElementById('kf-img').value.trim();
   const b = document.getElementById('ip');
-  b.innerHTML = u ? `<img src="${u}" onerror="this.parentElement.innerHTML='📷'"/>` : '📷';
+  b.innerHTML = u ? `<img src="${u}" onerror="this.parentElement.innerHTML='<i class=\\'fa-solid fa-camera\\'></i>'"/>` : '<i class="fa-solid fa-camera"></i>';
 }
 function autoSlug() {
   if (editKitId) return;
@@ -1178,7 +1179,7 @@ async function loadSubmissions() {
     <td><span class="badge ${statusClass[s.status] || 'pub-n'}">${s.status}</span></td>
     <td><div style="display:flex;gap:.35rem">
       <button class="btn-ed" onclick="reviewSubmission('${s.id}')">Review</button>
-      ${s.status === 'pending' ? `<button class="btn-app" onclick="approveSubmission('${s.id}')">✓ Approve</button><button class="btn-rej" onclick="rejectSubmission('${s.id}')">✕ Reject</button>` : ''}
+      ${s.status === 'pending' ? `<button class="btn-app" onclick="approveSubmission('${s.id}')"><i class="fa-solid fa-check"></i> Approve</button><button class="btn-rej" onclick="rejectSubmission('${s.id}')"><i class="fa-solid fa-xmark"></i> Reject</button>` : ''}
     </div></td>
   </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--w4)">No submissions.</td></tr>';
 }
@@ -1197,8 +1198,8 @@ async function reviewSubmission(id) {
   const actEl = document.getElementById('sub-actions');
   actEl.innerHTML = s.status === 'pending'
     ? `<button class="btn btn-g" onclick="document.getElementById('sub-ov').classList.remove('open')">Close</button>
-       <button class="btn btn-r" onclick="rejectSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')">✕ Reject</button>
-       <button class="btn btn-p" onclick="approveSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')">✓ Approve & Publish</button>`
+       <button class="btn btn-r" onclick="rejectSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')"><i class="fa-solid fa-xmark"></i> Reject</button>
+       <button class="btn btn-p" onclick="approveSubmission('${id}');document.getElementById('sub-ov').classList.remove('open')"><i class="fa-solid fa-check"></i> Approve & Publish</button>`
     : `<button class="btn btn-g" onclick="document.getElementById('sub-ov').classList.remove('open')">Close</button>`;
   document.getElementById('sub-ov').classList.add('open');
 }
@@ -1308,7 +1309,7 @@ async function loadKotw() {
   document.getElementById('kotw-tb').innerHTML = (data || []).map(k => `<tr>
     <td style="font-weight:600">${k.kits?.team || '—'} <span style="color:var(--w4)">${k.kits?.season || ''} ${k.kits?.type || ''}</span></td>
     <td style="font-size:.78rem;color:var(--w3)">${k.week_start} → ${k.week_end}</td>
-    <td style="font-family:var(--fm);font-size:.8rem;color:var(--gold)">★ ${k.votes}</td>
+    <td style="font-family:var(--fm);font-size:.8rem;color:var(--gold)"><i class="fa-solid fa-star"></i> ${k.votes}</td>
     <td><span class="badge ${k.is_active ? 'pub-y' : 'pub-n'}">${k.is_active ? 'Active' : 'Ended'}</span></td>
     <td><button class="btn-del" onclick="delKotw('${k.id}')">Del</button></td>
   </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--w4)">No Kit of the Week set.</td></tr>';
@@ -1403,10 +1404,10 @@ function openBadgeForm(badge) {
   }
   ov.innerHTML = `
     <div class="mbox" style="max-width:500px">
-      <div class="mh"><div class="mt">${b.id ? 'EDIT' : 'ADD'} <span>BADGE</span></div><button class="mc" onclick="document.getElementById('badge-ov').classList.remove('open')">✕</button></div>
+      <div class="mh"><div class="mt">${b.id ? 'EDIT' : 'ADD'} <span>BADGE</span></div><button class="mc" onclick="document.getElementById('badge-ov').classList.remove('open')"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="mb">
         <div style="display:flex;flex-direction:column;gap:.875rem">
-          <div class="field"><label>Icon (emoji)</label><input id="bad-icon" value="${b.icon || '⭐'}"/></div>
+          <div class="field"><label>Icon (emoji)</label><input id="bad-icon" value="${(b.icon || '<i class=\\'fa-solid fa-star\\'></i>').replace(/"/g, '&quot;')}"/></div>
           <div class="field"><label>Name *</label><input id="bad-name" value="${b.name || ''}"/></div>
           <div class="field"><label>Description</label><input id="bad-desc" value="${b.description || ''}"/></div>
           <div class="field"><label>Condition Type</label>
@@ -1512,7 +1513,7 @@ function renderBlogTags() {
   blogTagsList.forEach(t => {
     const span = document.createElement('span');
     span.className = 'tag';
-    span.innerHTML = `${t}<button onclick="removeTag('${t}')">✕</button>`;
+    span.innerHTML = `${t}<button onclick="removeTag('${t}')"><i class="fa-solid fa-xmark"></i></button>`;
     wrap.appendChild(span);
   });
   wrap.appendChild(inp);
@@ -1585,8 +1586,8 @@ async function loadPages() {
   document.getElementById('pages-tb').innerHTML = (data || []).map(p => `<tr>
     <td style="font-weight:600">${p.title}</td>
     <td style="font-family:var(--fm);font-size:.72rem;color:var(--g)">${p.slug}</td>
-    <td style="text-align:center">${p.show_in_footer ? '✓' : '—'}</td>
-    <td style="text-align:center">${p.show_in_nav ? '✓' : '—'}</td>
+    <td style="text-align:center">${p.show_in_footer ? '<i class="fa-solid fa-check"></i>' : '—'}</td>
+    <td style="text-align:center">${p.show_in_nav ? '<i class="fa-solid fa-check"></i>' : '—'}</td>
     <td><span class="badge ${p.is_published ? 'pub-y' : 'pub-n'}">${p.is_published ? 'Live' : 'Draft'}</span></td>
     <td><div style="display:flex;gap:.35rem">
       <button class="btn-ed" onclick="openPageForm(${JSON.stringify(p).replace(/"/g, '&quot;')})">Edit</button>
@@ -1745,7 +1746,7 @@ async function loadAdmins() {
   document.getElementById('admins-list').innerHTML = (data || []).map(a => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd)">
       <div>
-        <div style="font-weight:600;font-size:.875rem">⚙️ ${a.username || 'Admin'}</div>
+        <div style="font-weight:600;font-size:.875rem"><i class="fa-solid fa-gear"></i> ${a.username || 'Admin'}</div>
         <div style="font-size:.7rem;color:var(--w4)">${new Date(a.created_at).toLocaleDateString('en-GB')}</div>
       </div>
       ${a.id !== adminProfile?.id
@@ -1844,7 +1845,7 @@ async function loadDash() {
 // ── TOAST ────────────────────────────────────────────────────
 function toast(msg, type = 'ok') {
   const t = document.getElementById('toast');
-  t.textContent = (type === 'ok' ? '✓ ' : '✗ ') + msg;
+  t.innerHTML = (type === 'ok' ? '<i class="fa-solid fa-check"></i> ' : '<i class="fa-solid fa-xmark"></i> ') + msg;
   t.className = 'toast show ' + (type === 'ok' ? 'ok' : 'err');
   setTimeout(() => t.className = 'toast', 3000);
 }

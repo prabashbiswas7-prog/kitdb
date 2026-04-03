@@ -48,6 +48,7 @@
 .lightbox-close { position: absolute; top: 20px; right: 30px; font-size: 2.5rem; color: #fff; cursor: pointer; transition: color 0.2s; user-select: none; }
 .lightbox-close:hover { color: var(--g); }
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <nav class="nav">
@@ -113,7 +114,7 @@
 
         <!-- Save to collection -->
         <button class="save-btn" id="save-btn" onclick="toggleSave()" style="display:none">
-          <span id="save-icon">🤍</span> <span id="save-label">Save to Collection</span>
+          <span id="save-icon"><i class="fa-regular fa-heart"></i></span> <span id="save-label">Save to Collection</span>
         </button>
       </div>
     </div>
@@ -152,7 +153,7 @@
     </div>
   </div>
   <div id="not-found" style="display:none" class="empty">
-    <div class="empty-icon">🔍</div>
+    <div class="empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
     <h3>KIT NOT FOUND</h3>
     <p>This kit doesn't exist or has been removed.</p>
     <a href="/browse.html" class="btn btn-p" style="margin-top:1rem">Browse All Kits</a>
@@ -217,7 +218,7 @@ function renderKit() {
   const imgs = [kit.image_url, kit.image_url_2, kit.image_url_3].filter(Boolean);
   document.getElementById('kit-img-main').innerHTML = imgs.length
     ? `<img src="${imgs[0]}" id="main-img" alt="${kit.team}" onclick="openLightbox(this.src)"/>`
-    : `<span class="ph">⚽</span>`;
+    : `<span class="ph"><i class="fa-solid fa-futbol"></i></span>`;
   document.getElementById('kit-img-main').classList.add('grad-' + idx);
 
   if (imgs.length > 1) {
@@ -274,7 +275,7 @@ function renderKit() {
     document.getElementById('buy-section').style.display = 'block';
     document.getElementById('buy-section').innerHTML =
       `<a href="${kit.buy_url}" target="_blank" rel="noopener sponsored" class="buy-btn" onclick="trackClick()">
-        🛒 ${kit.buy_label || 'Buy Now'} ${kit.price_label ? '— ' + kit.price_label : ''}
+        <i class="fa-solid fa-cart-shopping"></i> ${kit.buy_label || 'Buy Now'} ${kit.price_label ? '— ' + kit.price_label : ''}
        </a>`;
   }
 
@@ -319,7 +320,7 @@ function renderInteractiveStars(current) {
     `<span class="star ${i<=current?'star-full':'star-empty'}" data-v="${i}"
       onclick="rateKit(${i})"
       onmouseover="hoverStars(${i})"
-      onmouseout="renderInteractiveStars(${userRating})">★</span>`
+      onmouseout="renderInteractiveStars(${userRating})"><i class="fa-solid fa-star"></i></span>`
   ).join('');
   document.getElementById('user-rating-hint').textContent = current > 0 ? `Your rating: ${current}/5 — click to change` : 'Click a star to rate';
 }
@@ -415,7 +416,7 @@ async function postComment() {
 function updateSaveBtn() {
   const btn = document.getElementById('save-btn');
   btn.classList.toggle('saved', isSaved);
-  document.getElementById('save-icon').textContent = isSaved ? '💚' : '🤍';
+  document.getElementById('save-icon').innerHTML = isSaved ? '<i class="fa-solid fa-heart" style="color:var(--g)"></i>' : '<i class="fa-regular fa-heart"></i>';
   document.getElementById('save-label').textContent = isSaved ? 'Saved to Collection' : 'Save to Collection';
 }
 async function toggleSave() {
@@ -439,7 +440,7 @@ async function loadRelated() {
     const idx = k.id.charCodeAt(0) % 6;
     return `<a href="/kit.html?slug=${k.slug}" class="kit-card" onclick="trackClick()">
       <div class="kit-card-img grad-${idx}">
-        ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph">⚽</span>`}
+        ${k.image_url?`<img src="${k.image_url}" alt="${k.team}" loading="lazy"/>`:`<span class="kit-card-ph"><i class="fa-solid fa-futbol"></i></span>`}
         <span class="badge ${bc}" style="position:absolute;top:.55rem;right:.55rem">${k.type}</span>
       </div>
       <div class="kit-card-body">

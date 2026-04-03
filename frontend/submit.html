@@ -38,6 +38,7 @@
 .success-title { font-family:var(--fd); font-size:2rem; letter-spacing:3px; margin-bottom:.5rem; }
 .success-title span { color:var(--g); }
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <nav class="nav">
@@ -51,7 +52,7 @@
 
     <!-- NOT LOGGED IN -->
     <div id="login-prompt" style="display:none;text-align:center;padding:4rem 2rem">
-      <div style="font-size:3rem;margin-bottom:1rem">🔐</div>
+      <div style="font-size:3rem;margin-bottom:1rem"><i class="fa-solid fa-lock"></i></div>
       <div style="font-family:var(--fd);font-size:1.75rem;letter-spacing:3px;margin-bottom:.5rem">SIGN IN TO SUBMIT</div>
       <p style="color:var(--w3);margin-bottom:1.5rem">You need a free KitDB account to submit kits.</p>
       <a href="/login.html?from=/submit.html" class="btn btn-p">Sign In / Join Free</a>
@@ -88,12 +89,12 @@
       <!-- FORM -->
       <div class="submit-box">
         <div class="submit-box-head">
-          <span style="font-size:1.25rem">👕</span>
+          <span style="font-size:1.25rem"><i class="fa-solid fa-shirt"></i></span>
           <span class="submit-box-title">KIT DETAILS</span>
         </div>
         <div class="submit-box-body">
           <div id="success-screen" class="success-screen">
-            <div class="success-icon">🎉</div>
+            <div class="success-icon"><i class="fa-solid fa-bullhorn"></i></div>
             <div class="success-title">KIT <span>SUBMITTED!</span></div>
             <p style="color:var(--w3);margin-bottom:1.5rem">Your submission is under review. You'll earn 50 points when it's approved!</p>
             <div style="display:flex;gap:.75rem;justify-content:center">
@@ -151,7 +152,7 @@
             </div>
 
             <div id="duplicate-warn" class="duplicate-warn">
-              ⚠️ A kit with this team, season and type already exists or has been submitted. Please check Browse first.
+              <i class="fa-solid fa-triangle-exclamation"></i> A kit with this team, season and type already exists or has been submitted. Please check Browse first.
             </div>
 
             <div class="form-section">Images</div>
