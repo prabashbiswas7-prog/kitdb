@@ -71,7 +71,7 @@ img { max-width: 100%; }
 }
 .kit-card:hover { border-color: var(--bdg); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(0,200,83,.07); }
 .kit-card-img { height: 200px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: var(--s2); }
-.kit-card-img img { width: 100%; height: 100%; object-fit: contain; padding: 10%; transition: transform .3s; border-radius: 12px 12px 0 0; }
+.kit-card-img img { width: 80%; height: 80%; object-fit: contain; transition: transform .3s; border-radius: 12px 12px 0 0; mix-blend-mode: multiply; background: #fff; }
 .kit-card:hover .kit-card-img img { transform: scale(1.05); }
 .kit-card-ph { font-size: 3.5rem; opacity: .1; }
 .kit-card-body { padding: .9rem 1rem; }
@@ -195,7 +195,7 @@ select.chip option { background: var(--s2); }
   .zigzag-row:nth-child(even) .zigzag-img { order: 1; }
 }
 .zigzag-img { background: var(--s2); border: 1px solid var(--bd); border-radius: 16px; overflow: hidden; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; font-size: 3rem; opacity: .4; }
-.zigzag-img img { width: 100%; height: 100%; object-fit: contain; padding: 10%; opacity: 1; }
+.zigzag-img img { width: 80%; height: 80%; object-fit: contain; opacity: 1; border-radius: 16px; mix-blend-mode: multiply; background: #fff; }
 .zigzag-txt h3 { font-family: var(--fd); font-size: 2.2rem; letter-spacing: 2px; margin-bottom: 1rem; color: var(--w); line-height: 1.1; }
 .zigzag-txt p { color: var(--w3); line-height: 1.6; font-size: .95rem; margin-bottom: 1.5rem; }
 
