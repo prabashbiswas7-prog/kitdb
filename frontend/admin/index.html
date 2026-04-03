@@ -850,8 +850,36 @@ function renderP1() {
   const q = document.getElementById('p1q').value.toLowerCase();
   const f = allSeasons.filter(s => s.name.toLowerCase().includes(q));
   document.getElementById('p1list').innerHTML = f.length
-    ? f.map(s => `<div class="ti ${selSeason?.id === s.id ? 'active' : ''}" onclick="selectSeason('${s.id}')"><span class="ti-ic"><i class="fa-regular fa-calendar"></i></span>${s.name}</div>`).join('')
+    ? f.map(s => `<div class="ti ${selSeason?.id === s.id ? 'active' : ''}" onclick="selectSeason('${s.id}')">
+        <span class="ti-ic"><i class="fa-regular fa-calendar"></i></span>
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</span>
+        <button class="ph-add" style="margin-left:5px" onclick="event.stopPropagation(); promptEditSeason('${s.id}', '${s.name.replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen" style="font-size:0.6rem"></i></button>
+      </div>`).join('')
     : '<div class="empty"><p style="font-size:.8rem">No seasons</p></div>';
+}
+
+async function promptEditSeason(id, oldName) {
+  const newName = prompt(`Rename/Merge "${oldName}" to:`, oldName);
+  if (!newName || newName.trim() === oldName) return;
+
+  const nameTrim = newName.trim();
+  const existing = allSeasons.find(s => s.name.toLowerCase() === nameTrim.toLowerCase());
+
+  if (existing) {
+    if (!confirm(`Merge "${oldName}" into existing "${existing.name}"? This cannot be undone.`)) return;
+    await sb.from('kits').update({ season: existing.name }).eq('season', oldName);
+    await sb.from('seasons').delete().eq('id', id);
+    toast('Season merged!');
+  } else {
+    const parts = nameTrim.split('/');
+    const ys = parseInt(parts[0]) || new Date().getFullYear();
+    const ye = parts[1] ? (parts[1].length === 2 ? parseInt(parts[0].substring(0, 2) + parts[1]) : parseInt(parts[1])) : ys + 1;
+    await sb.from('seasons').update({ name: nameTrim, year_start: ys, year_end: ye }).eq('id', id);
+    await sb.from('kits').update({ season: nameTrim }).eq('season', oldName);
+    toast('Season renamed!');
+  }
+  await loadMaster();
+  renderP1();
 }
 
 async function selectSeason(id) {
@@ -933,8 +961,30 @@ function renderP2Clubs() {
     ? clubs.map(c => `<div class="ti ${selClub?.id === c.id ? 'active' : ''}" onclick="selectClub('${c.id}')">
         <span class="ti-ic"><i class="fa-solid fa-futbol"></i></span>
         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span>
+        <button class="ph-add" style="margin-left:5px" onclick="event.stopPropagation(); promptEditClub('${c.id}', '${c.name.replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen" style="font-size:0.6rem"></i></button>
       </div>`).join('')
     : '<div class="empty"><p style="font-size:.8rem">No clubs — click + to add</p></div>';
+}
+
+async function promptEditClub(id, oldName) {
+  const newName = prompt(`Rename/Merge "${oldName}" to:`, oldName);
+  if (!newName || newName.trim() === oldName) return;
+
+  const nameTrim = newName.trim();
+  const existing = allClubs.find(c => c.name.toLowerCase() === nameTrim.toLowerCase());
+
+  if (existing) {
+    if (!confirm(`Merge "${oldName}" into existing "${existing.name}"? This cannot be undone.`)) return;
+    await sb.from('kits').update({ team: existing.name }).eq('team', oldName);
+    await sb.from('clubs').delete().eq('id', id);
+    toast('Club merged!');
+  } else {
+    await sb.from('clubs').update({ name: nameTrim }).eq('id', id);
+    await sb.from('kits').update({ team: nameTrim }).eq('team', oldName);
+    toast('Club renamed!');
+  }
+  await loadMaster();
+  if (selLeague) renderP2Clubs();
 }
 
 async function selectClub(id) { selClub = allClubs.find(c => c.id === id); renderP2Clubs(); loadP3(); }
