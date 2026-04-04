@@ -150,10 +150,15 @@
       </div>
       <div class="kit-grid" id="browse-grid"></div>
 
-      <div class="pagination" id="pagination" style="display:none; justify-content:center; align-items:center; gap:1rem; margin-top:2rem; margin-bottom:1rem;">
-        <button class="btn btn-g" id="page-prev" onclick="changePage(-1)" style="min-width:100px;">&larr; Previous</button>
-        <span id="page-info" style="font-weight:600; font-size:0.9rem; color:var(--w);">Page 1 of 1</span>
-        <button class="btn btn-g" id="page-next" onclick="changePage(1)" style="min-width:100px;">Next &rarr;</button>
+      <div class="pagination-wrapper" id="pagination-wrapper" style="display:none; flex-direction:column; align-items:center; gap:1rem; margin-top:2rem; margin-bottom:1rem;">
+        <div class="pagination" id="pagination" style="display:flex; justify-content:center; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          <!-- Pagination buttons will be injected here -->
+        </div>
+        <div class="page-jump" style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color:var(--w4);">
+          <span>Go to page:</span>
+          <input type="number" id="page-jump-input" min="1" style="width:50px; background:var(--s2); border:1px solid var(--bd); color:var(--w); border-radius:4px; padding:0.2rem 0.4rem; text-align:center; font-family:var(--fm);" onkeydown="if(event.key==='Enter') goToPage(this.value)">
+          <button onclick="goToPage(document.getElementById('page-jump-input').value)" style="background:var(--s3); border:1px solid var(--bd); color:var(--w); border-radius:4px; padding:0.2rem 0.5rem; cursor:pointer; font-size:0.8rem;">Go</button>
+        </div>
       </div>
 
     </div>
@@ -343,11 +348,12 @@ async function render() {
 
   const totalPages = Math.ceil(kits.length / itemsPerPage) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
+  const paginWrapper = document.getElementById('pagination-wrapper');
   const pagin = document.getElementById('pagination');
 
   if (!kits.length) {
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div><h3>NO KITS FOUND</h3><p>Try different filters.</p></div>`;
-    if(pagin) pagin.style.display = 'none';
+    if(paginWrapper) paginWrapper.style.display = 'none';
     return;
   }
 
@@ -366,23 +372,64 @@ async function render() {
   grid.innerHTML = html;
 
   if (totalPages > 1) {
-    if(pagin) pagin.style.display = 'flex';
-    document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
-    const btnPrev = document.getElementById('page-prev');
-    const btnNext = document.getElementById('page-next');
-    btnPrev.disabled = currentPage === 1;
-    btnNext.disabled = currentPage === totalPages;
-    btnPrev.style.opacity = currentPage === 1 ? '0.5' : '1';
-    btnPrev.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
-    btnNext.style.opacity = currentPage === totalPages ? '0.5' : '1';
-    btnNext.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+    if(paginWrapper) paginWrapper.style.display = 'flex';
+
+    let html = '';
+
+    // Prev Button
+    const prevDisabled = currentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+    html += `<button class="btn" onclick="changePage(-1)" ${prevDisabled} style="background:none; border:1px solid var(--bd); color:var(--w); border-radius:6px; padding:0.4rem 0.8rem; font-size:0.85rem; transition:background 0.2s;">&larr; Previous</button>`;
+
+    // Page Numbers logic
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, '...', totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+
+    pages.forEach(p => {
+      if (p === '...') {
+        html += `<span style="color:var(--w4); padding:0 0.2rem;">&hellip;</span>`;
+      } else {
+        const activeStyle = p === currentPage ? 'background:var(--w); color:var(--bk); font-weight:bold; border-color:var(--w);' : 'background:none; color:var(--w);';
+        html += `<button onclick="goToPage(${p})" style="border:1px solid var(--bd); border-radius:6px; padding:0.4rem 0.7rem; font-size:0.85rem; cursor:pointer; transition:background 0.2s; ${activeStyle}">${p}</button>`;
+      }
+    });
+
+    // Next Button
+    const nextDisabled = currentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+    html += `<button class="btn" onclick="changePage(1)" ${nextDisabled} style="background:none; border:1px solid var(--bd); color:var(--w); border-radius:6px; padding:0.4rem 0.8rem; font-size:0.85rem; transition:background 0.2s;">Next &rarr;</button>`;
+
+    if (pagin) pagin.innerHTML = html;
+
+    const jInput = document.getElementById('page-jump-input');
+    if (jInput) jInput.max = totalPages;
+
   } else {
-    if(pagin) pagin.style.display = 'none';
+    if(paginWrapper) paginWrapper.style.display = 'none';
   }
 }
 
 function changePage(delta) {
   currentPage += delta;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToPage(p) {
+  p = parseInt(p, 10);
+  if (isNaN(p) || p < 1) return;
+  const totalPages = Math.ceil(document.getElementById('result-count').textContent.split(' ')[0] / itemsPerPage) || 1; // get max from results
+  // Better way is using the length of current filtered array but we can calculate max bound from results string
+  // Let's just recalculate maximum bound inside render or just clamp it
+  currentPage = p;
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
