@@ -119,7 +119,7 @@ async function loadPosts() {
   if (!data?.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fa-solid fa-file-lines"></i></div><h3>NO POSTS YET</h3><p>Check back soon.</p></div>`; return; }
   grid.innerHTML = data.map(p => `
     <a href="/blog-post.html?slug=${p.slug}" class="blog-card" onclick="trackClick()">
-      <div class="blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${p.title}"/>` : '<i class="fa-solid fa-file-lines" style="font-size:3rem;color:var(--w3)"></i>'}</div>
+      <div class="blog-cover">${p.cover_image ? `<img src="${p.cover_image}" alt="${esc(p.title)}"/>` : '<i class="fa-solid fa-file-lines" style="font-size:3rem;color:var(--w3)"></i>'}</div>
       <div class="blog-body">
         ${p.tags?.length ? `<div class="blog-tags">${p.tags.map(t=>`<span class="blog-tag">${t}</span>`).join('')}</div>` : ''}
         <div class="blog-title">${p.title}</div>
