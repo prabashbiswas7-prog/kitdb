@@ -136,7 +136,7 @@
           <button class="mobile-filter-btn" onclick="toggleMobileFilters()">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg> Filters
           </button>
-          <select class="sort-select" id="sort-sel" onchange="render()">
+          <select class="sort-select" id="sort-sel" onchange="currentPage=1;render()">
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
             <option value="rating">Top Rated</option>
@@ -149,6 +149,13 @@
         </div>
       </div>
       <div class="kit-grid" id="browse-grid"></div>
+
+      <div class="pagination" id="pagination" style="display:none; justify-content:center; align-items:center; gap:1rem; margin-top:2rem; margin-bottom:1rem;">
+        <button class="btn btn-g" id="page-prev" onclick="changePage(-1)" style="min-width:100px;">&larr; Previous</button>
+        <span id="page-info" style="font-weight:600; font-size:0.9rem; color:var(--w);">Page 1 of 1</span>
+        <button class="btn btn-g" id="page-next" onclick="changePage(1)" style="min-width:100px;">Next &rarr;</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -200,6 +207,8 @@
 <script src="/assets/js/config.js"></script>
 <script>
 let allKits = [], filters = { type: [], league: [], season: [], maker: [], color: [], rating: [] }, viewMode = 'grid';
+let currentPage = 1;
+const itemsPerPage = 32;
 
 (async () => {
   await initNav();
@@ -211,7 +220,7 @@ let allKits = [], filters = { type: [], league: [], season: [], maker: [], color
   injectAd('sidebar','ad-sidebar');
   // check for ?q= param
   const q = new URLSearchParams(location.search).get('q');
-  if (q) { document.getElementById('search-q').value = q; render(); }
+  if (q) { document.getElementById('search-q').value = q; currentPage = 1; render(); }
 })();
 
 function buildFilterOptions() {
@@ -244,6 +253,7 @@ function toggleFilter(key, val, el) {
     el.classList.remove('active');
     filters[key] = filters[key].filter(v => v !== val);
   }
+  currentPage = 1;
   render();
 }
 function clearFilters() {
@@ -255,6 +265,7 @@ function clearFilters() {
   });
 
   document.getElementById('search-q').value = '';
+  currentPage = 1;
   render();
 }
 function setView(v) {
@@ -329,18 +340,51 @@ async function render() {
   document.getElementById('result-count').textContent = `${kits.length} kit${kits.length !== 1 ? 's' : ''}`;
   const grid = document.getElementById('browse-grid');
   grid.className = 'kit-grid' + (viewMode === 'list' ? ' list-view' : '');
-  if (!kits.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div><h3>NO KITS FOUND</h3><p>Try different filters.</p></div>`; return; }
+
+  const totalPages = Math.ceil(kits.length / itemsPerPage) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+  const pagin = document.getElementById('pagination');
+
+  if (!kits.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div><h3>NO KITS FOUND</h3><p>Try different filters.</p></div>`;
+    if(pagin) pagin.style.display = 'none';
+    return;
+  }
+
+  const startIdx = (currentPage - 1) * itemsPerPage;
+  const pageKits = kits.slice(startIdx, startIdx + itemsPerPage);
 
   // insert ad slot every 8 cards
   let html = '';
   const adSlot = await getAdSlot('browse_grid');
-  kits.forEach((k, i) => {
+  pageKits.forEach((k, i) => {
     if (i > 0 && i % 8 === 0 && adSlot?.is_active && adSlot?.ad_code) {
       html += `<div class="grid-ad"><div class="ad-slot ad-inline" style="display:block"><div class="ad-label">Advertisement</div>${adSlot.ad_code}</div></div>`;
     }
     html += kitCardHTML(k);
   });
   grid.innerHTML = html;
+
+  if (totalPages > 1) {
+    if(pagin) pagin.style.display = 'flex';
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+    const btnPrev = document.getElementById('page-prev');
+    const btnNext = document.getElementById('page-next');
+    btnPrev.disabled = currentPage === 1;
+    btnNext.disabled = currentPage === totalPages;
+    btnPrev.style.opacity = currentPage === 1 ? '0.5' : '1';
+    btnPrev.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+    btnNext.style.opacity = currentPage === totalPages ? '0.5' : '1';
+    btnNext.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+  } else {
+    if(pagin) pagin.style.display = 'none';
+  }
+}
+
+function changePage(delta) {
+  currentPage += delta;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function kitCardHTML(k) {
