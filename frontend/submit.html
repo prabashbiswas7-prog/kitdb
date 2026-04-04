@@ -37,6 +37,13 @@
 .success-icon { font-size:3.5rem; margin-bottom:1rem; }
 .success-title { font-family:var(--fd); font-size:2rem; letter-spacing:3px; margin-bottom:.5rem; }
 .success-title span { color:var(--g); }
+
+.acw { position:relative; width:100%; }
+.acl { position:absolute; top:100%; left:0; right:0; background:var(--s2); border:1px solid var(--bdg); border-top:none; border-radius:0 0 8px 8px; z-index:50; max-height:180px; overflow-y:auto; display:none; box-shadow:0 8px 24px rgba(0,0,0,.4); }
+.acl.open { display:block; }
+.ac-item { padding:.45rem .88rem; font-size:.84rem; cursor:pointer; transition:background .1s; border-bottom:1px solid var(--bd); }
+.ac-item:last-child { border-bottom:none; }
+.ac-item:hover { background:var(--gf); color:var(--g); }
 </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -318,8 +325,8 @@ function acSIn(key) {
   const q = inp.value.toLowerCase();
   const src = acSources[key] ? acSources[key]() : [];
   const matches = src.filter(v => v.toLowerCase().includes(q)).slice(0, 10);
-  if (!matches.length && !q) { list.classList.remove('open'); return; }
   const exact = src.find(v => v.toLowerCase() === q);
+  if (!matches.length && !q) { list.classList.remove('open'); return; }
   list.innerHTML = matches.map(v =>
     `<div class="ac-item" onmousedown="acSSet('${key}','${v.replace(/'/g,"\\'").replace(/"/g, '&quot;')}')">  ${v}</div>`
   ).join('') + (q && !exact ? `<div class="ac-item" style="color:var(--g);font-style:italic" onmousedown="acSSet('${key}','${inp.value.replace(/'/g,"\\'").replace(/"/g, '&quot;')}')">+ Use "${inp.value}"</div>` : '');
