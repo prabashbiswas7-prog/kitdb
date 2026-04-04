@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Submissions — KitDB</title>
+<link rel="stylesheet" href="/assets/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.submit-wrap { max-width:680px; margin:0 auto; padding:2rem 0 4rem; }
+.submit-header { margin-bottom:2rem; }
+.submit-header h1 { font-family:var(--fd); font-size:2.5rem; letter-spacing:3px; margin-bottom:.5rem; }
+.submit-header h1 span { color:var(--g); }
+.submit-header p { color:var(--w3); font-size:.9rem; line-height:1.6; }
+.status-box { background:var(--gf); border:1px solid var(--bdg); border-radius:10px; padding:1.25rem; margin-bottom:1.75rem; }
+.status-title { font-size:.65rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--g); margin-bottom:.75rem; }
+.sub-row { display:flex; align-items:center; justify-content:space-between; padding:.55rem 0; border-bottom:1px solid var(--bdg); font-size:.83rem; }
+.sub-row:last-child { border-bottom:none; }
+.sub-status { font-size:.65rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:.2rem .55rem; border-radius:4px; }
+.s-pending  { background:rgba(255,204,0,.1); color:var(--gold); border:1px solid rgba(255,204,0,.3); }
+.s-approved { background:var(--gf); color:var(--g); border:1px solid var(--bdg); }
+.s-rejected { background:rgba(255,68,68,.08); color:var(--red); border:1px solid rgba(255,68,68,.2); }
+</style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="nav-logo" id="nav-logo">Kit<span>DB</span></a>
+  <div class="nav-links" id="nav-links-dynamic"></div>
+  <div id="nav-auth"></div>
+</nav>
+
+<div class="container">
+  <div class="submit-wrap">
+
+    <!-- NOT LOGGED IN -->
+    <div id="login-prompt" style="display:none;text-align:center;padding:4rem 2rem">
+      <div style="font-size:3rem;margin-bottom:1rem"><i class="fa-solid fa-lock"></i></div>
+      <div style="font-family:var(--fd);font-size:1.75rem;letter-spacing:3px;margin-bottom:.5rem">SIGN IN TO VIEW SUBMISSIONS</div>
+      <p style="color:var(--w3);margin-bottom:1.5rem">You need a free KitDB account to view your submissions.</p>
+      <a href="/login.html?from=/my-submissions.html" class="btn btn-p">Sign In / Join Free</a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="submit-content" style="display:none">
+      <div class="submit-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+            <h1>MY <span>SUBMISSIONS</span></h1>
+            <p>Track the status of the kits you have submitted to KitDB.</p>
+        </div>
+        <a href="/submit.html" class="btn btn-p">Submit a Kit</a>
+      </div>
+
+      <!-- MY SUBMISSIONS STATUS -->
+      <div id="my-submissions-wrap" style="display:none">
+        <div class="status-box">
+          <div class="status-title">My Submissions</div>
+          <div id="my-submissions-list"></div>
+        </div>
+      </div>
+
+      <div id="no-submissions" style="display:none;text-align:center;padding:3rem 1rem;background:var(--s1);border:1px solid var(--bd);border-radius:10px;">
+        <i class="fa-solid fa-shirt" style="font-size:2rem;color:var(--w4);margin-bottom:1rem;display:block;"></i>
+        <p style="color:var(--w3);margin-bottom:1.5rem">You haven't submitted any kits yet.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="main-footer">
+  <div class="footer-grid">
+    <div class="footer-col brand-col">
+      <h4>KIT<span style="color:var(--w)">DB</span></h4>
+      <p>The world's most comprehensive football kit archive. Browse, rate, and collect kits from every club and era.</p>
+    </div>
+    <div class="footer-col">
+      <h4>EXPLORE</h4>
+      <ul class="footer-nav">
+        <li><a href="/">Home</a></li>
+        <li><a href="/browse.html">Browse Kits</a></li>
+        <li><a href="/search.html">Search</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>COMMUNITY</h4>
+      <ul class="footer-nav">
+        <li><a href="/submit.html">Submit a Kit</a></li>
+        <li><a href="/login.html">Sign In / Join</a></li>
+        <li><a href="/profile.html">My Collection</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>ABOUT</h4>
+      <ul class="footer-nav">
+        <li><a href="/about.html">About Us</a></li>
+        <li><a href="/contact.html">Contact</a></li>
+        <li><a href="/privacy.html">Privacy Policy</a></li>
+        <li><a href="/terms.html">Terms of Service</a></li>
+        <li><a href="/cookies.html">Cookie Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2025 KitDB. All rights reserved.</p>
+    <div class="footer-socials">
+      <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+      <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/config.js"></script>
+<script>
+let currentUser = null;
+
+(async () => {
+  await initNav();
+  await loadSiteSettings();
+  currentUser = await getUser();
+
+  if (!currentUser) {
+    document.getElementById('login-prompt').style.display = 'block';
+    return;
+  }
+  document.getElementById('submit-content').style.display = 'block';
+  await loadMySubmissions();
+})();
+
+async function loadSiteSettings() {
+  const { data } = await sb.from('site_settings').select('key,value');
+  if (!data) return;
+  const s = Object.fromEntries(data.map(r => [r.key, r.value]));
+  const fName = document.getElementById('footer-site-name');
+  if (s.site_name && fName) fName.textContent = s.site_name;
+  const fText = document.getElementById('footer-text');
+  if (s.footer_text && fText) fText.textContent = s.footer_text;
+}
+
+async function loadMySubmissions() {
+  const { data } = await sb.from('kit_submissions')
+    .select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(50);
+  if (!data || !data.length) {
+      document.getElementById('no-submissions').style.display = 'block';
+      return;
+  }
+  document.getElementById('my-submissions-wrap').style.display = 'block';
+  document.getElementById('my-submissions-list').innerHTML = data.map(s => `
+    <div class="sub-row">
+      <div>
+        <div style="font-weight:500">${s.team} — ${s.season} ${s.type}</div>
+        ${s.rejection_reason ? `<div style="font-size:.72rem;color:var(--red);margin-top:.15rem">Reason: ${s.rejection_reason}</div>` : ''}
+      </div>
+      <span class="sub-status s-${s.status}">${s.status}</span>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>

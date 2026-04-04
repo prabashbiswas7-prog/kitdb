@@ -65,6 +65,10 @@
         <p>Help grow the KitDB archive. Submit kits you know are missing. All submissions are reviewed by our team before going live. Earn points and badges for approved kits!</p>
       </div>
 
+      <div style="margin-bottom:1.5rem">
+        <a href="/my-submissions.html" class="btn btn-g">View My Submissions</a>
+      </div>
+
       <!-- RULES -->
       <div class="rules-box">
         <div class="rules-title">Submission Guidelines</div>
@@ -76,14 +80,6 @@
           <li>Earn <strong style="color:var(--g)">+5 points</strong> for submitting, <strong style="color:var(--g)">+50 points</strong> when approved</li>
           <li>Approved submissions show your username as contributor</li>
         </ul>
-      </div>
-
-      <!-- MY SUBMISSIONS STATUS -->
-      <div id="my-submissions-wrap" style="display:none">
-        <div class="status-box">
-          <div class="status-title">My Submissions</div>
-          <div id="my-submissions-list"></div>
-        </div>
       </div>
 
       <!-- FORM -->
@@ -258,7 +254,6 @@ let allClubs = [], allSeasons = [], allLeagues = [], allMakers = [], allKitTypes
   }
   document.getElementById('submit-content').style.display = 'block';
   await loadMasterData();
-  await loadMySubmissions();
   populateTypeSelect();
 })();
 
@@ -293,21 +288,6 @@ function populateTypeSelect() {
   const sel = document.getElementById('s-type');
   const types = allKitTypes.length ? allKitTypes : ['Home','Away','Third','GK Home','GK Away','Special Edition'];
   sel.innerHTML = types.map(t => `<option>${t}</option>`).join('');
-}
-
-async function loadMySubmissions() {
-  const { data } = await sb.from('kit_submissions')
-    .select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
-  if (!data || !data.length) return;
-  document.getElementById('my-submissions-wrap').style.display = 'block';
-  document.getElementById('my-submissions-list').innerHTML = data.map(s => `
-    <div class="sub-row">
-      <div>
-        <div style="font-weight:500">${s.team} — ${s.season} ${s.type}</div>
-        ${s.rejection_reason ? `<div style="font-size:.72rem;color:var(--red);margin-top:.15rem">Reason: ${s.rejection_reason}</div>` : ''}
-      </div>
-      <span class="sub-status s-${s.status}">${s.status}</span>
-    </div>`).join('');
 }
 
 // duplicate check
@@ -405,7 +385,6 @@ async function submitKit() {
 
   document.getElementById('submit-form').style.display = 'none';
   document.getElementById('success-screen').style.display = 'block';
-  await loadMySubmissions();
 }
 
 function resetForm() {
