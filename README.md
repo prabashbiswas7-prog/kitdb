@@ -1,5 +1,5 @@
 # KitDB — Full Deploy Guide
-## Stack: Supabase (backend/DB/auth) + Cloudflare Pages (frontend) + GitHub
+## Stack: Supabase (backend/DB/auth) + Cloudflare Pages (frontend) + GitHub 
 
 ---
 
